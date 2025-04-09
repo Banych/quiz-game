@@ -2,20 +2,20 @@
 
 ## Tasks
 
-- [ ] Initialize a Next.js project using `create-next-app`.
-- [ ] Configure Tailwind CSS for styling.
-  - [ ] Install Tailwind CSS and its dependencies.
-  - [ ] Add Tailwind directives to the global CSS file.
-- [ ] Set up TypeScript.
-  - [ ] Configure `tsconfig.json`.
-- [ ] Configure ESLint and Prettier for code formatting and linting.
-  - [ ] Install ESLint, Prettier, and related plugins.
-  - [ ] Create or update ESLint and Prettier configuration files.
-  - [ ] Verify linting and formatting work as expected.
+- [x] Initialize a Next.js project using `create-next-app`.
+- [x] Configure Tailwind CSS for styling.
+  - [x] Install Tailwind CSS and its dependencies.
+  - [x] Add Tailwind directives to the global CSS file.
+- [x] Set up TypeScript.
+  - [x] Configure `tsconfig.json`.
+- [x] Configure ESLint and Prettier for code formatting and linting.
+  - [x] Install ESLint, Prettier, and related plugins.
+  - [x] Create or update ESLint and Prettier configuration files.
+  - [x] Verify linting and formatting work as expected.
 - [ ] Add `shadcn` library for UI components.
   - [ ] Install `shadcn` and its dependencies.
   - [ ] Verify the library is working by adding a sample component.
-- [ ] Verify the development server runs successfully.
+- [x] Verify the development server runs successfully.
 
 ## Details
 
