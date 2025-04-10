@@ -21,10 +21,10 @@ Establish a clear and scalable structure for the application following Domain-Dr
    - [x] Group related entities into aggregates (e.g., `QuizAggregate` to manage `Quiz` and its `Questions`).
 
 5. **Domain Events**:
-   - [ ] Define domain events to capture significant changes in the domain (e.g., `PlayerAnsweredEvent`, `QuizStartedEvent`).
+   - [x] Define domain events to capture significant changes in the domain (e.g., `PlayerAnsweredEvent`, `QuizStartedEvent`).
 
 6. **Repository Interfaces**:
-   - [ ] Create repository interfaces for data access, ensuring the domain layer is decoupled from the infrastructure.
+   - [x] Create repository interfaces for data access, ensuring the domain layer is decoupled from the infrastructure.
 
 7. **Testing**:
    - [ ] Write unit tests for the domain layer to ensure the correctness of entities, value objects, and aggregates.
