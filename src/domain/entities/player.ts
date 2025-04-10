@@ -1,4 +1,4 @@
-import { Answer } from '@/domain/entities/answer';
+import { Answer } from '@domain/entities/answer';
 
 export class Player {
   id: string;

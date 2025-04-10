@@ -1,5 +1,5 @@
-import { Player } from '@/domain/entities/player';
-import { Question } from '@/domain/entities/question';
+import { Player } from '@domain/entities/player';
+import { Question } from '@domain/entities/question';
 
 export enum QuizStatus {
   Active = 'Active',
