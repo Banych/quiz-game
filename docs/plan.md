@@ -80,29 +80,35 @@
    - Initialize a Next.js project.
    - Configure Tailwind CSS.
 
-2. **Build Host Interface**:
+2. **Project Structure Setup**:
+   - Create the folder structure for components, domain, application, and infrastructure layers.
+   - Define core entities (Quiz, Question, Player, Answer) and their attributes/behaviors.
+   - Implement value objects (e.g., Timer, Score) and aggregates (e.g., QuizSessionAggregate).
+   - Create repository interfaces for data access.
+
+3. **Build Host Interface**:
    - Create pages for managing sessions and displaying questions/statistics.
 
-3. **Build Player Interface**:
+4. **Build Player Interface**:
    - Create pages for joining sessions and answering questions.
    - Ensure the question is not displayed, only the input field or options.
 
-4. **Build Admin Tool**:
+5. **Build Admin Tool**:
    - Create a protected route for managing questions.
    - Implement forms for adding/editing questions and uploading multimedia.
 
-5. **Implement Real-Time Communication**:
+6. **Implement Real-Time Communication**:
    - Set up WebSocket/Socket.io for synchronization.
 
-6. **Integrate Media**:
+7. **Integrate Media**:
    - Add support for images, videos, and audio in questions.
 
-7. **Database and API**:
+8. **Database and API**:
    - Design database schema for questions, sessions, and results.
    - Implement API routes for data access.
 
-8. **Testing**:
+9. **Testing**:
    - Test synchronization and responsiveness across devices.
 
-9. **Launch Prototype**:
+10. **Launch Prototype**:
    - Deploy a local network version for testing.
