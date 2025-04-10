@@ -1,7 +1,7 @@
 # Application Structure and Domain Design
 
 ## Overview
-The application will follow a **layered architecture** with three distinct layers:
+The application follows a **layered architecture** with three distinct layers:
 1. **Domain Layer**: Core business logic and entities.
 2. **Application Layer**: Use cases and application-specific logic.
 3. **Infrastructure Layer**: External dependencies like databases, APIs, and frameworks.
@@ -17,7 +17,7 @@ This structure ensures separation of concerns, testability, and scalability.
 - **Components**:
   - **Entities**: Represent core business objects with attributes and behavior.
   - **Value Objects**: Immutable objects that represent concepts (e.g., `Timer`, `Score`).
-  - **Aggregates**: Group of entities treated as a single unit (e.g., `Quiz` with `Questions`).
+  - **Aggregates**: Group of entities treated as a single unit (e.g., `Quiz` with `Questions` and `Answers`).
   - **Domain Events**: Events triggered by changes in the domain (e.g., `PlayerAnsweredEvent`).
   - **Repositories (Interfaces)**: Abstract interfaces for data access.
 
@@ -31,7 +31,8 @@ This structure ensures separation of concerns, testability, and scalability.
   - `title`: Name of the quiz.
   - `questions`: List of `Question` entities.
   - `status`: Current status (`Pending`, `Active`, `Completed`).
-  - `players`: List of `Player` entities.
+  - `players`: Set of player IDs participating in the quiz.
+  - `answers`: Map of player IDs to their submitted answers.
   - `startTime`: Timestamp when the quiz starts.
   - `endTime`: Timestamp when the quiz ends.
   - `settings`: Quiz-specific configurations (e.g., time per question, scoring rules).
@@ -39,6 +40,8 @@ This structure ensures separation of concerns, testability, and scalability.
   - Start the quiz.
   - End the quiz.
   - Add/remove players.
+  - Submit answers for players.
+  - Calculate scores dynamically based on submitted answers.
   - Transition between quiz states.
   - Shuffle questions if needed.
   - Track the current question index.
@@ -69,15 +72,9 @@ This structure ensures separation of concerns, testability, and scalability.
 - **Attributes**:
   - `id`: Unique identifier.
   - `name`: Player's name.
-  - `score`: Player's current score.
-  - `answers`: Map of `questionId -> Answer`.
   - `status`: Player's status (`Active`, `Disconnected`, `Finished`).
-  - `rank`: Player's position in the leaderboard.
 - **Behavior**:
-  - Submit an answer.
-  - Update score.
-  - Track answers for each question.
-  - Calculate the total score based on correct answers and scoring rules.
+  - Update status.
 
 ---
 
@@ -88,6 +85,7 @@ This structure ensures separation of concerns, testability, and scalability.
   - `value`: The submitted answer.
   - `timestamp`: Time of submission.
   - `isCorrect`: Whether the answer was correct.
+  - `points`: Points awarded for the answer.
   - `timeTaken`: Time taken to answer.
 - **Behavior**:
   - Store the submitted answer and metadata.
@@ -116,3 +114,4 @@ src/
 │   ├── api/            # External API integrations
 │   └── websocket/      # WebSocket/Socket.io logic
 └── lib/                # Shared utilities and helpers
+```

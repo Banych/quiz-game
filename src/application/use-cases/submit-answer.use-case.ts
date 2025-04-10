@@ -1,5 +1,6 @@
 import { IPlayerRepository } from '@domain/repositories/player-repository';
 import { IQuizRepository } from '@domain/repositories/quiz-repository';
+import { QuizStatus } from '@domain/enums/quiz-status';
 
 export class SubmitAnswerUseCase {
   constructor(
@@ -14,17 +15,18 @@ export class SubmitAnswerUseCase {
     answer: string
   ): Promise<void> {
     const quiz = await this.quizRepository.findById(quizId);
-    if (!quiz) {
-      throw new Error('Quiz not found.');
+    if (!quiz || quiz.quizStatus !== QuizStatus.Active) {
+      throw new Error('Quiz is not active or does not exist.');
+    }
+
+    const player = await this.playerRepository.findById(playerId);
+    if (!player) {
+      throw new Error('Player not found.');
     }
 
     quiz.submitAnswer(playerId, questionId, answer);
 
     await this.quizRepository.save(quiz);
-
-    const player = quiz.quiz.players.find((p) => p.id === playerId);
-    if (player) {
-      await this.playerRepository.save(player);
-    }
+    await this.playerRepository.save(player);
   }
 }

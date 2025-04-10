@@ -1,4 +1,4 @@
-import { Player } from '@domain/entities/player';
+import { Answer } from '@domain/entities/answer';
 import { Question } from '@domain/entities/question';
 import { Quiz, QuizStatus } from '@domain/entities/quiz';
 import { describe, expect, it } from 'vitest';
@@ -76,11 +76,11 @@ describe('Quiz', () => {
       allowSkipping: true,
     });
 
-    const player = new Player('p1', 'John Doe');
-    quiz.addPlayer(player);
+    const playerId = 'p1';
+    quiz.addPlayer(playerId);
 
     expect(quiz.players).toHaveLength(1);
-    expect(quiz.players[0]).toBe(player);
+    expect(quiz.players).toContain(playerId);
   });
 
   it('should remove a player from the quiz', () => {
@@ -89,9 +89,9 @@ describe('Quiz', () => {
       allowSkipping: true,
     });
 
-    const player = new Player('p1', 'John Doe');
-    quiz.addPlayer(player);
-    quiz.removePlayer('p1');
+    const playerId = 'p1';
+    quiz.addPlayer(playerId);
+    quiz.removePlayer(playerId);
 
     expect(quiz.players).toHaveLength(0);
   });
@@ -123,5 +123,28 @@ describe('Quiz', () => {
     const nextQuestion = quiz.nextQuestion();
 
     expect(nextQuestion).toBeNull();
+  });
+
+  it('should submit an answer and update the answers map', () => {
+    const question = new Question('q1', 'What is 2 + 2?', ['4'], 'text', 10);
+    const quiz = new Quiz('quiz1', 'Math Quiz', [question], {
+      timePerQuestion: 30,
+      allowSkipping: true,
+    });
+
+    quiz.addPlayer('p1');
+    quiz.startQuiz();
+
+    const answer = new Answer('p1', 'q1', '4', new Date());
+    answer.markCorrect(10);
+
+    quiz.submitAnswer('p1', answer);
+
+    const answers = quiz.answers.get('p1');
+    expect(answers).toBeDefined();
+    expect(answers?.length).toBe(1);
+    expect(answers?.[0].questionId).toBe('q1');
+    expect(answers?.[0].value).toBe('4');
+    expect(answers?.[0].isCorrect).toBe(true);
   });
 });

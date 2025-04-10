@@ -37,7 +37,15 @@ export class Question {
 
   randomizeOptions(): void {
     if (this.options) {
-      this.options = this.options.sort(() => Math.random() - 0.5);
+      const shuffledOptions = [...this.options];
+      for (let i = shuffledOptions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledOptions[i], shuffledOptions[j]] = [
+          shuffledOptions[j],
+          shuffledOptions[i],
+        ];
+      }
+      this.options = shuffledOptions;
     }
   }
 }

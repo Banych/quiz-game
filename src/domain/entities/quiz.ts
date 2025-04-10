@@ -1,5 +1,5 @@
-import { Player } from '@domain/entities/player';
 import { Question } from '@domain/entities/question';
+import { Answer } from '@domain/entities/answer';
 
 export enum QuizStatus {
   Active = 'Active',
@@ -11,12 +11,13 @@ export class Quiz {
   id: string;
   title: string;
   questions: Question[];
-  players: Player[];
+  players: Set<string>;
   status: QuizStatus;
   currentQuestionIndex: number;
   startTime?: Date;
   endTime?: Date;
   settings: QuizSettings;
+  answers: Map<string, Answer[]>;
 
   constructor(
     id: string,
@@ -27,10 +28,11 @@ export class Quiz {
     this.id = id;
     this.title = title;
     this.questions = questions;
-    this.players = [];
+    this.players = new Set();
     this.status = QuizStatus.Pending;
     this.currentQuestionIndex = 0;
     this.settings = settings;
+    this.answers = new Map();
   }
 
   startQuiz(): void {
@@ -49,12 +51,38 @@ export class Quiz {
     this.endTime = new Date();
   }
 
-  addPlayer(player: Player): void {
-    this.players.push(player);
+  addPlayer(playerId: string): void {
+    this.players.add(playerId);
   }
 
   removePlayer(playerId: string): void {
-    this.players = this.players.filter((player) => player.id !== playerId);
+    this.players.delete(playerId);
+    this.answers.delete(playerId);
+  }
+
+  submitAnswer(playerId: string, answer: Answer): void {
+    if (!this.players.has(playerId)) {
+      throw new Error('Player is not part of this quiz.');
+    }
+
+    if (!this.answers.has(playerId)) {
+      this.answers.set(playerId, []);
+    }
+
+    this.answers.get(playerId)!.push(answer);
+  }
+
+  calculateScores(): Map<string, number> {
+    const scores = new Map<string, number>();
+
+    for (const [playerId, answers] of this.answers.entries()) {
+      const totalScore = answers
+        .filter((answer) => answer.isCorrect)
+        .reduce((sum, answer) => sum + (answer.points || 0), 0);
+      scores.set(playerId, totalScore);
+    }
+
+    return scores;
   }
 
   nextQuestion(): Question | null {

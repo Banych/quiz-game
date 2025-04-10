@@ -12,9 +12,16 @@ describe('QuizSessionAggregate', () => {
     });
     const aggregate = new QuizSessionAggregate(quiz, 30);
 
-    expect(aggregate.quiz).toBe(quiz);
-    expect(aggregate.timer.duration).toBe(30);
-    expect(aggregate.scores.size).toBe(0);
+    expect(aggregate.quizId).toBe(quiz.id);
+    expect(aggregate.quizTitle).toBe(quiz.title);
+    expect(aggregate.quizStatus).toBe(QuizStatus.Pending);
+    expect(aggregate.quizSettings.timePerQuestion).toBe(30);
+    expect(aggregate.quizQuestions).toHaveLength(0);
+    expect(aggregate.timerDuration).toBe(30);
+    expect(aggregate.timerStartTime).toBeUndefined();
+    expect(aggregate.timerEndTime).toBeUndefined();
+    expect(aggregate.currentQuestion).toBeNull();
+    expect(aggregate.answers.size).toBe(0);
   });
 
   it('should start the quiz and timer', () => {
@@ -26,8 +33,8 @@ describe('QuizSessionAggregate', () => {
 
     aggregate.startQuiz();
 
-    expect(aggregate.quiz.status).toBe(QuizStatus.Active);
-    expect(aggregate.timer.startTime).toBeDefined();
+    expect(aggregate.quizStatus).toBe(QuizStatus.Active);
+    expect(aggregate.timerStartTime).toBeDefined();
   });
 
   it('should end the quiz', () => {
@@ -40,7 +47,7 @@ describe('QuizSessionAggregate', () => {
     aggregate.startQuiz();
     aggregate.endQuiz();
 
-    expect(aggregate.quiz.status).toBe(QuizStatus.Completed);
+    expect(aggregate.quizStatus).toBe(QuizStatus.Completed);
   });
 
   it('should submit an answer and update the score if correct', () => {
@@ -50,16 +57,26 @@ describe('QuizSessionAggregate', () => {
       allowSkipping: true,
     });
     const player = new Player('p1', 'John Doe');
-    quiz.addPlayer(player);
 
     const aggregate = new QuizSessionAggregate(quiz, 30);
+    aggregate.addPlayer(player.id);
     aggregate.startQuiz();
 
-    aggregate.submitAnswer('p1', 'q1', '4');
+    aggregate.submitAnswer(player.id, 'q1', '4');
 
-    expect(player.answers.size).toBe(1);
-    expect(player.answers.get('q1')?.isCorrect).toBe(true);
-    expect(aggregate.scores.get('p1')?.value).toBe(10);
+    expect(aggregate.answers.size).toBe(1);
+    const playerAnswers = aggregate.answers.get(player.id);
+    expect(playerAnswers).toBeDefined();
+    expect(playerAnswers?.length).toBe(1);
+    expect(playerAnswers?.[0].questionId).toBe('q1');
+    expect(playerAnswers?.[0].value).toBe('4');
+    expect(playerAnswers?.[0].isCorrect).toBe(true);
+
+    const score = aggregate
+      .getLeaderboard()
+      .find((score) => score.playerId === player.id);
+    expect(score).toBeDefined();
+    expect(score?.score).toBe(10);
   });
 
   it('should submit an answer and not update the score if incorrect', () => {
@@ -69,29 +86,74 @@ describe('QuizSessionAggregate', () => {
       allowSkipping: true,
     });
     const player = new Player('p1', 'John Doe');
-    quiz.addPlayer(player);
 
     const aggregate = new QuizSessionAggregate(quiz, 30);
+    aggregate.addPlayer(player.id);
     aggregate.startQuiz();
 
-    aggregate.submitAnswer('p1', 'q1', '5');
+    aggregate.submitAnswer(player.id, 'q1', '5');
 
-    expect(player.answers.size).toBe(1);
-    expect(player.answers.get('q1')?.isCorrect).toBe(false);
-    expect(aggregate.scores.get('p1')?.value).toBe(0);
+    expect(aggregate.answers.size).toBe(1);
+    const playerAnswers = aggregate.answers.get(player.id);
+    expect(playerAnswers).toBeDefined();
+    expect(playerAnswers?.length).toBe(1);
+    expect(playerAnswers?.[0].questionId).toBe('q1');
+    expect(playerAnswers?.[0].value).toBe('5');
+    expect(playerAnswers?.[0].isCorrect).toBe(false);
+
+    const score = aggregate
+      .getLeaderboard()
+      .find((score) => score.playerId === player.id);
+    expect(score).toBeDefined();
+    expect(score?.score).toBe(0);
   });
 
-  it('should throw an error if submitting an answer for an invalid player or question', () => {
-    const quiz = new Quiz('quiz1', 'Math Quiz', [], {
+  it('should throw an error if submitting an answer when quiz is not active', () => {
+    const questions = [new Question('q1', 'What is 2 + 2?', ['4'], 'text', 10)];
+    const quiz = new Quiz('quiz1', 'Math Quiz', questions, {
       timePerQuestion: 30,
       allowSkipping: true,
     });
+    const player = new Player('p1', 'John Doe');
+    const aggregate = new QuizSessionAggregate(quiz, 30);
+    aggregate.addPlayer(player.id);
+
+    expect(() => aggregate.submitAnswer(player.id, 'q1', '4')).toThrow(
+      'Quiz is not active.'
+    );
+  });
+
+  it('should throw an error if submitting an answer for an invalid question', () => {
+    const questions = [new Question('q1', 'What is 2 + 2?', ['4'], 'text', 10)];
+    const quiz = new Quiz('quiz1', 'Math Quiz', questions, {
+      timePerQuestion: 30,
+      allowSkipping: true,
+    });
+    const player = new Player('p1', 'John Doe');
+    const aggregate = new QuizSessionAggregate(quiz, 30);
+    aggregate.addPlayer(player.id);
+    aggregate.startQuiz();
+    expect(() =>
+      aggregate.submitAnswer(player.id, 'invalidQuestion', '4')
+    ).toThrow('Invalid question.');
+  });
+
+  it('should throw an error if submitting an answer for an invalid player', () => {
+    const quiz = new Quiz(
+      'quiz1',
+      'Math Quiz',
+      [new Question('q1', 'What is 2 + 2?', ['4'], 'text', 10)],
+      {
+        timePerQuestion: 30,
+        allowSkipping: true,
+      }
+    );
     const aggregate = new QuizSessionAggregate(quiz, 30);
     aggregate.startQuiz();
 
-    expect(() =>
-      aggregate.submitAnswer('invalidPlayer', 'invalidQuestion', '4')
-    ).toThrow('Invalid player or question.');
+    expect(() => aggregate.submitAnswer('invalidPlayer', 'q1', '4')).toThrow(
+      'Player is not part of this quiz.'
+    );
   });
 
   it('should generate a leaderboard sorted by score', () => {
@@ -102,10 +164,10 @@ describe('QuizSessionAggregate', () => {
     });
     const player1 = new Player('p1', 'John Doe');
     const player2 = new Player('p2', 'Jane Doe');
-    quiz.addPlayer(player1);
-    quiz.addPlayer(player2);
 
     const aggregate = new QuizSessionAggregate(quiz, 30);
+    aggregate.addPlayer(player1.id);
+    aggregate.addPlayer(player2.id);
     aggregate.startQuiz();
 
     aggregate.submitAnswer('p1', 'q1', '4');
