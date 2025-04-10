@@ -1,8 +1,8 @@
-import { Answer } from '@/domain/entities/answer';
-import { Quiz } from '@/domain/entities/quiz';
-import { LeaderboardScore } from '@/domain/types/leaderboard-score';
-import { Score } from '@/domain/value-objects/score';
-import { Timer } from '@/domain/value-objects/timer';
+import { Answer } from '@domain/entities/answer';
+import { Quiz, QuizStatus } from '@domain/entities/quiz';
+import { LeaderboardScore } from '@domain/types/leaderboard-score';
+import { Score } from '@domain/value-objects/score';
+import { Timer } from '@domain/value-objects/timer';
 
 export class QuizSessionAggregate {
   quiz: Quiz;
@@ -28,6 +28,10 @@ export class QuizSessionAggregate {
   }
 
   submitAnswer(playerId: string, questionId: string, answer: string): void {
+    if (this.quiz.status !== QuizStatus.Active) {
+      throw new Error('Quiz is not active.');
+    }
+
     const player = this.quiz.players.find((p) => p.id === playerId);
     const question = this.quiz.questions.find((q) => q.id === questionId);
 
@@ -40,7 +44,11 @@ export class QuizSessionAggregate {
 
     const playerAnswer = player.answers.get(questionId);
     if (playerAnswer) {
-      playerAnswer.markCorrect(points);
+      if (isCorrect) {
+        playerAnswer.markCorrect(points);
+      } else {
+        playerAnswer.markIncorrect();
+      }
     } else {
       const newAnswer = new Answer(
         playerId,
@@ -49,7 +57,12 @@ export class QuizSessionAggregate {
         new Date(),
         this.timer.getRemainingTime()
       );
-      newAnswer.markCorrect(points);
+
+      if (isCorrect) {
+        newAnswer.markCorrect(points);
+      } else {
+        newAnswer.markIncorrect();
+      }
 
       player.submitAnswer(questionId, newAnswer);
     }

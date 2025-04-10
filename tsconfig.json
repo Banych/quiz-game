@@ -23,9 +23,6 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
       "@components/*": [
         "./src/components/*"
       ],
@@ -40,7 +37,19 @@
       ],
       "@hooks/*": [
         "./src/hooks/*"
-      ]
+      ],
+      "@domain/*": [
+        "./src/domain/*"
+      ],
+      "@infrastructure/*": [
+        "./src/infrastructure/*"
+      ],
+      "@application/*": [
+        "./src/application/*"
+      ],
+      "@/*": [
+        "./src/*"
+      ],
     }
   },
   "include": [

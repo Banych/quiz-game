@@ -1,12 +1,18 @@
 import { Player } from '@/domain/entities/player';
 import { Question } from '@/domain/entities/question';
 
+export enum QuizStatus {
+  Active = 'Active',
+  Pending = 'Pending',
+  Completed = 'Completed',
+}
+
 export class Quiz {
   id: string;
   title: string;
   questions: Question[];
   players: Player[];
-  status: 'Pending' | 'Active' | 'Completed';
+  status: QuizStatus;
   currentQuestionIndex: number;
   startTime?: Date;
   endTime?: Date;
@@ -22,24 +28,24 @@ export class Quiz {
     this.title = title;
     this.questions = questions;
     this.players = [];
-    this.status = 'Pending';
+    this.status = QuizStatus.Pending;
     this.currentQuestionIndex = 0;
     this.settings = settings;
   }
 
   startQuiz(): void {
-    if (this.status !== 'Pending') {
+    if (this.status !== QuizStatus.Pending) {
       throw new Error('Quiz can only be started if it is in Pending status.');
     }
-    this.status = 'Active';
+    this.status = QuizStatus.Active;
     this.startTime = new Date();
   }
 
   endQuiz(): void {
-    if (this.status !== 'Active') {
+    if (this.status !== QuizStatus.Active) {
       throw new Error('Quiz can only be ended if it is in Active status.');
     }
-    this.status = 'Completed';
+    this.status = QuizStatus.Completed;
     this.endTime = new Date();
   }
 

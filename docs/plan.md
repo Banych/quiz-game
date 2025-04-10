@@ -85,6 +85,7 @@
    - Define core entities (Quiz, Question, Player, Answer) and their attributes/behaviors.
    - Implement value objects (e.g., Timer, Score) and aggregates (e.g., QuizSessionAggregate).
    - Create repository interfaces for data access.
+   - Other structure related tasks.
 
 3. **Build Host Interface**:
    - Create pages for managing sessions and displaying questions/statistics.
