@@ -1,11 +1,13 @@
-import { AddPlayerUseCase } from '@application/useCases/add-player.use-case';
-import { UpdatePlayerStatusUseCase } from '@application/useCases/update-player-status.use-case';
-import { Player } from '@domain/entities/player';
+import { AddPlayerUseCase } from '@application/use-cases/add-player.use-case';
+import { FindPlayerByIdUseCase } from '@application/use-cases/find-player-by-id.use-case';
+import { UpdatePlayerStatusUseCase } from '@application/use-cases/update-player-status.use-case';
+import { Player, PlayerStatus } from '@domain/entities/player';
 
 export class PlayerService {
   constructor(
     private readonly addPlayerUseCase: AddPlayerUseCase,
-    private readonly updatePlayerStatusUseCase: UpdatePlayerStatusUseCase
+    private readonly updatePlayerStatusUseCase: UpdatePlayerStatusUseCase,
+    private readonly findPlayerByIdUseCase: FindPlayerByIdUseCase
   ) {}
 
   async addPlayer(
@@ -24,6 +26,6 @@ export class PlayerService {
   }
 
   async getPlayerDetails(playerId: string): Promise<Player | null> {
-    return this.addPlayerUseCase.playerRepository.findById(playerId);
+    return this.findPlayerByIdUseCase.execute(playerId);
   }
 }

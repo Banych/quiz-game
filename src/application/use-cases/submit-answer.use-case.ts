@@ -1,6 +1,6 @@
+import { QuizStatus } from '@domain/entities/quiz';
 import { IPlayerRepository } from '@domain/repositories/player-repository';
 import { IQuizRepository } from '@domain/repositories/quiz-repository';
-import { QuizStatus } from '@domain/enums/quiz-status';
 
 export class SubmitAnswerUseCase {
   constructor(
