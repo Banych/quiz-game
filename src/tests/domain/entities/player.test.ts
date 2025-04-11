@@ -1,4 +1,3 @@
-import { Answer } from '@domain/entities/answer';
 import { Player, PlayerStatus } from '@domain/entities/player';
 import { describe, expect, it } from 'vitest';
 

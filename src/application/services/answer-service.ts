@@ -1,4 +1,4 @@
-import { SubmitAnswerUseCase } from '@application/useCases/submit-answer.use-case';
+import { SubmitAnswerUseCase } from '@application/use-cases/submit-answer.use-case';
 
 export class AnswerService {
   constructor(private readonly submitAnswerUseCase: SubmitAnswerUseCase) {}
