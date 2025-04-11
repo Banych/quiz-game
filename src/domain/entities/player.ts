@@ -1,33 +1,22 @@
-import { Answer } from '@/domain/entities/answer';
+export enum PlayerStatus {
+  Active = 'Active',
+  Disconnected = 'Disconnected',
+  Finished = 'Finished',
+}
 
 export class Player {
   id: string;
   name: string;
-  score: number;
-  answers: Map<string, Answer>;
-  status: 'Active' | 'Disconnected' | 'Finished';
+  status: PlayerStatus;
   rank?: number;
 
   constructor(id: string, name: string) {
     this.id = id;
     this.name = name;
-    this.score = 0;
-    this.answers = new Map();
-    this.status = 'Active';
+    this.status = PlayerStatus.Active;
   }
 
-  submitAnswer(questionId: string, answer: Answer): void {
-    this.answers.set(questionId, answer);
-  }
-
-  calculateScore(): number {
-    this.score = Array.from(this.answers.values())
-      .filter((answer) => answer.isCorrect)
-      .reduce((total, answer) => total + (answer.points || 0), 0);
-    return this.score;
-  }
-
-  updateStatus(newStatus: 'Active' | 'Disconnected' | 'Finished'): void {
+  updateStatus(newStatus: PlayerStatus): void {
     this.status = newStatus;
   }
 }

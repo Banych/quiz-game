@@ -1,7 +1,7 @@
-import { Quiz } from '@/domain/entities/quiz';
+import { QuizSessionAggregate } from '@domain/aggregates/quiz-session-aggregate';
 
 export interface IQuizRepository {
-  findById(id: string): Promise<Quiz | null>;
-  save(quiz: Quiz): Promise<void>;
+  findById(id: string): Promise<QuizSessionAggregate | null>;
+  save(quiz: QuizSessionAggregate): Promise<void>;
   delete(id: string): Promise<void>;
 }
