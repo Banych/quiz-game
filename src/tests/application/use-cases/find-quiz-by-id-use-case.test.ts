@@ -4,11 +4,15 @@ import { QuizSessionAggregate } from '@domain/aggregates/quiz-session-aggregate'
 import { FindQuizByIdUseCase } from '@application/use-cases/find-quiz-by-id.use-case';
 
 describe('FindQuizByIdUseCase', () => {
-  const mockQuizRepository: IQuizRepository = {
+  const mockQuizRepository = {
     findById: vi.fn(),
-    delete: vi.fn(),
+    findByJoinCode: vi.fn(),
+    listByStatus: vi.fn(),
     save: vi.fn(),
-  };
+    updateCurrentQuestion: vi.fn(),
+    updateLeaderboard: vi.fn(),
+    delete: vi.fn(),
+  } as unknown as IQuizRepository;
 
   const findQuizByIdUseCase = new FindQuizByIdUseCase(mockQuizRepository);
 

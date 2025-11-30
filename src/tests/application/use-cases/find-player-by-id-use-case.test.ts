@@ -4,11 +4,15 @@ import { IPlayerRepository } from '@domain/repositories/player-repository';
 import { describe, expect, it, vi } from 'vitest';
 
 describe('FindPlayerByIdUseCase', () => {
-  const mockPlayerRepository: IPlayerRepository = {
+  const mockPlayerRepository = {
     findById: vi.fn(),
+    listByQuizId: vi.fn(),
+    findByQuizIdAndName: vi.fn(),
     delete: vi.fn(),
     save: vi.fn(),
-  };
+    updateStatus: vi.fn(),
+    updateScore: vi.fn(),
+  } as unknown as IPlayerRepository;
 
   const findPlayerByIdUseCase = new FindPlayerByIdUseCase(mockPlayerRepository);
 
@@ -27,7 +31,7 @@ describe('FindPlayerByIdUseCase', () => {
   });
 
   it('should return the player if found', async () => {
-    const mockPlayer = new Player('player-id', 'player-name');
+    const mockPlayer = new Player('player-id', 'player-name', 'quiz1');
     vi.spyOn(mockPlayerRepository, 'findById').mockResolvedValueOnce(
       mockPlayer
     );

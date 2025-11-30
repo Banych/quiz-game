@@ -10,21 +10,28 @@ describe('UpdatePlayerStatusUseCase', () => {
   beforeEach(() => {
     playerRepository = {
       findById: vi.fn(),
+      listByQuizId: vi.fn(),
+      findByQuizIdAndName: vi.fn(),
       save: vi.fn(),
+      updateStatus: vi.fn(),
+      updateScore: vi.fn(),
       delete: vi.fn(),
-    };
+    } as unknown as Mocked<IPlayerRepository>;
     updatePlayerStatusUseCase = new UpdatePlayerStatusUseCase(playerRepository);
   });
 
   it('should update the player status', async () => {
-    const player = new Player('p1', 'Player 1');
+    const player = new Player('p1', 'Player 1', 'quiz1');
     playerRepository.findById.mockResolvedValue(player);
 
     await updatePlayerStatusUseCase.execute('p1', PlayerStatus.Disconnected);
 
     expect(playerRepository.findById).toHaveBeenCalledWith('p1');
     expect(player.status).toBe(PlayerStatus.Disconnected);
-    expect(playerRepository.save).toHaveBeenCalledWith(player);
+    expect(playerRepository.updateStatus).toHaveBeenCalledWith(
+      'p1',
+      PlayerStatus.Disconnected
+    );
   });
 
   it('should throw an error if the player is not found', async () => {
@@ -33,6 +40,6 @@ describe('UpdatePlayerStatusUseCase', () => {
     await expect(
       updatePlayerStatusUseCase.execute('p1', PlayerStatus.Disconnected)
     ).rejects.toThrow('Player not found.');
-    expect(playerRepository.save).not.toHaveBeenCalled();
+    expect(playerRepository.updateStatus).not.toHaveBeenCalled();
   });
 });

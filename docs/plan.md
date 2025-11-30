@@ -1,115 +1,47 @@
-# Quiz Game Plan
+# Quiz Game Delivery Plan
 
-## Concept and Requirements
+## Vision Snapshot
+- **Host/Admin desktop**: Runs the quiz, controls rounds, views live stats. Mirrors the layouts from the mockups (`docs/mockups/*.png`).
+- **Player mobile**: Joins with a name/code, sees timers and answer inputs only (no questions) to keep the experience fair.
+- **Round insights**: End-of-round summaries with correctness, speed, and leaderboard deltas.
 
-### Key Features
-1. **Host Interface (Desktop)**:
-   - Displays the current question (text, image, video, audio, or combinations).
-   - Shows a timer for answering.
-   - Tracks player responses and displays statistics after each round.
+## Personas & Primary Journeys
+- **Host**: create session → load playlist of questions → run round → review stats → optionally restart.
+- **Player**: join session → answer via mobile UI → watch timers/results.
+- **Admin**: curate reusable quizzes, manage media, configure timings.
 
-2. **Player Interface (Mobile)**:
-   - Allows players to join a session by entering their name.
-   - Displays only the input field for answers or options to choose from (the question itself is not displayed).
-   - Shows a timer and updates on who has answered.
+## Non‑Functional Goals
+- Snappy realtime updates (<300 ms round trip) for answer/timer sync.
+- Fault tolerance: reconnecting players rehydrate state.
+- Observability: structured logs + basic telemetry hooks before public launch.
+- Continuous testing (unit + Vitest integration) wired into CI and `yarn` scripts.
 
-3. **Question Formats**:
-   - Text-only questions.
-   - Questions with images, videos (YouTube), or audio (Spotify/YouTube Music).
-   - Combinations of the above.
+## Technology Choices
+- **Frontend**: Next.js App Router + React Server/Client Components, Tailwind, shared UI primitives, TanStack Query for data fetching and cache invalidation, custom hooks for presentation logic.
+- **State & realtime**: TanStack Query + lightweight signal stores for UI; WebSocket (likely `ws`/Socket.IO) channel per session for timers/answers.
+- **Backend/data**: Prisma ORM targeting Supabase Postgres. DTOs map to Prisma models; repositories isolate persistence.
+- **Hosting**: Vercel for host/admin UI + serverless routes. Consider Supabase Realtime or Pusher if Socket.IO on Vercel is limiting; alternative is Fly.io for a thin realtime worker if needed.
+- **Media**: store structured metadata in Supabase, assets in Supabase Storage or Vercel Blob (TBD when we wire uploads).
+- **Tooling**: Yarn as package manager, ESLint/Prettier/Vitest, Playwright (later) for flows.
 
-4. **Rounds and Statistics**:
-   - Group questions into rounds.
-   - Show detailed player statistics after each round.
+## Release Roadmap
+| Release                     | Goal                             | Scope / Acceptance                                                                                                                    |
+| --------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **R0 – Foundation**         | Stable scaffolding               | Upgrade lint/test config, Tailwind, TanStack Query, Yarn scripts, CI smoke test, health page.                                         |
+| **R1 – Domain & Data**      | DDD-lite core established        | DTO catalog, Prisma schema + migrations, repositories for Quiz/Player/Question, seed data, Supabase project wiring, SDK wrappers.     |
+| **R2 – Host MVP**           | Run a scripted quiz from desktop | Host dashboard per mockups, question timeline view, timer component, TanStack hooks calling stubbed services, optimistic stats cards. |
+| **R3 – Player MVP**         | Join + submit answers            | Join screen, answer pad, timer sync via WebSocket, player session persistence, latency budget instrumentation.                        |
+| **R4 – Content Admin**      | Manage quizzes and media         | Auth gate, CRUD UI for quizzes/questions, uploads to Supabase storage, DTO validation, audit log.                                     |
+| **R5 – Realtime & Scoring** | Production-ready game loop       | Full scoring logic, round transitions, leaderboard, reconnect flows, analytics events, load testing.                                  |
+| **R6 – Polish & Launch**    | Fit/finish                       | Accessibility pass, responsive tweaks, marketing landing, incident docs, deployment promotion to Vercel prod.                         |
 
-### Future Enhancements
-- Leaderboards.
-- Audience polls before the quiz starts.
-- Sharing results on social media.
+## Cross-Cutting Workstreams
+- **Authentication & Sessions**: Supabase Auth or Vercel middleware; host/admin vs player roles defined in R1 but activated before R4.
+- **Testing**: Unit coverage in every release, domain service integration tests, WebSocket contract tests post-R3.
+- **Observability**: Structured logging adapters + feature flags, user journey analytics piped via Segment/PostHog (decide in R5).
+- **Documentation**: Update plan + structure docs each release; ADRs for WebSocket hosting, media storage, auth provider.
 
----
-
-## Technology Stack
-
-### Frontend
-- **Next.js**: Framework for server-side rendering and static generation.
-- **React**: Component-based UI development.
-- **Tailwind CSS**: For responsive and modern UI design.
-
-### Real-Time Communication
-- **WebSocket/Socket.io**: For real-time updates (questions, answers, timers, statistics).
-
-### Backend
-- **API Routes**: For fetching questions, storing results, and managing sessions.
-- **Database**:
-  - **PostgreSQL/MySQL** with Prisma ORM for structured data.
-  - **Firebase/Supabase** for quick prototyping.
-
-### Media Integration
-- **Images**: Stored locally or via CDN (e.g., Cloudinary).
-- **Videos**: Embedded from YouTube or hosted locally.
-- **Audio**: Played using HTML `<audio>` or Spotify API.
-
----
-
-## Application Architecture
-
-### Host (Desktop)
-- Create and manage quiz sessions.
-- Display questions, timers, and player statistics.
-
-### Player (Mobile)
-- Join sessions and answer questions.
-- View only the input field for answers or options to choose from (the question itself is not displayed).
-- View timers and response statuses.
-
-### Admin Tool
-- A protected route for adding, editing, and managing questions.
-- Allows uploading multimedia content (images, videos, audio) for questions.
-- Provides a user-friendly interface for organizing questions into rounds.
-
-### Synchronization
-- Use WebSockets for real-time updates.
-- API routes for initial data loading and periodic updates.
-
----
-
-## Development Steps
-
-1. **Setup Project**:
-   - Initialize a Next.js project.
-   - Configure Tailwind CSS.
-
-2. **Project Structure Setup**:
-   - Create the folder structure for components, domain, application, and infrastructure layers.
-   - Define core entities (Quiz, Question, Player, Answer) and their attributes/behaviors.
-   - Implement value objects (e.g., Timer, Score) and aggregates (e.g., QuizSessionAggregate).
-   - Create repository interfaces for data access.
-   - Other structure related tasks.
-
-3. **Build Host Interface**:
-   - Create pages for managing sessions and displaying questions/statistics.
-
-4. **Build Player Interface**:
-   - Create pages for joining sessions and answering questions.
-   - Ensure the question is not displayed, only the input field or options.
-
-5. **Build Admin Tool**:
-   - Create a protected route for managing questions.
-   - Implement forms for adding/editing questions and uploading multimedia.
-
-6. **Implement Real-Time Communication**:
-   - Set up WebSocket/Socket.io for synchronization.
-
-7. **Integrate Media**:
-   - Add support for images, videos, and audio in questions.
-
-8. **Database and API**:
-   - Design database schema for questions, sessions, and results.
-   - Implement API routes for data access.
-
-9. **Testing**:
-   - Test synchronization and responsiveness across devices.
-
-10. **Launch Prototype**:
-   - Deploy a local network version for testing.
+## Dependencies & Open Questions
+- Confirm whether Vercel Edge functions satisfy WebSocket needs; fallback is a small Node worker elsewhere.
+- Decide on CDN/storage for heavy media (Supabase Storage vs Cloudinary) before R4.
+- Determine branding assets for final polish; mockups currently guide spacing/layout only.

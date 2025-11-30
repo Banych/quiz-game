@@ -56,7 +56,7 @@ describe('QuizSessionAggregate', () => {
       timePerQuestion: 30,
       allowSkipping: true,
     });
-    const player = new Player('p1', 'John Doe');
+    const player = new Player('p1', 'John Doe', 'quiz1');
 
     const aggregate = new QuizSessionAggregate(quiz, 30);
     aggregate.addPlayer(player.id);
@@ -85,7 +85,7 @@ describe('QuizSessionAggregate', () => {
       timePerQuestion: 30,
       allowSkipping: true,
     });
-    const player = new Player('p1', 'John Doe');
+    const player = new Player('p1', 'John Doe', 'quiz1');
 
     const aggregate = new QuizSessionAggregate(quiz, 30);
     aggregate.addPlayer(player.id);
@@ -114,7 +114,7 @@ describe('QuizSessionAggregate', () => {
       timePerQuestion: 30,
       allowSkipping: true,
     });
-    const player = new Player('p1', 'John Doe');
+    const player = new Player('p1', 'John Doe', 'quiz1');
     const aggregate = new QuizSessionAggregate(quiz, 30);
     aggregate.addPlayer(player.id);
 
@@ -129,7 +129,7 @@ describe('QuizSessionAggregate', () => {
       timePerQuestion: 30,
       allowSkipping: true,
     });
-    const player = new Player('p1', 'John Doe');
+    const player = new Player('p1', 'John Doe', 'quiz1');
     const aggregate = new QuizSessionAggregate(quiz, 30);
     aggregate.addPlayer(player.id);
     aggregate.startQuiz();
@@ -162,8 +162,8 @@ describe('QuizSessionAggregate', () => {
       timePerQuestion: 30,
       allowSkipping: true,
     });
-    const player1 = new Player('p1', 'John Doe');
-    const player2 = new Player('p2', 'Jane Doe');
+    const player1 = new Player('p1', 'John Doe', 'quiz1');
+    const player2 = new Player('p2', 'Jane Doe', 'quiz1');
 
     const aggregate = new QuizSessionAggregate(quiz, 30);
     aggregate.addPlayer(player1.id);

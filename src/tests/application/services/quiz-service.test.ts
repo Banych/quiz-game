@@ -5,11 +5,20 @@ import { beforeEach, describe, expect, it, Mocked, vi } from 'vitest';
 import { FindQuizByIdUseCase } from '@application/use-cases/find-quiz-by-id.use-case';
 import { QuizSessionAggregate } from '@domain/aggregates/quiz-session-aggregate';
 import { Quiz } from '@domain/entities/quiz';
+import { GetQuizStateUseCase } from '@application/use-cases/get-quiz-state.use-case';
+import { AdvanceQuestionUseCase } from '@application/use-cases/advance-question.use-case';
+
+type QuizStateDTO = Awaited<ReturnType<GetQuizStateUseCase['execute']>>;
+type QuestionDTOResponse = Awaited<
+  ReturnType<AdvanceQuestionUseCase['execute']>
+>;
 
 describe('QuizService', () => {
   let startQuizUseCase: Mocked<StartQuizUseCase>;
   let endQuizUseCase: Mocked<EndQuizUseCase>;
   let findQuizByIdUseCase: Mocked<FindQuizByIdUseCase>;
+  let getQuizStateUseCase: Mocked<GetQuizStateUseCase>;
+  let advanceQuestionUseCase: Mocked<AdvanceQuestionUseCase>;
   let quizService: QuizService;
 
   beforeEach(() => {
@@ -25,10 +34,20 @@ describe('QuizService', () => {
       execute: vi.fn(),
     } as unknown as Mocked<FindQuizByIdUseCase>;
 
+    getQuizStateUseCase = {
+      execute: vi.fn(),
+    } as unknown as Mocked<GetQuizStateUseCase>;
+
+    advanceQuestionUseCase = {
+      execute: vi.fn(),
+    } as unknown as Mocked<AdvanceQuestionUseCase>;
+
     quizService = new QuizService(
       startQuizUseCase,
       endQuizUseCase,
-      findQuizByIdUseCase
+      findQuizByIdUseCase,
+      getQuizStateUseCase,
+      advanceQuestionUseCase
     );
   });
 
@@ -71,5 +90,46 @@ describe('QuizService', () => {
       `Quiz with ID quiz1 not found`
     );
     expect(findQuizByIdUseCase.execute).toHaveBeenCalledWith('quiz1');
+  });
+
+  it('returns quiz state DTOs', async () => {
+    const dto = {
+      id: 'quiz1',
+      title: 'Quiz 1',
+      status: 'Active',
+      currentQuestionIndex: 0,
+      settings: { timePerQuestion: 30, allowSkipping: false },
+      questions: [],
+      players: [],
+      answers: undefined,
+      leaderboard: [],
+      activeQuestionId: null,
+      startTime: null,
+      endTime: null,
+    } as QuizStateDTO;
+
+    getQuizStateUseCase.execute.mockResolvedValue(dto);
+
+    const result = await quizService.getQuizState('quiz1');
+    expect(getQuizStateUseCase.execute).toHaveBeenCalledWith('quiz1');
+    expect(result).toBe(dto);
+  });
+
+  it('advances to the next question', async () => {
+    const question = {
+      id: 'q2',
+      text: 'Q2',
+      media: undefined,
+      mediaType: undefined,
+      options: undefined,
+      type: 'multiple-choice',
+      points: 10,
+    } as QuestionDTOResponse;
+
+    advanceQuestionUseCase.execute.mockResolvedValue(question);
+
+    const result = await quizService.advanceToNextQuestion('quiz1');
+    expect(advanceQuestionUseCase.execute).toHaveBeenCalledWith('quiz1');
+    expect(result).toEqual(question);
   });
 });
