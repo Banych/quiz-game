@@ -6,6 +6,7 @@ Use this checklist to track the current work-in-progress items for the release. 
 _No active targets. Start a new checklist when new work begins._
 
 ## Completed This Session
+- [x] Expose host dashboard API routes (`GET /api/quiz/[quizId]/state` + `/players`) with accompanying tests and docs.
 - [x] Add a Prisma-backed integration test in `src/tests/integration/**` that exercises a repository → use case flow against a disposable database.
 - [x] Extend domain repository interfaces (quiz/player/question) with share-code lookups, quiz scoping, and partial update helpers.
 - [x] Implement Prisma-backed quiz/question repositories plus shared mapping helpers and unit tests (player repo updates included).
