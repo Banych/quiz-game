@@ -123,6 +123,7 @@ describe('PrismaQuizRepository', () => {
     expect(aggregate?.quizQuestions[0].id).toBe('q1');
     expect(aggregate?.playerIds).toContain('player-1');
     expect(aggregate?.answers.get('player-1')).toHaveLength(1);
+    expect(aggregate?.answers.get('player-1')?.[0].timeTaken).toBe(5);
   });
 
   it('finds a quiz by join code', async () => {
@@ -172,6 +173,7 @@ describe('PrismaQuizRepository', () => {
           id: 'answer-uuid',
           playerId: 'player-1',
           value: '4',
+          timeTakenMs: 5000,
         }),
       ],
     });

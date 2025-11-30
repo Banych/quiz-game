@@ -19,6 +19,12 @@ const quizInclude = {
 
 type QuizWithRelations = Prisma.QuizGetPayload<{ include: typeof quizInclude }>;
 
+const toSeconds = (value?: number | null) =>
+  typeof value === 'number' ? value / 1000 : undefined;
+
+const toMilliseconds = (value?: number) =>
+  typeof value === 'number' ? Math.round(value * 1000) : null;
+
 const mapQuizRecordToAggregate = (
   record: QuizWithRelations
 ): QuizSessionAggregate => {
@@ -53,7 +59,7 @@ const mapQuizRecordToAggregate = (
       answerRecord.questionId,
       answerRecord.value,
       answerRecord.submittedAt,
-      answerRecord.timeTakenMs ?? undefined
+      toSeconds(answerRecord.timeTakenMs)
     );
 
     if (answerRecord.isCorrect === true) {
@@ -89,8 +95,7 @@ const buildAnswerWrites = (aggregate: QuizSessionAggregate) => {
         isCorrect:
           typeof answer.isCorrect === 'boolean' ? answer.isCorrect : null,
         points: typeof answer.points === 'number' ? answer.points : null,
-        timeTakenMs:
-          typeof answer.timeTaken === 'number' ? answer.timeTaken : null,
+        timeTakenMs: toMilliseconds(answer.timeTaken),
       });
     });
   });
