@@ -15,6 +15,13 @@ export const LeaderboardEntryDTO = z.object({
   score: z.number().nonnegative(),
 });
 
+export const QuizTimerDTO = z.object({
+  duration: z.number().int().positive(),
+  remainingSeconds: z.number().int().nonnegative().nullable(),
+  startTime: z.string().datetime().nullable(),
+  endTime: z.string().datetime().nullable(),
+});
+
 export const QuizDTO = z.object({
   id: z.string(),
   title: z.string(),
@@ -28,8 +35,11 @@ export const QuizDTO = z.object({
   activeQuestionId: z.string().nullable(),
   startTime: z.string().datetime().nullable().optional(),
   endTime: z.string().datetime().nullable().optional(),
+  joinCode: z.string().min(1).nullable().optional(),
+  timer: QuizTimerDTO,
 });
 
 export type QuizDTO = z.infer<typeof QuizDTO>;
 export type QuizSettingsDTO = z.infer<typeof QuizSettingsDTO>;
 export type LeaderboardEntryDTO = z.infer<typeof LeaderboardEntryDTO>;
+export type QuizTimerDTO = z.infer<typeof QuizTimerDTO>;

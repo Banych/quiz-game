@@ -2,6 +2,7 @@ import type { QuizSessionAggregate } from '@domain/aggregates/quiz-session-aggre
 import type { Player } from '@domain/entities/player';
 import type { Question } from '@domain/entities/question';
 import type { Answer } from '@domain/entities/answer';
+import { QuizStatus } from '@domain/entities/quiz';
 import type { QuizDTO as QuizDTOType } from '@application/dtos/quiz.dto';
 import type { QuestionDTO as QuestionDTOType } from '@application/dtos/question.dto';
 import type { AnswerDTO as AnswerDTOType } from '@application/dtos/answer.dto';
@@ -18,6 +19,7 @@ export const mapQuestionToDTO = (question: Question): QuestionDTOType => ({
   options: question.options,
   type: question.type,
   points: question.points,
+  orderIndex: question.orderIndex,
 });
 
 export const mapAnswerToDTO = (answer: Answer): AnswerDTOType => ({
@@ -48,6 +50,15 @@ export const mapQuizToDTO = (
 
   const questions = aggregate.quizQuestions.map(mapQuestionToDTO);
 
+  let remainingSeconds: number | null = null;
+  if (aggregate.quizStatus === QuizStatus.Active) {
+    try {
+      remainingSeconds = aggregate.remainingTime;
+    } catch {
+      remainingSeconds = null;
+    }
+  }
+
   return {
     id: aggregate.quizId,
     title: aggregate.quizTitle,
@@ -64,5 +75,12 @@ export const mapQuizToDTO = (
     activeQuestionId: aggregate.activeQuestionId,
     startTime: aggregate.startTime?.toISOString() ?? null,
     endTime: aggregate.endTime?.toISOString() ?? null,
+    joinCode: aggregate.joinCode ?? null,
+    timer: {
+      duration: aggregate.timerDuration,
+      remainingSeconds,
+      startTime: aggregate.timerStartTime?.toISOString() ?? null,
+      endTime: aggregate.timerEndTime?.toISOString() ?? null,
+    },
   };
 };
