@@ -17,4 +17,9 @@
 - Use case/service fill (2025-11-30): Added player + quiz mappers and DTO-focused use cases (`get-quiz-state`, `get-player-session`, `list-quiz-players`, `advance-question`) plus service facades (`QuizService`, `PlayerService`). `IPlayerRepository` now exposes `findByQuizId` so Prisma can hydrate lobby views. Tests run: `yarn test get-player-session-use-case`, `yarn test list-quiz-players-use-case`.
 - Current status: DTO mappers + quiz state/advance use cases are in place; next step is wiring Prisma-backed repositories so these workflows hit Supabase data.
 - Prisma wiring (2025-11-30): Created `prisma.config.ts` pointing at `src/infrastructure/database/prisma/schema.prisma`, regenerated the Prisma client, and implemented `PrismaPlayerRepository` with DTO-friendly mapping plus safe deletes. Added `src/tests/infrastructure/repositories/prisma-player-repository.test.ts` to cover find/list/save/delete paths using hoisted mocks (`vi.hoisted`) so Vitest can run without top-level await.
+- Application/API progress (2025-11-30 later session):
+  - Extended `Quiz` + `QuizSessionAggregate` to persist/share `joinCode`, plus added a new `JoinSessionUseCase` with Vitest coverage for joining by code while hydrating players.
+  - Introduced `src/application/services/factories.ts` so API routes can lazy-load Prisma repositories + service facades without duplicating wiring.
+  - Stubbed the first Next.js API routes: `POST /api/session/join`, `POST /api/player/add`, `POST /api/quiz/start`, and `POST /api/player/answer`—each validates zod payloads, invokes the relevant service/use case, and maps domain errors to HTTP codes.
+  - Added seed helpers + shared Prisma workflow docs earlier in the day; latest endpoints now reuse `PlayerService`, `QuizService`, and `AnswerService` directly via the factory to stay aligned with DTO contracts.
 ````
