@@ -47,21 +47,29 @@ yarn test:coverage
 ```bash
 yarn add @prisma/client
 yarn add -D prisma
-npx prisma init --datasource-provider postgresql
 ```
-- Keep schema + migrations under `src/infrastructure/database/prisma/`.
-- Create `src/infrastructure/database/client.ts` exporting a singleton Prisma client.
-- Implement domain repository interfaces inside `src/infrastructure/repositories/**` using that client.
+- The Prisma schema plus migrations live under `src/infrastructure/database/prisma/` (see `prisma.config.ts` for the custom path). Commit every migration in `migrations/` so Supabase/Postgres stay reproducible.
+- `src/infrastructure/database/client.ts` exports the singleton Prisma client used across repositories.
+- Use the shared Yarn scripts to manage the workflow:
+	- `yarn prisma:generate` – refreshes the Prisma client after schema edits.
+	- `yarn prisma:migrate -- --name <change>` – creates/applies migrations against `DATABASE_URL`.
+	- `yarn prisma:seed` – runs `src/infrastructure/database/prisma/seed.ts`, which wipes the DB via `resetDatabase()` and inserts demo data using `seed-helpers.ts`.
+- Repository implementations under `src/infrastructure/repositories/**` must depend on the Prisma client + mapping helpers only (never on React code).
 
 ## 6. Environment Files
-Create `.env.example` with representative values:
+Copy `.env.example` → `.env` and provide the required connection strings:
 ```
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:6543/postgres"
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/quiz_game?schema=public"
+SHADOW_DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/quiz_game_shadow?schema=public"
+DATABASE_URL_TEST="postgresql://USER:PASSWORD@HOST:5432/quiz_game_test?schema=public"
 NEXT_PUBLIC_SUPABASE_URL="https://xyz.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="public-anon-key"
 SUPABASE_SERVICE_ROLE_KEY="service-role"
 ```
-Update this template whenever a feature introduces new secrets (auth, media, analytics, etc.). Never commit real credentials.
+- `DATABASE_URL` points to the primary Postgres instance used for dev.
+- `SHADOW_DATABASE_URL` is mandatory for `prisma migrate dev` against hosted providers (Supabase) so Prisma can run diffing safely.
+- `DATABASE_URL_TEST` powers Vitest integration runs; wire it up once the test suite needs live repositories.
+- Document and rotate additional env vars here whenever new infra (auth, realtime, analytics) is introduced. Never commit real credentials.
 
 ## 7. Verification Commands
 ```bash
