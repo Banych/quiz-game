@@ -15,6 +15,7 @@ export const QuestionDTO = z.object({
   options: z.array(z.string()).optional(),
   type: QuestionTypeDTO,
   points: z.number().nonnegative(),
+  orderIndex: z.number().int().nonnegative().optional(),
 });
 
 export type QuestionDTO = z.infer<typeof QuestionDTO>;
