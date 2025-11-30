@@ -7,6 +7,9 @@ export class Question {
   correctAnswers: string[];
   type: 'multiple-choice' | 'text' | 'true/false';
   points: number;
+  quizId?: string;
+  orderIndex?: number;
+  isPublished?: boolean;
 
   constructor(
     id: string,
