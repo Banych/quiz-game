@@ -42,6 +42,8 @@ With domain + infrastructure ready, this step connects application services to N
 - `POST /api/player/add` → allows hosts/admin tools to add a player by `{ quizId, playerName }`, reusing `PlayerService` to produce the `PlayerDTO` response.
 - `POST /api/quiz/start` → calls `QuizService.startQuiz` for the given `quizId` and responds with `{ status: "started" }` once the aggregate transitions to Active.
 - `POST /api/player/answer` → proxies `{ quizId, playerId, questionId, answer }` to `AnswerService.submitAnswer`, mapping domain errors (inactive quiz, unknown player) to HTTP 4xx codes.
+- `GET /api/quiz/[quizId]/state` → returns the full `QuizDTO` via `QuizService.getQuizState`, which host dashboard pages can hydrate from before subscribing to realtime events.
+- `GET /api/quiz/[quizId]/players` → lists the lobby roster by calling `PlayerService.listPlayersForQuiz`, allowing host/admin UIs to render player chips or leaderboards on demand.
 
 ## Acceptance Criteria
 - Hooks expose typed DTO data and are consumed by the relevant pages/components.
