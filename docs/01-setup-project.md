@@ -42,6 +42,7 @@ yarn test
 yarn test:watch
 yarn test:coverage
 ```
+- Vitest automatically loads `.env` via `dotenv/config`, so make sure `DATABASE_URL` (or an override exported before running the command) points to a disposable test database whenever you execute integration suites.
 
 ## 5. Prisma + Supabase Plumbing
 ```bash
@@ -62,13 +63,15 @@ Copy `.env.example` → `.env` and provide the required connection strings:
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/quiz_game?schema=public"
 SHADOW_DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/quiz_game_shadow?schema=public"
 DATABASE_URL_TEST="postgresql://USER:PASSWORD@HOST:5432/quiz_game_test?schema=public"
+ENABLE_PRISMA_INTEGRATION_TESTS="false"
 NEXT_PUBLIC_SUPABASE_URL="https://xyz.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="public-anon-key"
 SUPABASE_SERVICE_ROLE_KEY="service-role"
 ```
 - `DATABASE_URL` points to the primary Postgres instance used for dev.
 - `SHADOW_DATABASE_URL` is mandatory for `prisma migrate dev` against hosted providers (Supabase) so Prisma can run diffing safely.
-- `DATABASE_URL_TEST` powers Vitest integration runs; wire it up once the test suite needs live repositories.
+- `DATABASE_URL_TEST` powers Vitest integration runs; wire it up once the test suite needs live repositories (the suite will fall back to `DATABASE_URL` if this value is missing, but that is discouraged).
+- `ENABLE_PRISMA_INTEGRATION_TESTS` must be set to `true` before Vitest will attempt to hit the database; keep it `false` unless you have a disposable test database configured.
 - Document and rotate additional env vars here whenever new infra (auth, realtime, analytics) is introduced. Never commit real credentials.
 
 ## 7. Verification Commands

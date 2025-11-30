@@ -3,9 +3,10 @@
 Use this checklist to track the current work-in-progress items for the release. Mark boxes as work finishes, and start a new file under `docs/progress/sessions/` for future dates to preserve history.
 
 ## Active Targets
-- [ ] Add a Prisma-backed integration test in `src/tests/integration/**` that exercises a repository → use case flow against a disposable database.
+_No active targets. Start a new checklist when new work begins._
 
 ## Completed This Session
+- [x] Add a Prisma-backed integration test in `src/tests/integration/**` that exercises a repository → use case flow against a disposable database.
 - [x] Extend domain repository interfaces (quiz/player/question) with share-code lookups, quiz scoping, and partial update helpers.
 - [x] Implement Prisma-backed quiz/question repositories plus shared mapping helpers and unit tests (player repo updates included).
 - [x] Recreate `.env.example` and update `docs/01-setup-project.md` with DATABASE_URL/shadow DB onboarding + Prisma command references.
