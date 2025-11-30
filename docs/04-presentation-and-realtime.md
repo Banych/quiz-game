@@ -37,6 +37,12 @@ With domain + infrastructure ready, this step connects application services to N
    - Add Playwright smoke tests covering host start → player answer → host results.
    - Mock realtime layer in tests to avoid flakiness.
 
+### Current API route stubs (2025-11-30)
+- `POST /api/session/join` → validates `{ joinCode, playerName }`, fetches the quiz via `JoinSessionUseCase`, registers a player through `PlayerService`, and returns the hydrated lobby DTOs.
+- `POST /api/player/add` → allows hosts/admin tools to add a player by `{ quizId, playerName }`, reusing `PlayerService` to produce the `PlayerDTO` response.
+- `POST /api/quiz/start` → calls `QuizService.startQuiz` for the given `quizId` and responds with `{ status: "started" }` once the aggregate transitions to Active.
+- `POST /api/player/answer` → proxies `{ quizId, playerId, questionId, answer }` to `AnswerService.submitAnswer`, mapping domain errors (inactive quiz, unknown player) to HTTP 4xx codes.
+
 ## Acceptance Criteria
 - Hooks expose typed DTO data and are consumed by the relevant pages/components.
 - Realtime adapter can be swapped via env/config; no direct Socket.IO imports in React components.

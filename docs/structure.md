@@ -23,7 +23,7 @@ Presentation (hooks, components, pages)
 ## Layer Details
 
 ### Domain
-- **Entities**: `Quiz`, `Question`, `Player`, `Answer`, etc. Each exposes behavior (start/end quiz, record answer, compute score) and enforces invariants.
+- **Entities**: `Quiz`, `Question`, `Player`, `Answer`, etc. Each exposes behavior (start/end quiz, record answer, compute score) and enforces invariants. `Quiz` now tracks a shareable `joinCode` so clients can discover sessions without leaking internal IDs; the aggregate surfaces it for repositories/API layers.
 - **Value objects**: `Timer`, `Score`, session codes, media references.
 - **Aggregates**: `QuizSessionAggregate` coordinates quiz state machine and events.
 - **Events**: `QuizStartEvent`, `PlayerAnsweredEvent`, `QuizEndedEvent` for downstream reactions.

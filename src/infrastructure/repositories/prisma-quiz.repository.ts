@@ -30,6 +30,7 @@ const mapQuizRecordToAggregate = (
     timePerQuestion: record.timePerQuestion,
     allowSkipping: record.allowSkipping,
   });
+  quiz.joinCode = record.joinCode ?? undefined;
 
   quiz.status = record.status as QuizStatus;
   quiz.currentQuestionIndex = record.currentQuestionIndex;
@@ -138,6 +139,7 @@ export class PrismaQuizRepository implements IQuizRepository {
         endTime: quizAggregate.endTime ?? null,
         timePerQuestion: quizAggregate.quizSettings.timePerQuestion,
         allowSkipping: quizAggregate.quizSettings.allowSkipping,
+        joinCode: quizAggregate.joinCode ?? null,
       },
     });
 

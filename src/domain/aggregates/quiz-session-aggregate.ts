@@ -25,6 +25,14 @@ export class QuizSessionAggregate {
     return this.quiz.status;
   }
 
+  get joinCode(): string | undefined {
+    return this.quiz.joinCode;
+  }
+
+  set joinCode(code: string | undefined) {
+    this.quiz.joinCode = code;
+  }
+
   get quizSettings(): QuizSettings {
     return this.quiz.settings;
   }

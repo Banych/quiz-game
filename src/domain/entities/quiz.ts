@@ -18,12 +18,16 @@ export class Quiz {
   endTime?: Date;
   settings: QuizSettings;
   answers: Map<string, Answer[]>;
+  joinCode?: string;
 
   constructor(
     id: string,
     title: string,
     questions: Question[],
-    settings: QuizSettings
+    settings: QuizSettings,
+    options?: {
+      joinCode?: string;
+    }
   ) {
     this.id = id;
     this.title = title;
@@ -33,6 +37,7 @@ export class Quiz {
     this.currentQuestionIndex = 0;
     this.settings = settings;
     this.answers = new Map();
+    this.joinCode = options?.joinCode;
   }
 
   startQuiz(): void {
