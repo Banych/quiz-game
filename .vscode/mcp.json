@@ -1,12 +1,4 @@
 {
-	"inputs": [
-		{
-			"id": "CONTEXT7_API_KEY",
-			"type": "promptString",
-			"description": "API key for authentication",
-			"password": true
-		}
-	],
 	"servers": {
 		"supabase": {
 			"type": "http",
@@ -19,6 +11,31 @@
 				"source ~/.nvm/nvm.sh && nvm use && npx @playwright/mcp@latest"
 			],
 			"type": "stdio"
+		},
+		"com.postman/postman-mcp-server": {
+			"type": "stdio",
+			"command": "/bin/zsh",
+			"args": [
+				"-lc",
+				"source ~/.nvm/nvm.sh && nvm use && npx @postman/postman-mcp-server@2.5.1"
+			],
+			"env": {
+				"POSTMAN_API_KEY": "${input:POSTMAN_API_KEY}"
+			}
 		}
-	}
+	},
+	"inputs": [
+		{
+			"id": "CONTEXT7_API_KEY",
+			"type": "promptString",
+			"description": "API key for authentication",
+			"password": true
+		},
+		{
+			"id": "POSTMAN_API_KEY",
+			"type": "promptString",
+			"description": "A valid Postman API key.",
+			"password": true
+		}
+	]
 }
