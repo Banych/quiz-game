@@ -52,8 +52,8 @@ describe('Quiz Session Integration', () => {
       allowSkipping: true,
     });
 
-    const player1 = new Player('p1', 'Alice');
-    const player2 = new Player('p2', 'Bob');
+    const player1 = new Player('p1', 'Alice', 'quiz1');
+    const player2 = new Player('p2', 'Bob', 'quiz1');
 
     const aggregate = new QuizSessionAggregate(quiz, 30);
     aggregate.addPlayer(player1.id);
@@ -123,7 +123,7 @@ describe('Quiz Session Integration', () => {
       timePerQuestion: 30,
       allowSkipping: true,
     });
-    const player = new Player('p1', 'Alice');
+    const player = new Player('p1', 'Alice', 'quiz1');
 
     const aggregate = new QuizSessionAggregate(quiz, 30);
     aggregate.addPlayer(player.id);

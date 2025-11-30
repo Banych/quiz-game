@@ -11,9 +11,13 @@ describe('StartQuizUseCase', () => {
   beforeEach(() => {
     quizRepository = {
       findById: vi.fn(),
+      findByJoinCode: vi.fn(),
+      listByStatus: vi.fn(),
       save: vi.fn(),
+      updateCurrentQuestion: vi.fn(),
+      updateLeaderboard: vi.fn(),
       delete: vi.fn(),
-    };
+    } as unknown as Mocked<IQuizRepository>;
     startQuizUseCase = new StartQuizUseCase(quizRepository);
   });
 

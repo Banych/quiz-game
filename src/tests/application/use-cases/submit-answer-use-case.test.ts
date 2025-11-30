@@ -15,14 +15,22 @@ describe('SubmitAnswerUseCase', () => {
   beforeEach(() => {
     quizRepository = {
       findById: vi.fn(),
+      findByJoinCode: vi.fn(),
+      listByStatus: vi.fn(),
       save: vi.fn(),
+      updateCurrentQuestion: vi.fn(),
+      updateLeaderboard: vi.fn(),
       delete: vi.fn(),
-    };
+    } as unknown as Mocked<IQuizRepository>;
     playerRepository = {
       findById: vi.fn(),
+      listByQuizId: vi.fn(),
+      findByQuizIdAndName: vi.fn(),
       save: vi.fn(),
+      updateStatus: vi.fn(),
+      updateScore: vi.fn(),
       delete: vi.fn(),
-    };
+    } as unknown as Mocked<IPlayerRepository>;
     submitAnswerUseCase = new SubmitAnswerUseCase(
       quizRepository,
       playerRepository
@@ -38,7 +46,7 @@ describe('SubmitAnswerUseCase', () => {
       }),
       30
     );
-    const player = new Player('p1', 'Player 1');
+    const player = new Player('p1', 'Player 1', 'quiz1');
     quiz.addPlayer(player.id);
     quiz.startQuiz();
 

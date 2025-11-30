@@ -60,6 +60,26 @@ export class QuizSessionAggregate {
     return this.quiz.answers;
   }
 
+  get playerIds(): string[] {
+    return Array.from(this.quiz.players);
+  }
+
+  get startTime(): Date | undefined {
+    return this.quiz.startTime;
+  }
+
+  get endTime(): Date | undefined {
+    return this.quiz.endTime;
+  }
+
+  get currentQuestionIndex(): number {
+    return this.quiz.currentQuestionIndex;
+  }
+
+  get activeQuestionId(): string | null {
+    return this.currentQuestion?.id ?? null;
+  }
+
   startQuiz(): void {
     this.quiz.startQuiz();
     this.timer.start();
