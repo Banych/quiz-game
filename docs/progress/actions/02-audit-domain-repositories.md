@@ -4,3 +4,4 @@
 - `src/domain/repositories/player-repository.ts` lacks quiz scoping helpers such as `listByQuizId` or `findByQuizIdAndName`; upcoming Prisma layer must expose these so DTOs can include names/status.
 - `src/domain/repositories/question-repository.ts` is unused beyond basic CRUD; R1 requires batch fetch by quiz and publication/order helpers to maintain question timelines.
 - Notes are mirrored in `docs/progress/dev-notes.md` for quick reference before repository implementations land.
+- 2025-11-30: Prisma quiz repository now maps timer metrics correctly (seconds in domain <-> milliseconds in Postgres) and exposes join-code lookups plus partial updates, satisfying the audit checklist.
