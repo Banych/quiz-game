@@ -46,6 +46,13 @@ Wire Prisma + Supabase so repositories can talk to a real database while staying
 - Integration tests covering at least one repository + service path pass via `yarn test`.
 - All new env vars documented in `.env.example` and referenced in `docs/01-setup-project.md` if onboarding changes.
 
+## Prisma workflow reference
+- All Prisma assets live under `src/infrastructure/database/prisma/`. Generated migrations are tracked in the sibling `migrations/` folder so Supabase stays reproducible.
+- Run `yarn prisma:generate` whenever the schema changes so the client under `node_modules/.prisma` stays in sync.
+- Run `yarn prisma:migrate -- --name <change>` to create and apply migrations (the extra `--` passes arguments through to Prisma).
+- Use `yarn prisma:seed` to execute `src/infrastructure/database/prisma/seed.ts`, which clears the database via `resetDatabase()` and re-creates a demo quiz using helpers from `seed-helpers.ts`.
+- Tests or scripts that need fixture data can import `resetDatabase`/`seedSampleQuiz` from `seed-helpers.ts` instead of duplicating the seeding logic.
+
 ## Next Steps
 Proceed to Step 4 to focus on presentation hooks, TanStack Query wiring, and realtime transport.
 ````

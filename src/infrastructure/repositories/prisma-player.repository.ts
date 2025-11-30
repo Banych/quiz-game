@@ -10,7 +10,7 @@ const mapToDomain = (record: PrismaPlayer): Player => {
   const player = new Player(record.id, record.name, record.quizId);
   player.status = record.status as PlayerStatus;
   player.updateScore(record.score ?? 0);
-  player.updateRank(record.rank);
+  player.updateRank(record.rank ?? null);
   return player;
 };
 
