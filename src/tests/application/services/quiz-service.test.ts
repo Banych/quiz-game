@@ -14,9 +14,7 @@ type QuizStateDTO = Awaited<ReturnType<GetQuizStateUseCase['execute']>>;
 type AdvanceQuestionResponse = Awaited<
   ReturnType<AdvanceQuestionUseCase['execute']>
 >;
-type ResetTimerResponse = Awaited<
-  ReturnType<ResetQuizTimerUseCase['execute']>
->;
+type ResetTimerResponse = Awaited<ReturnType<ResetQuizTimerUseCase['execute']>>;
 type LeaderboardSnapshot = Awaited<
   ReturnType<SnapshotLeaderboardUseCase['execute']>
 >;

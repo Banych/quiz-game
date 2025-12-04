@@ -125,9 +125,7 @@ describe('PrismaQuizRepository', () => {
     expect(aggregate?.playerIds).toContain('player-1');
     expect(aggregate?.answers.get('player-1')).toHaveLength(1);
     expect(aggregate?.answers.get('player-1')?.[0].timeTaken).toBe(5);
-    expect(aggregate?.timerStartTime?.toISOString()).toBe(
-      now.toISOString()
-    );
+    expect(aggregate?.timerStartTime?.toISOString()).toBe(now.toISOString());
     expect(aggregate?.timerEndTime?.toISOString()).toBe(
       new Date(now.getTime() + 30_000).toISOString()
     );

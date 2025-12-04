@@ -36,7 +36,10 @@ describe('ResetQuizTimerUseCase', () => {
     const aggregate = buildAggregate();
     quizRepository.findById.mockResolvedValue(aggregate);
 
-    const result = await useCase.execute({ quizId: 'quiz-1', durationSeconds: 45 });
+    const result = await useCase.execute({
+      quizId: 'quiz-1',
+      durationSeconds: 45,
+    });
 
     expect(result.duration).toBe(45);
     expect(result.remainingSeconds).toBeLessThanOrEqual(45);
@@ -47,9 +50,9 @@ describe('ResetQuizTimerUseCase', () => {
   it('throws when quiz does not exist', async () => {
     quizRepository.findById.mockResolvedValue(null);
 
-    await expect(
-      useCase.execute({ quizId: 'missing' })
-    ).rejects.toThrow('Quiz with ID missing not found.');
+    await expect(useCase.execute({ quizId: 'missing' })).rejects.toThrow(
+      'Quiz with ID missing not found.'
+    );
   });
 
   it('throws when quiz is not active', async () => {
@@ -57,9 +60,9 @@ describe('ResetQuizTimerUseCase', () => {
     aggregate.endQuiz();
     quizRepository.findById.mockResolvedValue(aggregate);
 
-    await expect(
-      useCase.execute({ quizId: 'quiz-1' })
-    ).rejects.toThrow('Timer can only be controlled while the quiz is active.');
+    await expect(useCase.execute({ quizId: 'quiz-1' })).rejects.toThrow(
+      'Timer can only be controlled while the quiz is active.'
+    );
   });
 
   it('validates duration inputs', async () => {
