@@ -26,6 +26,7 @@ const eslintConfig = [
     ignores: ['node_modules/**/*', '.next/**/*', 'out/**/*'],
     rules: {
       'react/react-in-jsx-scope': 'off',
+      'eslint/linebreak-style': ['error', 'unix'],
     },
   },
 ];

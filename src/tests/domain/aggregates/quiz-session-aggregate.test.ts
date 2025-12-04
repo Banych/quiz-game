@@ -24,6 +24,23 @@ describe('QuizSessionAggregate', () => {
     expect(aggregate.answers.size).toBe(0);
   });
 
+  it('hydrates timer metadata when provided', () => {
+    const quiz = new Quiz('quiz1', 'Math Quiz', [], {
+      timePerQuestion: 30,
+      allowSkipping: true,
+    });
+    const timerStart = new Date('2025-01-01T00:00:00Z');
+    const timerEnd = new Date('2025-01-01T00:00:30Z');
+
+    const aggregate = new QuizSessionAggregate(quiz, 30, {
+      timerStartTime: timerStart,
+      timerEndTime: timerEnd,
+    });
+
+    expect(aggregate.timerStartTime).toEqual(timerStart);
+    expect(aggregate.timerEndTime).toEqual(timerEnd);
+  });
+
   it('should start the quiz and timer', () => {
     const quiz = new Quiz('quiz1', 'Math Quiz', [], {
       timePerQuestion: 30,
