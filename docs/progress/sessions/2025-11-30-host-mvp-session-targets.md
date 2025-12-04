@@ -8,6 +8,7 @@ Tracking the follow-up focus block for November 30. Keep goals scoped to the hos
 - [x] Build missing host MVP use cases/services (timer control, leaderboard snapshots, question advancement) with tests in `src/tests/application/**` and expose them through `getServices`.
 - [x] Wire the host dashboard page to real DTOs via TanStack Query hooks, mirroring `docs/mockups/*.png`, and note the progress in `docs/progress/dev-notes.md`.
 - [x] Stub the realtime adapter described in `docs/04-presentation-and-realtime.md` (even if it’s a no-op) so hooks can subscribe to future events.
+- [ ] Reproduce the Vercel build locally (`vercel build` / `next build`) whenever API routes change so we can catch deployment-only typing errors before pushing.
 
 ## Completed This Session
 - [x] Added `joinCode`, timer metadata, and question ordering to the DTO catalog so host/player flows have the data promised in the mockups (logged in `docs/progress/actions/01-define-dto-catalog.md`).
