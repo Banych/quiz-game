@@ -7,10 +7,6 @@ const ParamsSchema = z.object({
   quizId: z.string().min(1),
 });
 
-type RouteContext = {
-  params: unknown;
-};
-
 type ErrorResponse = {
   error: string;
 };
@@ -20,9 +16,12 @@ type SuccessResponse = {
   players: PlayerDTO[];
 };
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(
+  _request: Request,
+  { params }: { params: z.infer<typeof ParamsSchema> }
+) {
   try {
-    const { quizId } = ParamsSchema.parse(context.params);
+    const { quizId } = ParamsSchema.parse(params);
     const { playerService } = getServices();
     const players = await playerService.listPlayersForQuiz(quizId);
 
