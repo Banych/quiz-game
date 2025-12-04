@@ -16,6 +16,8 @@ import { QuizService } from '@application/services/quiz-service';
 import { SubmitAnswerUseCase } from '@application/use-cases/submit-answer.use-case';
 import { AnswerService } from '@application/services/answer-service';
 import { JoinSessionUseCase } from '@application/use-cases/join-session.use-case';
+import { ResetQuizTimerUseCase } from '@application/use-cases/reset-quiz-timer.use-case';
+import { SnapshotLeaderboardUseCase } from '@application/use-cases/snapshot-leaderboard.use-case';
 
 type ServiceContainer = {
   playerService: PlayerService;
@@ -76,13 +78,19 @@ export const getServices = (): ServiceContainer => {
     playerRepository
   );
   const advanceQuestionUseCase = new AdvanceQuestionUseCase(quizRepository);
+  const resetQuizTimerUseCase = new ResetQuizTimerUseCase(quizRepository);
+  const snapshotLeaderboardUseCase = new SnapshotLeaderboardUseCase(
+    quizRepository
+  );
 
   const quizService = new QuizService(
     startQuizUseCase,
     endQuizUseCase,
     findQuizUseCase,
     getQuizStateUseCase,
-    advanceQuestionUseCase
+    advanceQuestionUseCase,
+    resetQuizTimerUseCase,
+    snapshotLeaderboardUseCase
   );
 
   const submitAnswerUseCase = new SubmitAnswerUseCase(

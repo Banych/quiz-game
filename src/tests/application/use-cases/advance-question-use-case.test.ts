@@ -23,7 +23,7 @@ describe('AdvanceQuestionUseCase', () => {
     useCase = new AdvanceQuestionUseCase(quizRepository);
   });
 
-  it('moves the quiz to the next question', async () => {
+  it('moves the quiz to the next question and resets the timer', async () => {
     const quiz = new Quiz(
       'quiz-1',
       'General Knowledge',
@@ -56,9 +56,12 @@ describe('AdvanceQuestionUseCase', () => {
 
     quizRepository.findById.mockResolvedValue(aggregate);
 
-    const nextQuestion = await useCase.execute('quiz-1');
+    const result = await useCase.execute('quiz-1');
 
-    expect(nextQuestion?.id).toBe('q-2');
+    expect(result.question?.id).toBe('q-2');
+    expect(result.timer.duration).toBe(30);
+    expect(result.timer.remainingSeconds).toBeLessThanOrEqual(30);
+    expect(result.timer.startTime).toMatch(/T/);
     expect(quizRepository.save).toHaveBeenCalledWith(aggregate);
   });
 

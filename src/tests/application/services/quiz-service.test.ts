@@ -7,10 +7,18 @@ import { QuizSessionAggregate } from '@domain/aggregates/quiz-session-aggregate'
 import { Quiz } from '@domain/entities/quiz';
 import { GetQuizStateUseCase } from '@application/use-cases/get-quiz-state.use-case';
 import { AdvanceQuestionUseCase } from '@application/use-cases/advance-question.use-case';
+import { ResetQuizTimerUseCase } from '@application/use-cases/reset-quiz-timer.use-case';
+import { SnapshotLeaderboardUseCase } from '@application/use-cases/snapshot-leaderboard.use-case';
 
 type QuizStateDTO = Awaited<ReturnType<GetQuizStateUseCase['execute']>>;
-type QuestionDTOResponse = Awaited<
+type AdvanceQuestionResponse = Awaited<
   ReturnType<AdvanceQuestionUseCase['execute']>
+>;
+type ResetTimerResponse = Awaited<
+  ReturnType<ResetQuizTimerUseCase['execute']>
+>;
+type LeaderboardSnapshot = Awaited<
+  ReturnType<SnapshotLeaderboardUseCase['execute']>
 >;
 
 describe('QuizService', () => {
@@ -19,6 +27,8 @@ describe('QuizService', () => {
   let findQuizByIdUseCase: Mocked<FindQuizByIdUseCase>;
   let getQuizStateUseCase: Mocked<GetQuizStateUseCase>;
   let advanceQuestionUseCase: Mocked<AdvanceQuestionUseCase>;
+  let resetQuizTimerUseCase: Mocked<ResetQuizTimerUseCase>;
+  let snapshotLeaderboardUseCase: Mocked<SnapshotLeaderboardUseCase>;
   let quizService: QuizService;
 
   beforeEach(() => {
@@ -42,12 +52,22 @@ describe('QuizService', () => {
       execute: vi.fn(),
     } as unknown as Mocked<AdvanceQuestionUseCase>;
 
+    resetQuizTimerUseCase = {
+      execute: vi.fn(),
+    } as unknown as Mocked<ResetQuizTimerUseCase>;
+
+    snapshotLeaderboardUseCase = {
+      execute: vi.fn(),
+    } as unknown as Mocked<SnapshotLeaderboardUseCase>;
+
     quizService = new QuizService(
       startQuizUseCase,
       endQuizUseCase,
       findQuizByIdUseCase,
       getQuizStateUseCase,
-      advanceQuestionUseCase
+      advanceQuestionUseCase,
+      resetQuizTimerUseCase,
+      snapshotLeaderboardUseCase
     );
   });
 
@@ -106,6 +126,13 @@ describe('QuizService', () => {
       activeQuestionId: null,
       startTime: null,
       endTime: null,
+      joinCode: null,
+      timer: {
+        duration: 30,
+        remainingSeconds: 30,
+        startTime: null,
+        endTime: null,
+      },
     } as QuizStateDTO;
 
     getQuizStateUseCase.execute.mockResolvedValue(dto);
@@ -116,20 +143,59 @@ describe('QuizService', () => {
   });
 
   it('advances to the next question', async () => {
-    const question = {
-      id: 'q2',
-      text: 'Q2',
-      media: undefined,
-      mediaType: undefined,
-      options: undefined,
-      type: 'multiple-choice',
-      points: 10,
-    } as QuestionDTOResponse;
+    const advanceResult = {
+      question: {
+        id: 'q2',
+        text: 'Q2',
+        media: undefined,
+        mediaType: undefined,
+        options: undefined,
+        type: 'multiple-choice',
+        points: 10,
+        orderIndex: 1,
+      },
+      timer: {
+        duration: 30,
+        remainingSeconds: 30,
+        startTime: '2025-01-01T00:00:00.000Z',
+        endTime: '2025-01-01T00:00:30.000Z',
+      },
+    } as AdvanceQuestionResponse;
 
-    advanceQuestionUseCase.execute.mockResolvedValue(question);
+    advanceQuestionUseCase.execute.mockResolvedValue(advanceResult);
 
     const result = await quizService.advanceToNextQuestion('quiz1');
     expect(advanceQuestionUseCase.execute).toHaveBeenCalledWith('quiz1');
-    expect(result).toEqual(question);
+    expect(result).toEqual(advanceResult);
+  });
+
+  it('resets the timer via the timer use case', async () => {
+    const timerResult = {
+      duration: 45,
+      remainingSeconds: 45,
+      startTime: '2025-01-01T00:00:00.000Z',
+      endTime: '2025-01-01T00:00:45.000Z',
+    } as ResetTimerResponse;
+
+    resetQuizTimerUseCase.execute.mockResolvedValue(timerResult);
+
+    const response = await quizService.resetTimer('quiz1', 45);
+
+    expect(resetQuizTimerUseCase.execute).toHaveBeenCalledWith({
+      quizId: 'quiz1',
+      durationSeconds: 45,
+    });
+    expect(response).toEqual(timerResult);
+  });
+
+  it('snapshots the leaderboard', async () => {
+    const leaderboard = [{ playerId: 'p1', score: 20 }];
+    snapshotLeaderboardUseCase.execute.mockResolvedValue(
+      leaderboard as LeaderboardSnapshot
+    );
+
+    const response = await quizService.snapshotLeaderboard('quiz1');
+    expect(snapshotLeaderboardUseCase.execute).toHaveBeenCalledWith('quiz1');
+    expect(response).toEqual(leaderboard);
   });
 });

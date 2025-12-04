@@ -9,6 +9,13 @@ type QuizSessionAggregateOptions = {
   timerEndTime?: Date;
 };
 
+export type TimerSnapshot = {
+  duration: number;
+  remainingSeconds: number | null;
+  startTime?: Date;
+  endTime?: Date;
+};
+
 export class QuizSessionAggregate {
   private quiz: Quiz;
   private timer: Timer;
@@ -102,7 +109,7 @@ export class QuizSessionAggregate {
 
   startQuiz(): void {
     this.quiz.startQuiz();
-    this.timer.start();
+    this.resetTimer();
   }
 
   endQuiz(): void {
@@ -167,5 +174,29 @@ export class QuizSessionAggregate {
     return Array.from(scores.entries())
       .map(([playerId, score]) => ({ playerId, score }))
       .sort((a, b) => b.score - a.score);
+  }
+
+  resetTimer(duration?: number, startAt: Date = new Date()): TimerSnapshot {
+    const nextDuration = duration ?? this.quiz.settings.timePerQuestion;
+    this.timer.restart(nextDuration, startAt);
+    return this.getTimerSnapshot();
+  }
+
+  getTimerSnapshot(): TimerSnapshot {
+    let remainingSeconds: number | null = null;
+    if (this.timer.startTime && this.timer.endTime) {
+      try {
+        remainingSeconds = this.timer.getRemainingTime();
+      } catch {
+        remainingSeconds = null;
+      }
+    }
+
+    return {
+      duration: this.timer.duration,
+      remainingSeconds,
+      startTime: this.timer.startTime,
+      endTime: this.timer.endTime,
+    };
   }
 }

@@ -44,6 +44,8 @@ model Quiz {
   joinCode             String?    @unique
   startTime            DateTime?
   endTime              DateTime?
+  timerStartedAt       DateTime?
+  timerExpiresAt       DateTime?
   createdAt            DateTime   @default(now())
   updatedAt            DateTime   @updatedAt
 
