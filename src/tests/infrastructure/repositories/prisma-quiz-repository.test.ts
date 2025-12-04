@@ -124,6 +124,13 @@ describe('PrismaQuizRepository', () => {
     expect(aggregate?.playerIds).toContain('player-1');
     expect(aggregate?.answers.get('player-1')).toHaveLength(1);
     expect(aggregate?.answers.get('player-1')?.[0].timeTaken).toBe(5);
+    expect(aggregate?.timerStartTime?.toISOString()).toBe(
+      now.toISOString()
+    );
+    const expectedTimerEnd = new Date(now.getTime() + 30 * 1000);
+    expect(aggregate?.timerEndTime?.toISOString()).toBe(
+      expectedTimerEnd.toISOString()
+    );
   });
 
   it('finds a quiz by join code', async () => {

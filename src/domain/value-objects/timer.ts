@@ -1,15 +1,29 @@
+type TimerOptions = {
+  startTime?: Date;
+  endTime?: Date;
+};
+
 export class Timer {
   duration: number;
   startTime?: Date;
   endTime?: Date;
 
-  constructor(duration: number) {
+  constructor(duration: number, options?: TimerOptions) {
     this.duration = duration;
+
+    if (options?.startTime) {
+      this.resume(options.startTime, options.endTime);
+    }
   }
 
-  start(): void {
-    this.startTime = new Date();
-    this.endTime = new Date(this.startTime.getTime() + this.duration * 1000);
+  start(startAt: Date = new Date()): void {
+    this.resume(startAt);
+  }
+
+  resume(startAt: Date, endAt?: Date): void {
+    this.startTime = startAt;
+    this.endTime =
+      endAt ?? new Date(this.startTime.getTime() + this.duration * 1000);
   }
 
   getRemainingTime(): number {

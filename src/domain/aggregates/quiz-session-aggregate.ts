@@ -4,13 +4,25 @@ import { Answer } from '@domain/entities/answer';
 import { LeaderboardScore } from '@domain/types/leaderboard-score';
 import { Question } from '@domain/entities/question';
 
+type QuizSessionAggregateOptions = {
+  timerStartTime?: Date;
+  timerEndTime?: Date;
+};
+
 export class QuizSessionAggregate {
   private quiz: Quiz;
   private timer: Timer;
 
-  constructor(quiz: Quiz, timerDuration: number) {
+  constructor(
+    quiz: Quiz,
+    timerDuration: number,
+    options?: QuizSessionAggregateOptions
+  ) {
     this.quiz = quiz;
-    this.timer = new Timer(timerDuration);
+    this.timer = new Timer(timerDuration, {
+      startTime: options?.timerStartTime,
+      endTime: options?.timerEndTime,
+    });
   }
 
   get quizId(): string {

@@ -76,8 +76,10 @@ const mapQuizRecordToAggregate = (
     quiz.submitAnswer(answerRecord.playerId, answer);
   });
 
-  const aggregate = new QuizSessionAggregate(quiz, record.timePerQuestion);
-  return aggregate;
+  return new QuizSessionAggregate(quiz, record.timePerQuestion, {
+    timerStartTime: record.startTime ?? undefined,
+    timerEndTime: record.endTime ?? undefined,
+  });
 };
 
 const buildAnswerWrites = (aggregate: QuizSessionAggregate) => {
