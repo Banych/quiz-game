@@ -77,8 +77,8 @@ const mapQuizRecordToAggregate = (
   });
 
   return new QuizSessionAggregate(quiz, record.timePerQuestion, {
-    timerStartTime: record.startTime ?? undefined,
-    timerEndTime: record.endTime ?? undefined,
+    timerStartTime: record.timerStartedAt ?? undefined,
+    timerEndTime: record.timerExpiresAt ?? undefined,
   });
 };
 
@@ -144,6 +144,8 @@ export class PrismaQuizRepository implements IQuizRepository {
         activeQuestionId: quizAggregate.activeQuestionId,
         startTime: quizAggregate.startTime ?? null,
         endTime: quizAggregate.endTime ?? null,
+        timerStartedAt: quizAggregate.timerStartTime ?? null,
+        timerExpiresAt: quizAggregate.timerEndTime ?? null,
         timePerQuestion: quizAggregate.quizSettings.timePerQuestion,
         allowSkipping: quizAggregate.quizSettings.allowSkipping,
         joinCode: quizAggregate.joinCode ?? null,

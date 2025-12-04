@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { QuizSessionAggregate } from '@domain/aggregates/quiz-session-aggregate';
 import { Quiz, QuizStatus } from '@domain/entities/quiz';
 import { Question } from '@domain/entities/question';
-import { Answer } from '@domain/entities/answer';
 import { PrismaQuizRepository } from '@infrastructure/repositories/prisma-quiz.repository';
 import { prisma } from '@infrastructure/database/prisma/client';
 
@@ -65,6 +64,8 @@ describe('PrismaQuizRepository', () => {
       joinCode: 'JOIN',
       startTime: now,
       endTime: null,
+      timerStartedAt: now,
+      timerExpiresAt: new Date(now.getTime() + 30_000),
       createdAt: now,
       updatedAt: now,
       questions: [
@@ -127,9 +128,8 @@ describe('PrismaQuizRepository', () => {
     expect(aggregate?.timerStartTime?.toISOString()).toBe(
       now.toISOString()
     );
-    const expectedTimerEnd = new Date(now.getTime() + 30 * 1000);
     expect(aggregate?.timerEndTime?.toISOString()).toBe(
-      expectedTimerEnd.toISOString()
+      new Date(now.getTime() + 30_000).toISOString()
     );
   });
 
@@ -150,26 +150,20 @@ describe('PrismaQuizRepository', () => {
       timePerQuestion: 30,
       allowSkipping: false,
     });
-    quiz.addPlayer('player-1');
-    quiz.startQuiz();
-
-    const answer = new Answer(
-      'player-1',
-      'q1',
-      '4',
-      new Date('2025-01-01T00:00:00Z'),
-      5
-    );
-    answer.markCorrect(10);
-    quiz.submitAnswer('player-1', answer);
-
     const aggregate = new QuizSessionAggregate(quiz, 30);
+    aggregate.addPlayer('player-1');
+    aggregate.startQuiz();
+    aggregate.submitAnswer('player-1', 'q1', '4');
 
     await repository.save(aggregate);
 
     expect(prisma.quiz.update).toHaveBeenCalledWith({
       where: { id: 'quiz-1' },
-      data: expect.objectContaining({ status: QuizStatus.Active }),
+      data: expect.objectContaining({
+        status: QuizStatus.Active,
+        timerStartedAt: expect.any(Date),
+        timerExpiresAt: expect.any(Date),
+      }),
     });
     expect(prisma.answer.deleteMany).toHaveBeenCalledWith({
       where: { quizId: 'quiz-1' },
@@ -180,7 +174,6 @@ describe('PrismaQuizRepository', () => {
           id: 'answer-uuid',
           playerId: 'player-1',
           value: '4',
-          timeTakenMs: 5000,
         }),
       ],
     });

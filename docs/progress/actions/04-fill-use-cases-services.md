@@ -6,3 +6,4 @@
 - Expanded `PlayerService` and `QuizService` to expose the new workflows (`getQuizState`, `advanceToNextQuestion`, `listPlayersForQuiz`, `getPlayerSession`) instead of returning aggregates directly.
 - Updated Vitest coverage (~6 specs) so the new use cases/services are defended, including DTO snapshots and leaderboard-aware mapping logic.
 - `IPlayerRepository` now declares `findByQuizId`, matching the repository audit outcome and paving the way for Prisma-backed lobby queries.
+- 2025-12-04: Implemented host MVP flows—`ResetQuizTimerUseCase`, `SnapshotLeaderboardUseCase`, and the enhanced `AdvanceQuestionUseCase`—plus new `QuizService` facades (`resetTimer`, `snapshotLeaderboard`) with corresponding Vitest coverage.
