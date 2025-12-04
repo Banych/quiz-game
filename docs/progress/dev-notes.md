@@ -24,6 +24,7 @@
   - Stubbed the first Next.js API routes: `POST /api/session/join`, `POST /api/player/add`, `POST /api/quiz/start`, and `POST /api/player/answer`—each validates zod payloads, invokes the relevant service/use case, and maps domain errors to HTTP codes.
   - Added seed helpers + shared Prisma workflow docs earlier in the day; latest endpoints now reuse `PlayerService`, `QuizService`, and `AnswerService` directly via the factory to stay aligned with DTO contracts.
 - Host data APIs (2025-11-30 evening): Added `GET /api/quiz/[quizId]/state` and `GET /api/quiz/[quizId]/players` so the upcoming host dashboard can hydrate quiz state + lobby rosters via `QuizService`/`PlayerService`; route handlers ship with Vitest coverage that mocks Prisma at the factory layer.
+- 2025-12-04: Installed TanStack Query (+ devtools), introduced `AppProviders` to wrap the Next.js layout, and shipped the first host dashboard route (`/quiz/[quizId]`) that hydrates `QuizDTO` via `getServices` then hands control to the client-side `useHostQuizState` hook for periodic refetches.
 # Dev Progress Log
 
 ## 2025-11-30
