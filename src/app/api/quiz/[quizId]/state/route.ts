@@ -6,17 +6,16 @@ const ParamsSchema = z.object({
   quizId: z.string().min(1),
 });
 
-type RouteContext = {
-  params: unknown;
-};
-
 type ErrorResponse = {
   error: string;
 };
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(
+  _request: Request,
+  { params }: { params: z.infer<typeof ParamsSchema> }
+) {
   try {
-    const { quizId } = ParamsSchema.parse(context.params);
+    const { quizId } = ParamsSchema.parse(params);
     const { quizService } = getServices();
     const quizState = await quizService.getQuizState(quizId);
 
