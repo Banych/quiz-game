@@ -8,7 +8,7 @@ import type {
 } from '@domain/repositories/quiz-repository';
 import type { LeaderboardScore } from '@domain/types/leaderboard-score';
 import { prisma } from '@infrastructure/database/prisma/client';
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '@infrastructure/database/prisma/generated-client';
 import { mapPrismaQuestionToDomain } from '@infrastructure/repositories/mappers/prisma-question-mapper';
 
 const quizInclude = {

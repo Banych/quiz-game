@@ -4,7 +4,7 @@ import type {
   PlayerScoreUpdate,
 } from '@domain/repositories/player-repository';
 import { prisma } from '@infrastructure/database/prisma/client';
-import type { Player as PrismaPlayer } from '@prisma/client';
+import type { Player as PrismaPlayer } from '@infrastructure/database/prisma/generated-client';
 
 const mapToDomain = (record: PrismaPlayer): Player => {
   const player = new Player(record.id, record.name, record.quizId);

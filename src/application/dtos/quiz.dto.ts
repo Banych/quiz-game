@@ -30,7 +30,7 @@ export const QuizDTO = z.object({
   settings: QuizSettingsDTO,
   questions: z.array(QuestionDTO),
   players: z.array(PlayerDTO),
-  answers: z.record(z.array(AnswerDTO)).optional(),
+  answers: z.record(z.string(), z.array(AnswerDTO)).optional(),
   leaderboard: z.array(LeaderboardEntryDTO).default([]),
   activeQuestionId: z.string().nullable(),
   startTime: z.string().datetime().nullable().optional(),

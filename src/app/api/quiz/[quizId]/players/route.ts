@@ -16,12 +16,13 @@ type SuccessResponse = {
   players: PlayerDTO[];
 };
 
-export async function GET(
-  _request: Request,
-  { params }: { params: z.infer<typeof ParamsSchema> }
-) {
+type RouteContext = {
+  params: Promise<z.infer<typeof ParamsSchema>>;
+};
+
+export async function GET(_request: Request, { params }: RouteContext) {
   try {
-    const { quizId } = ParamsSchema.parse(params);
+    const { quizId } = ParamsSchema.parse(await params);
     const { playerService } = getServices();
     const players = await playerService.listPlayersForQuiz(quizId);
 
