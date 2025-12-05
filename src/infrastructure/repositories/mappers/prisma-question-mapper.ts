@@ -3,7 +3,7 @@ import type {
   Prisma,
   Question as PrismaQuestion,
   QuestionType,
-} from '@prisma/client';
+} from '@infrastructure/database/prisma/generated-client';
 
 const QUESTION_TYPE_TO_DOMAIN: Record<QuestionType, Question['type']> = {
   multiple_choice: 'multiple-choice',

@@ -6,7 +6,7 @@ import type {
   Question,
   Quiz,
   QuestionType,
-} from '@prisma/client';
+} from '@infrastructure/database/prisma/generated-client';
 
 export type SeedQuizOptions = {
   title?: string;

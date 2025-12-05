@@ -1,6 +1,11 @@
 ````markdown
 # Dev Progress Log
 
+## 2025-12-05
+- Adopted Prisma v7 driver adapters end-to-end: generator now targets `prisma-client` with output in `src/infrastructure/database/prisma/generated/client`, and the runtime client instantiates `PrismaPg` with `DATABASE_URL`.
+- Introduced `generated-client.ts` as the canonical barrel so repositories/seed helpers import Prisma types from one path after regeneration.
+- Added `@prisma/adapter-pg` dependency, regenerated the client, and updated ESLint ignores to skip generated sources (Next.js build now passes without formatter noise).
+
 ## 2025-11-30
 - MCP servers trimmed to Supabase HTTP endpoint + Playwright MCP; Playwright runs via `nvm use` so telemetry works.
 - Ready to start Release R1 (Domain & Data) tasks:

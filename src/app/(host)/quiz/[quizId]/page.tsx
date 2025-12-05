@@ -5,11 +5,11 @@ import { HostQuizDashboard } from '@/components/host/host-quiz-dashboard';
 export const dynamic = 'force-dynamic';
 
 type HostQuizPageProps = {
-  params: { quizId: string };
+  params: Promise<{ quizId: string }>;
 };
 
 export default async function HostQuizPage({ params }: HostQuizPageProps) {
-  const { quizId } = params;
+  const { quizId } = await params;
   const { quizService } = getServices();
 
   try {
