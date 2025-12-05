@@ -56,6 +56,7 @@ yarn add -D prisma
 	- `yarn prisma:generate` – refreshes the Prisma client after schema edits.
 	- `yarn prisma:migrate -- --name <change>` – creates/applies migrations against `DATABASE_URL`.
 	- `yarn prisma:seed` – runs `src/infrastructure/database/prisma/seed.ts`, which wipes the DB via `resetDatabase()` and inserts demo data using `seed-helpers.ts`.
+- `yarn build` automatically runs `yarn prisma:generate` via the `prebuild` script so Vercel (and any CI) always regenerates the adapter-aware client before compiling Next.js.
 - Repository implementations under `src/infrastructure/repositories/**` must depend on the Prisma client + mapping helpers only (never on React code).
 
 ## 6. Environment Files
