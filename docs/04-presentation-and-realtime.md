@@ -18,6 +18,7 @@ With domain + infrastructure ready, this step connects application services to N
      - Call the corresponding application service via an API route or direct server action.
      - Handle loading/error states consistently (return `{ data, isPending, error }`).
      - Provide mutation helpers for host actions (start round, end quiz) with optimistic cache updates.
+   - 2025-12-08 update: `usePlayerSession` now hydrates `PlayerSessionDTO` via `GET /api/quiz/[quizId]/player/[playerId]`, pushes host broadcasts from Supabase Realtime into the TanStack cache, and confirms answers through `POST /api/player/answer` before clearing the local input.
 2. **Query client provider**
    - Add `src/app/providers.tsx` (client component) that wraps children with `QueryClientProvider`, `HydrationBoundary`, and realtime context.
    - Configure sensible defaults (retry = 1, refetchOnWindowFocus = false for player devices).
@@ -28,7 +29,7 @@ With domain + infrastructure ready, this step connects application services to N
    - 2025-12-08 update: Supabase Realtime is now the default client (`createSupabaseRealtimeClient`) using `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY`, with a noop fallback when env vars are absent. Server routes broadcast quiz updates via the Supabase service key.
 4. **Next.js routes**
    - Host dashboard (`src/app/(host)/dashboard/page.tsx`): server component fetches `QuizDTO`, client child subscribes to updates.
-   - Player join/answer screens (`src/app/(player)/**`): minimal UI, keypad/input controls, latency indicators.
+   - Player join + play screens: `/join` renders `PlayerJoinForm` while `/play/[quizId]/[playerId]` hydrates the session server-side, then hands off to `PlayerSessionScreen` + `usePlayerSession` for timers, latency hints, and server-confirmed submissions.
    - Admin content manager: gated route with forms powered by shadcn components.
 5. **shadcn + Tailwind usage**
    - Use the established `src/components/ui/**` primitives; add new ones via `yarn shadcn add <component>` and document them in `components.json`.
@@ -38,7 +39,7 @@ With domain + infrastructure ready, this step connects application services to N
    - Add Playwright smoke tests covering host start → player answer → host results.
    - Mock realtime layer in tests to avoid flakiness.
 
-### Current API route stubs (2025-11-30)
+### Current API route stubs (2025-12-08)
 - `POST /api/session/join` → validates `{ joinCode, playerName }`, fetches the quiz via `JoinSessionUseCase`, registers a player through `PlayerService`, and returns the hydrated lobby DTOs.
 - `POST /api/player/add` → allows hosts/admin tools to add a player by `{ quizId, playerName }`, reusing `PlayerService` to produce the `PlayerDTO` response.
 - `POST /api/quiz/start` → calls `QuizService.startQuiz` for the given `quizId` and responds with `{ status: "started" }` once the aggregate transitions to Active.
@@ -48,6 +49,7 @@ With domain + infrastructure ready, this step connects application services to N
  - `POST /api/quiz/[quizId]/advance` (2025-12-08) → triggers `QuizService.advanceToNextQuestion`, rebroadcasting the new question/timer snapshot.
  - `POST /api/quiz/[quizId]/timer/reset` (2025-12-08) → invokes `QuizService.resetTimer` with an optional `durationSeconds` override and broadcasts the refreshed timer DTO.
  - `POST /api/quiz/[quizId]/leaderboard/snapshot` (2025-12-08) → calls `QuizService.snapshotLeaderboard` to persist and broadcast the latest standings.
+ - `GET /api/quiz/[quizId]/player/[playerId]` (2025-12-08) → hydrates `PlayerSessionDTO` via `PlayerService.getPlayerSession`, enabling the `/play` route + `usePlayerSession` hook to stay in sync with Supabase broadcasts.
 
 ## Acceptance Criteria
 - Hooks expose typed DTO data and are consumed by the relevant pages/components.

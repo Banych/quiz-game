@@ -4,6 +4,8 @@
 - Shipped Supabase Realtime integration: `AppProviders` now instantiates `createSupabaseRealtimeClient` (with a noop fallback) and API routes broadcast `quiz:${quizId}` `state:update` payloads via the new server helper after every host action.
 - Added host control API endpoints (`advance`, `timer/reset`, `leaderboard/snapshot`) plus expanded `POST /api/quiz/start` to return/broadcast the updated `QuizDTO`.
 - `useHostQuizState` now exposes TanStack Query mutations for start/advance/reset/snapshot, runs optimistic cache updates, and emits realtime payloads so other tabs stay in sync; `HostQuizDashboard` surfaces the new control panel with loading/error states.
+- Launched the player join funnel (`/join`): new `PlayerJoinForm` calls `POST /api/session/join`, persists the returned IDs to `localStorage`, and exposes a resume CTA for recently connected players.
+- Added the first player experience at `/play/[quizId]/[playerId]` powered by `usePlayerSession`, a Supabase-backed realtime hook that streams `QuizDTO` updates, polls `GET /api/quiz/[quizId]/player/[playerId]`, and confirms answers via `POST /api/player/answer` before clearing the input.
 - Next steps: document channel auth + player consumption path once we add the real transport to player hooks, then backfill Playwright smoke tests around the host control surface.
 
 ## 2025-12-05
