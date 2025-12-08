@@ -25,6 +25,7 @@ With domain + infrastructure ready, this step connects application services to N
    - Create `src/infrastructure/realtime` with a transport-agnostic interface (`RealtimeClient` with `subscribe`, `emit`, `disconnect`).
    - Implement `socket-io.client.ts` (default) plus stubs for Supabase Realtime if we need to switch.
    - Hooks should interact with the adapter, not Socket.IO directly.
+   - 2025-12-08 update: Supabase Realtime is now the default client (`createSupabaseRealtimeClient`) using `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY`, with a noop fallback when env vars are absent. Server routes broadcast quiz updates via the Supabase service key.
 4. **Next.js routes**
    - Host dashboard (`src/app/(host)/dashboard/page.tsx`): server component fetches `QuizDTO`, client child subscribes to updates.
    - Player join/answer screens (`src/app/(player)/**`): minimal UI, keypad/input controls, latency indicators.
@@ -44,6 +45,9 @@ With domain + infrastructure ready, this step connects application services to N
 - `POST /api/player/answer` → proxies `{ quizId, playerId, questionId, answer }` to `AnswerService.submitAnswer`, mapping domain errors (inactive quiz, unknown player) to HTTP 4xx codes.
 - `GET /api/quiz/[quizId]/state` → returns the full `QuizDTO` via `QuizService.getQuizState`, which host dashboard pages can hydrate from before subscribing to realtime events.
 - `GET /api/quiz/[quizId]/players` → lists the lobby roster by calling `PlayerService.listPlayersForQuiz`, allowing host/admin UIs to render player chips or leaderboards on demand.
+ - `POST /api/quiz/[quizId]/advance` (2025-12-08) → triggers `QuizService.advanceToNextQuestion`, rebroadcasting the new question/timer snapshot.
+ - `POST /api/quiz/[quizId]/timer/reset` (2025-12-08) → invokes `QuizService.resetTimer` with an optional `durationSeconds` override and broadcasts the refreshed timer DTO.
+ - `POST /api/quiz/[quizId]/leaderboard/snapshot` (2025-12-08) → calls `QuizService.snapshotLeaderboard` to persist and broadcast the latest standings.
 
 ## Acceptance Criteria
 - Hooks expose typed DTO data and are consumed by the relevant pages/components.
