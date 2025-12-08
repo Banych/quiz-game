@@ -14,5 +14,7 @@ Track future improvements or follow-ups per file so context survives between ses
 | src/app/api/**                                              | Create REST endpoints (join, start, submit answer) calling application layer.                              | Done   |
 | src/tests/integration/**                                    | Add Prisma-backed repository/service integration tests with disposable DB.                                 | TODO   |
 | src/tests/integration/add-player.integration.test.ts        | Schedule a manual run against a disposable DB (set `DATABASE_URL_TEST` + opt-in flag, seed/reset, verify). | TODO   |
+| src/hooks/use-player-session.ts                             | Add Vitest coverage for realtime cache updates + submission states once the hook stabilizes.               | TODO   |
+| src/components/player/player-session-screen.tsx             | Add a Playwright smoke that walks `/join → /play` to cover timer UI + resume CTA behavior.                 | TODO   |
 
 _Add new rows as you uncover ideas. Mark status as TODO / In Progress / Done to reflect whether the follow-up is still outstanding._
