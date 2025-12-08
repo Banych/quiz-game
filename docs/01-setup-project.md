@@ -52,6 +52,7 @@ yarn add -D prisma
 - The Prisma schema plus migrations live under `src/infrastructure/database/prisma/` (see `prisma.config.ts` for the custom path). Commit every migration in `migrations/` so Supabase/Postgres stay reproducible.
 - `src/infrastructure/database/client.ts` exports the singleton Prisma client used across repositories. Prisma v7 requires a **driver adapter**: we instantiate `PrismaPg` with `DATABASE_URL` and pass it to the generated client so build-time code never falls back to Data Proxy/Edge mode.
 - The Prisma generator uses `provider = "prisma-client"` and outputs to `src/infrastructure/database/prisma/generated/client`. Import types/classes via `@infrastructure/database/prisma/generated-client` to keep a single barrel and run `yarn prisma:generate` whenever the schema changes so the referenced files exist.
+- The generated folder `src/infrastructure/database/prisma/generated/` is ignored by Git and ESLint (see `.gitignore` + `eslint.config.mjs`) so builds/lint stay quiet—rerun `yarn prisma:generate` before committing if the client changed.
 - Use the shared Yarn scripts to manage the workflow:
 	- `yarn prisma:generate` – refreshes the Prisma client after schema edits.
 	- `yarn prisma:migrate -- --name <change>` – creates/applies migrations against `DATABASE_URL`.
