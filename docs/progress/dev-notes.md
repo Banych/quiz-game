@@ -1,5 +1,10 @@
-````markdown
 # Dev Progress Log
+
+## 2025-12-08
+- Shipped Supabase Realtime integration: `AppProviders` now instantiates `createSupabaseRealtimeClient` (with a noop fallback) and API routes broadcast `quiz:${quizId}` `state:update` payloads via the new server helper after every host action.
+- Added host control API endpoints (`advance`, `timer/reset`, `leaderboard/snapshot`) plus expanded `POST /api/quiz/start` to return/broadcast the updated `QuizDTO`.
+- `useHostQuizState` now exposes TanStack Query mutations for start/advance/reset/snapshot, runs optimistic cache updates, and emits realtime payloads so other tabs stay in sync; `HostQuizDashboard` surfaces the new control panel with loading/error states.
+- Next steps: document channel auth + player consumption path once we add the real transport to player hooks, then backfill Playwright smoke tests around the host control surface.
 
 ## 2025-12-05
 - Adopted Prisma v7 driver adapters end-to-end: generator now targets `prisma-client` with output in `src/infrastructure/database/prisma/generated/client`, and the runtime client instantiates `PrismaPg` with `DATABASE_URL`.
@@ -30,7 +35,6 @@
   - Added seed helpers + shared Prisma workflow docs earlier in the day; latest endpoints now reuse `PlayerService`, `QuizService`, and `AnswerService` directly via the factory to stay aligned with DTO contracts.
 - Host data APIs (2025-11-30 evening): Added `GET /api/quiz/[quizId]/state` and `GET /api/quiz/[quizId]/players` so the upcoming host dashboard can hydrate quiz state + lobby rosters via `QuizService`/`PlayerService`; route handlers ship with Vitest coverage that mocks Prisma at the factory layer.
 - 2025-12-04: Installed TanStack Query (+ devtools), introduced `AppProviders` to wrap the Next.js layout, and shipped the first host dashboard route (`/quiz/[quizId]`) that hydrates `QuizDTO` via `getServices` then hands control to the client-side `useHostQuizState` hook for periodic refetches.
-# Dev Progress Log
 
 ## 2025-11-30
 - MCP servers trimmed to Supabase HTTP endpoint + Playwright MCP; Playwright runs via `nvm use` so telemetry works.

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { QuizDTO } from '@application/dtos/quiz.dto';
 import { useHostQuizState } from '@/hooks/use-host-quiz-state';
 import { Button } from '@/components/ui/button';
@@ -28,10 +28,37 @@ export function HostQuizDashboard({
   quizId,
   initialQuiz,
 }: HostQuizDashboardProps) {
-  const { data, isPending, isFetching, error, refetch } = useHostQuizState({
+  const {
+    data,
+    isPending,
+    isFetching,
+    error,
+    refetch,
+    startQuiz,
+    isStartingQuiz,
+    advanceQuestion,
+    isAdvancingQuestion,
+    resetTimer,
+    isResettingTimer,
+    snapshotLeaderboard,
+    isSnapshottingLeaderboard,
+  } = useHostQuizState({
     quizId,
     initialData: initialQuiz,
   });
+
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const runAction = (action: () => Promise<unknown>) => {
+    setActionError(null);
+    action().catch((actionErr) => {
+      setActionError(
+        actionErr instanceof Error
+          ? actionErr.message
+          : 'Something went wrong. Please try again.'
+      );
+    });
+  };
 
   const quiz = data ?? initialQuiz;
 
@@ -40,6 +67,16 @@ export function HostQuizDashboard({
   }, [quiz]);
 
   const leaderboard = quiz.leaderboard ?? [];
+  const isMutating =
+    isStartingQuiz ||
+    isAdvancingQuestion ||
+    isResettingTimer ||
+    isSnapshottingLeaderboard;
+  const canControlTimer = quiz.status === 'Active';
+  const canAdvance = quiz.status === 'Active' && quiz.questions.length > 0;
+  const startButtonLabel =
+    quiz.status === 'Pending' ? 'Start quiz' : 'Resume quiz';
+  const hasActiveTimer = typeof quiz.timer.remainingSeconds === 'number';
 
   return (
     <div className="min-h-screen bg-background text-foreground p-6">
@@ -71,7 +108,7 @@ export function HostQuizDashboard({
             <Button
               variant="outline"
               onClick={() => refetch()}
-              disabled={isPending}
+              disabled={isPending || isMutating}
             >
               Sync now {isFetching ? '…' : ''}
             </Button>
@@ -85,6 +122,49 @@ export function HostQuizDashboard({
               : 'Unable to load quiz state.'}
           </div>
         ) : null}
+
+        <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+          <header className="mb-3 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Controls</h2>
+            {isMutating ? (
+              <span className="text-xs uppercase text-muted-foreground">
+                Updating…
+              </span>
+            ) : null}
+          </header>
+          <div className="flex flex-wrap gap-3">
+            <Button
+              disabled={isStartingQuiz}
+              onClick={() => runAction(() => startQuiz())}
+            >
+              {isStartingQuiz ? 'Starting…' : startButtonLabel}
+            </Button>
+            <Button
+              variant="secondary"
+              disabled={!canAdvance || isAdvancingQuestion}
+              onClick={() => runAction(() => advanceQuestion())}
+            >
+              {isAdvancingQuestion ? 'Advancing…' : 'Next question'}
+            </Button>
+            <Button
+              variant="outline"
+              disabled={!canControlTimer || isResettingTimer}
+              onClick={() => runAction(() => resetTimer(undefined))}
+            >
+              {isResettingTimer ? 'Resetting…' : 'Reset timer'}
+            </Button>
+            <Button
+              variant="ghost"
+              disabled={isSnapshottingLeaderboard}
+              onClick={() => runAction(() => snapshotLeaderboard())}
+            >
+              {isSnapshottingLeaderboard ? 'Saving…' : 'Snapshot leaderboard'}
+            </Button>
+          </div>
+          {actionError ? (
+            <p className="mt-3 text-sm text-destructive">{actionError}</p>
+          ) : null}
+        </section>
 
         <section className="grid gap-4 md:grid-cols-2">
           <article className="rounded-xl border border-border bg-card p-4 shadow-sm">
@@ -107,6 +187,11 @@ export function HostQuizDashboard({
               Current question:{' '}
               {activeQuestion ? activeQuestion.text : 'No active question'}
             </p>
+            {!hasActiveTimer && canControlTimer ? (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Timer paused — reset to restart countdown.
+              </p>
+            ) : null}
           </article>
 
           <article className="rounded-xl border border-border bg-card p-4 shadow-sm">

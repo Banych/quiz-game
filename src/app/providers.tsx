@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { RealtimeClientProvider } from '@hooks/use-realtime-client';
 import { createNoopRealtimeClient } from '@infrastructure/realtime/noop-realtime-client';
+import { createSupabaseRealtimeClient } from '@infrastructure/realtime/supabase-realtime-client';
 
 const createQueryClient = () =>
   new QueryClient({
@@ -22,7 +23,9 @@ const createQueryClient = () =>
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const [queryClient] = useState(createQueryClient);
-  const realtimeClient = useMemo(createNoopRealtimeClient, []);
+  const realtimeClient = useMemo(() => {
+    return createSupabaseRealtimeClient() ?? createNoopRealtimeClient();
+  }, []);
 
   return (
     <RealtimeClientProvider client={realtimeClient}>
