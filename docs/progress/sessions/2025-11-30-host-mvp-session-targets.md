@@ -16,3 +16,4 @@ Tracking the follow-up focus block for November 30. Keep goals scoped to the hos
 - [x] Built host-facing timer reset, leaderboard snapshot, and question-advance flows (new use cases + service methods) with Vitest coverage and documented the additions under `docs/progress/actions/04-fill-use-cases-services.md`.
 - [x] Wired the host quiz page to `QuizDTO` data via `AppProviders` + `useHostQuizState`, then documented the TanStack Query integration inside `docs/progress/dev-notes.md`.
 - [x] Added the realtime adapter skeleton (`RealtimeClient` contract + `createNoopRealtimeClient`), exposed it via `RealtimeClientProvider`/`useRealtimeClient`, and updated `useHostQuizState` to subscribe to future quiz events.
+- [x] 2025-12-08: Re-ran `yarn build` to mirror the Vercel pipeline and confirmed the host MVP endpoints/types pass production checks locally.
