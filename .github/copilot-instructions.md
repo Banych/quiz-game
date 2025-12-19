@@ -1,22 +1,165 @@
 # Quiz Game – Copilot Instructions
 
-- **Read intent before coding**: Start in `docs/plan.md` for roadmap expectations, `docs/structure.md` for the layered model, then the numbered step guides (`docs/01-*.md` → `docs/04-*.md`). Update those docs plus `docs/progress/actions/*.md` whenever your implementation changes the described flow.
-- **Session bookkeeping**: Each focus block needs its own tracker under `docs/progress/sessions/<DATE>-slug.md` (active goals + Completed lists). Parking-lot ideas belong in `docs/progress/file-ideas.md`, and short execution notes land in `docs/progress/dev-notes.md`.
-- **Layered map**: Flow is `Next.js request → DTO (zod) → use-case/service → domain entities → Prisma repository → Supabase`. Keep domain logic inside `src/domain/**`, orchestration inside `src/application/**`, and presentation in `src/app/**` / `src/components/**` / eventual `src/hooks/**`.
-- **Domain rules**: `src/domain/aggregates/quiz-session-aggregate.ts` drives timers, question progression, and leaderboard math; entities such as `Quiz`, `Question`, `Answer`, and value objects like `Timer` enforce invariants. Extend these first when gameplay rules change, then expose the behavior via DTOs.
-- **Application services**: Use cases under `src/application/use-cases` each accept repository interfaces and return DTO-friendly data. `src/application/services/factories.ts` wires Prisma repositories once and caches them; call `resetServices({ force: true })` in tests to drop the singleton before reconnecting Prisma.
-- **DTO contracts**: Shapes in `src/application/dtos/**/*.ts` (zod) are the single truth shared by API routes, mappers, and UI props. When you add fields (e.g., leaderboard entries or player ranks), update DTOs, regenerate mappers (`src/application/mappers/**`), and touch every API/Hook that emits that DTO.
-- **API route pattern**: See `src/app/api/player/add/route.ts` or `src/app/api/quiz/[quizId]/state/route.ts`—validate params/body with zod, pull services from `getServices`, return JSON DTOs, and translate service errors into HTTP status codes (404 when `/not found/i`). Duplicate this template for any new route.
-- **Player lifecycle flows**: `src/app/api/session/join/route.ts` seeds new players via `randomUUID`, chains `joinSessionUseCase`, `PlayerService.addPlayer`, and finally emits `PlayerSessionDTO` plus the quiz roster. Keep this pattern so join codes remain the source of truth and host/player lists stay in sync.
-- **Presentation boundaries**: Next.js App Router (`src/app/**`) server components fetch DTOs, client components subscribe via TanStack Query/WebSockets (per `docs/04-presentation-and-realtime.md`). Never let React touch entities or Prisma types—feed components only DTOs or hook outputs. Mirror layouts from `docs/mockups/*.png` before inventing new UX.
-- **Hooks & realtime**: Feature hooks live under `src/hooks/**` (or feature folders), wrap TanStack Query, and talk to the adapter in `src/infrastructure/realtime` (`RealtimeClient` contract + `createNoopRealtimeClient`). Components access it via `RealtimeClientProvider`/`useRealtimeClient` so event handlers can `setQueryData` when updates arrive. When adding a service, extend the hook to keep optimistic UI + realtime events aligned.
-- **Prisma & Supabase**: Schema lives at `src/infrastructure/database/prisma/schema.prisma` with `prisma.config.ts` forwarding `DATABASE_URL`. Run `nvm use` then `yarn prisma:migrate` / `yarn prisma:generate` / `yarn prisma:seed` (seed script calls `seed-helpers.ts` to drop tables and create a demo quiz). Document any env var changes in `.env.example` and `docs/01-setup-project.md`.
-- **Repositories**: Domain interfaces sit in `src/domain/repositories/**`. Implementations like `PrismaQuizRepository` rebuild aggregates (sorting questions by `orderIndex`, rewriting answer collections) before persisting back to Supabase. Any schema change means updating these mappers plus the DTO conversions in `src/application/mappers`.
-- **Commands & tooling**: Use Yarn only—`yarn dev` (Turbopack), `yarn build`, `yarn start`, `yarn lint`, `yarn test`, `yarn test:watch`, `yarn test:coverage`. Never run `npx`/`npm` scripts. Honor the path aliases from `tsconfig.json` (`@application/*`, `@domain/*`, etc.) so imports stay absolute.
-- **Environment & configs**: `tsconfig.json`, `next.config.ts`, and `vitest.config.ts` carry the shared path aliases; update them if you move folders to avoid broken builds/tests. Store any new env requirements in `.env.example` and reference them inside the appropriate doc section (usually `docs/01-setup-project.md`).
-- **Testing posture**: Vitest lives under `src/tests/**` with parity for domain/entities, aggregates, and services (see `src/tests/domain/entities/quiz.test.ts`). Prefer in-memory doubles for domain/application tests, Prisma test DB for repository contracts, and reset the Prisma client between suites. Add new scenarios whenever you touch scoring, timers, or repositories.
-- **Styling system**: Tailwind 4 is configured globally in `src/app/globals.css` with OKLCH tokens, `@custom-variant dark`, and `tw-animate-css`. Use the `cn` helper in `src/lib/utils.ts`, reuse primitives under `src/components/ui`, and record new shadcn components in `components.json`. Avoid inline styles that bypass the design tokens.
-- **Realtime + hosting assumptions**: Vercel serves the Next.js app, Supabase supplies Postgres/Storage, and a pluggable WebSocket adapter (Socket.IO today, swappable later) should sit behind the abstractions in `docs/04-presentation-and-realtime.md`. Keep transports isolated so UI/hooks continue to talk through services.
-- **MCP toolbox**: `.vscode/mcp.json` wires three servers—Supabase HTTP (project ref `iwnxzdhhrreogxauxehm`), Playwright (`/bin/zsh -lc "source ~/.nvm/nvm.sh && nvm use && npx @playwright/mcp@latest"`), and Postman (`/bin/zsh -lc "source ~/.nvm/nvm.sh && nvm use && npx @postman/postman-mcp-server@2.5.1"`). Use them freely for Supabase queries, browser automation, or Postman workflows, and copy the same nvm-sourcing pattern if you register new servers so everything runs under Node 22.
-- **Documentation discipline**: When architecture or workflow shifts, update the relevant numbered doc plus any affected ADR/plan sections immediately. Leaving docs stale is treated as a regression; the next agent relies on them to align DDD layers, DTO contracts, and deployment expectations.
-- **New components(atoms)**: For new primitives use shadcn library. Run `yarn shadcn add <component>` to scaffold them under `src/components/ui`, then track them in `components.json`. Style via Tailwind tokens and avoid hardcoded CSS.
+## Architecture Overview
+This is a **Next.js 15 + Prisma v7 + Supabase** quiz game using **DDD-lite** (Domain-Driven Design) patterns. The critical data flow is:
+```
+Next.js request → DTO (zod) → use-case/service → domain entities → Prisma repository → Supabase Postgres
+```
+
+**Key architectural rules:**
+- Domain logic lives in `src/domain/**` (entities, aggregates, value objects) and stays framework-agnostic
+- Application layer (`src/application/**`) orchestrates via use cases/services, returns DTOs
+- Infrastructure (`src/infrastructure/**`) implements repositories with Prisma
+- Presentation (`src/app/**`, `src/components/**`, `src/hooks/**`) consumes only DTOs—never entities or Prisma types
+
+## Critical Prisma v7 Setup
+**Prisma uses driver adapters** (not default engine). This is NOT the standard Prisma config:
+
+1. **Generator output:** Schema at `src/infrastructure/database/prisma/schema.prisma` uses:
+   ```prisma
+   generator client {
+     provider = "prisma-client"
+     output   = "./generated/client"
+   }
+   ```
+
+2. **Client instantiation:** `src/infrastructure/database/prisma/client.ts` instantiates with `@prisma/adapter-pg`:
+   ```ts
+   import { PrismaPg } from '@prisma/adapter-pg';
+   import { PrismaClient } from './generated-client';
+
+   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+   const prisma = new PrismaClient({ adapter });
+   ```
+
+3. **Import path:** All code imports Prisma types via `@infrastructure/database/prisma/generated-client` barrel (NOT `@prisma/client`)
+
+4. **Build workflow:** `package.json` has `"prebuild": "yarn prisma:generate"` so Vercel/CI regenerate the client before `next build` (generated files are git-ignored)
+
+**Common mistakes to avoid:**
+- ❌ Importing from `@prisma/client` directly
+- ❌ Forgetting to run `yarn prisma:generate` after schema changes
+- ❌ Trying to instantiate PrismaClient without the adapter
+
+## Iterative Development Approach
+This codebase enforces an **iterative, incremental development style** via `.github/instructions/iterative-approach-for-work-with-code.instructions.md` (applies to all files):
+
+**Core principles:**
+- Break complex tasks into small, testable increments (single function/class/module)
+- Test each piece immediately before moving to the next
+- Refactor after each working increment—don't accumulate technical debt
+- Document as you go (inline comments + session logs in `docs/progress/`)
+- Plan work upfront: outline sub-tasks before coding
+
+**Why this matters:** This project uses DDD layers with strict boundaries (domain → application → infrastructure → presentation). Attempting to implement features "all at once" across layers leads to mismatched contracts between DTOs/entities/repos. Instead:
+1. Start with domain entities and test behavior
+2. Build application use cases that orchestrate them
+3. Wire infrastructure (Prisma repos) and verify with integration tests
+4. Finally expose via API routes and hooks
+
+**When adding features:** See the pattern in `docs/progress/sessions/*.md`—each session breaks goals into concrete steps, marks progress incrementally, and documents decisions. Follow this when implementing new quiz flows, player actions, or realtime features.
+
+## Essential Workflows
+
+### Development Commands (Yarn ONLY—never use npm/npx)
+```bash
+yarn dev                    # Next.js dev server with Turbopack
+yarn build                  # Production build (auto-runs prisma:generate)
+yarn lint                   # ESLint with Prettier
+yarn test                   # Run Vitest suite
+yarn test:watch             # Vitest watch mode
+yarn prisma:migrate         # Create/apply Prisma migration
+yarn prisma:generate        # Regenerate Prisma client after schema edits
+yarn prisma:seed            # Reset DB and seed demo data via seed-helpers.ts
+yarn shadcn add <component> # Add shadcn UI primitive
+```
+
+### Path Aliases (tsconfig.json + vitest.config.ts)
+All imports use absolute paths via these aliases:
+- `@domain/*` → `src/domain/*`
+- `@application/*` → `src/application/*`
+- `@infrastructure/*` → `src/infrastructure/*`
+- `@components/*` → `src/components/*`
+- `@hooks/*` → `src/hooks/*`
+- `@lib/*` → `src/lib/*`
+- `@ui/*` → `src/components/ui/*`
+
+**Update both configs if moving folders** or builds/tests break.
+
+### API Route Pattern
+See `src/app/api/player/add/route.ts` or `src/app/api/quiz/[quizId]/state/route.ts`:
+1. Validate params/body with zod schemas
+2. Call `getServices()` from `src/application/services/factories.ts` (singleton that wires Prisma repos)
+3. Invoke use case or service method
+4. Return JSON DTOs
+5. Map domain errors to HTTP codes (404 when error matches `/not found/i`)
+
+### Repository Implementation Pattern
+Domain interfaces in `src/domain/repositories/**` define contracts. Prisma implementations in `src/infrastructure/repositories/**` must:
+- Rebuild aggregates from normalized DB rows (e.g., `PrismaQuizRepository` sorts questions by `orderIndex`, hydrates answers)
+- Map domain value objects (seconds) ↔ Postgres columns (milliseconds for timers)
+- Update both repository mapper AND DTO mapper (`src/application/mappers/**`) when schema changes
+
+### Testing Strategy
+- **Domain/Application:** In-memory doubles or mocked repos, Vitest under `src/tests/**`
+- **Infrastructure:** Use test DB (`DATABASE_URL_TEST`), reset Prisma via `resetServices({ force: true })` between suites
+- **Pattern:** See `src/tests/domain/entities/quiz.test.ts` for entity tests, `src/tests/infrastructure/repositories/prisma-quiz-repository.test.ts` for repo contracts
+
+## DTO-First Development
+**DTOs are the single source of truth** for API contracts:
+1. Define/update zod schema in `src/application/dtos/**/*.ts`
+2. Update mappers in `src/application/mappers/**` (domain entity ↔ DTO)
+3. Update every API route and hook that consumes that DTO
+4. **Never** let React components import entities or Prisma types—only DTOs
+
+Example: Adding a field like `playerRank` requires touching:
+- `src/application/dtos/player.dto.ts` (zod schema)
+- `src/application/mappers/player-mapper.ts` (entity → DTO)
+- Any API route returning `PlayerDTO`
+- Any hook/component consuming player data
+
+## Documentation Requirements
+**Docs are part of the codebase, not optional:**
+- `docs/plan.md` – roadmap and release goals
+- `docs/structure.md` – DDD layer architecture
+- `docs/01-setup-project.md` → `docs/04-presentation-and-realtime.md` – numbered step guides
+- `docs/progress/sessions/<DATE>-slug.md` – track each work session (active goals + completed items)
+- `docs/progress/dev-notes.md` – append short execution notes after changes
+- `docs/progress/actions/*.md` – action items per release
+
+**Update relevant docs immediately when:**
+- Architecture patterns change
+- New workflows are introduced
+- Environment variables are added
+- DTO contracts evolve
+
+**Stale docs are treated as regressions** since future agents rely on them.
+
+## Styling & UI Components
+- **Tailwind 4** configured in `src/app/globals.css` with OKLCH tokens and `@custom-variant dark`
+- Use `cn()` helper from `src/lib/utils.ts` for conditional classes
+- Reuse primitives from `src/components/ui` (managed via `components.json`)
+- Add new primitives via `yarn shadcn add <component>` (auto-tracked in registry)
+- **Avoid inline styles**—use design tokens
+
+## Realtime & State Management
+- **TanStack Query** handles server state (queries/mutations)
+- `src/hooks/**` wraps TanStack Query + domain service calls
+- `src/infrastructure/realtime/` contains WebSocket adapter contract (`RealtimeClient`, currently using `createNoopRealtimeClient` stub)
+- Components access via `RealtimeClientProvider`/`useRealtimeClient` so event handlers can `setQueryData` for optimistic updates
+- **Never** subscribe to raw WebSocket events in components—always via hooks
+
+## Environment & Deployment
+- `.env.example` documents all required vars (`DATABASE_URL`, Supabase keys, etc.)
+- Vercel serves Next.js + API routes
+- Supabase provides Postgres (via Prisma) + Storage
+- `prebuild` script ensures Prisma client regenerates on every deploy
+- MCP toolbox configured in `.vscode/mcp.json` (Supabase HTTP, Playwright, Postman servers)—all run via `nvm use` to ensure Node 22
+
+## Common Pitfalls
+1. **Forgetting to await Next.js 15 params:** Route handlers must `await params` before accessing `params.quizId`
+2. **Skipping Prisma generation:** Always run `yarn prisma:generate` after schema edits or imports break
+3. **Importing wrong Prisma path:** Use `@infrastructure/database/prisma/generated-client`, NOT `@prisma/client`
+4. **Leaking entities to UI:** Components must receive DTOs, never domain entities
+5. **Ignoring path aliases:** Use `@application/*` etc., not relative paths like `../../application`
+6. **Missing service factory reset in tests:** Call `resetServices({ force: true })` when tests need fresh Prisma client
