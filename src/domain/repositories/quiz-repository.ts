@@ -1,5 +1,5 @@
 import { QuizSessionAggregate } from '@domain/aggregates/quiz-session-aggregate';
-import { QuizStatus } from '@domain/entities/quiz';
+import { Quiz, QuizStatus } from '@domain/entities/quiz';
 import { LeaderboardScore } from '@domain/types/leaderboard-score';
 
 export type QuizProgressUpdate = {
@@ -21,4 +21,10 @@ export interface IQuizRepository {
     leaderboard: LeaderboardScore[]
   ): Promise<void>;
   delete(id: string): Promise<void>;
+
+  // Admin CRUD operations
+  create(quiz: Quiz): Promise<Quiz>;
+  update(quiz: Quiz): Promise<void>;
+  findAll(): Promise<Quiz[]>;
+  findEntityById(id: string): Promise<Quiz | null>;
 }

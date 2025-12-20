@@ -29,9 +29,10 @@ export function QuestionTimeline({
   compact = false,
 }: QuestionTimelineProps) {
   const totalQuestions = questions.length;
-  const progressPercentage = totalQuestions > 0
-    ? ((currentQuestionIndex + 1) / totalQuestions) * 100
-    : 0;
+  const progressPercentage =
+    totalQuestions > 0
+      ? ((currentQuestionIndex + 1) / totalQuestions) * 100
+      : 0;
 
   return (
     <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
@@ -42,12 +43,14 @@ export function QuestionTimeline({
           <span className="text-sm text-muted-foreground">
             {currentQuestionIndex + 1} of {totalQuestions}
           </span>
-          <span className={cn(
-            "rounded-full px-3 py-1 text-xs font-medium",
-            currentQuestionIndex === totalQuestions - 1
-              ? "bg-blue-500/15 text-blue-500"
-              : "bg-primary/15 text-primary"
-          )}>
+          <span
+            className={cn(
+              'rounded-full px-3 py-1 text-xs font-medium',
+              currentQuestionIndex === totalQuestions - 1
+                ? 'bg-blue-500/15 text-blue-500'
+                : 'bg-primary/15 text-primary'
+            )}
+          >
             {Math.round(progressPercentage)}%
           </span>
         </div>
@@ -73,7 +76,8 @@ export function QuestionTimeline({
               key={question.id}
               className={cn(
                 'relative rounded-lg border px-4 py-3 transition-all duration-300',
-                isActive && 'border-primary bg-primary/10 ring-2 ring-primary/20',
+                isActive &&
+                  'border-primary bg-primary/10 ring-2 ring-primary/20',
                 isCompleted && 'border-green-500/50 bg-green-500/5',
                 isUpcoming && 'border-transparent bg-muted/40 opacity-60'
               )}
@@ -95,8 +99,12 @@ export function QuestionTimeline({
                 <div className="min-w-0 flex-1">
                   <p className="text-sm uppercase tracking-wide text-muted-foreground">
                     Question {index + 1}
-                    {isActive && <span className="ml-2 text-primary">• Active</span>}
-                    {isCompleted && <span className="ml-2 text-green-600">• Completed</span>}
+                    {isActive && (
+                      <span className="ml-2 text-primary">• Active</span>
+                    )}
+                    {isCompleted && (
+                      <span className="ml-2 text-green-600">• Completed</span>
+                    )}
                   </p>
                   {!compact && (
                     <p

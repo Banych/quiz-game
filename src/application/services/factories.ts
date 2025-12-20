@@ -18,6 +18,10 @@ import { AnswerService } from '@application/services/answer-service';
 import { JoinSessionUseCase } from '@application/use-cases/join-session.use-case';
 import { ResetQuizTimerUseCase } from '@application/use-cases/reset-quiz-timer.use-case';
 import { SnapshotLeaderboardUseCase } from '@application/use-cases/snapshot-leaderboard.use-case';
+import { CreateQuizUseCase } from '@application/use-cases/create-quiz.use-case';
+import { UpdateQuizUseCase } from '@application/use-cases/update-quiz.use-case';
+import { DeleteQuizUseCase } from '@application/use-cases/delete-quiz.use-case';
+import { ListAllQuizzesUseCase } from '@application/use-cases/list-all-quizzes.use-case';
 
 type ServiceContainer = {
   playerService: PlayerService;
@@ -83,6 +87,12 @@ export const getServices = (): ServiceContainer => {
     quizRepository
   );
 
+  // Admin use cases
+  const createQuizUseCase = new CreateQuizUseCase(quizRepository);
+  const updateQuizUseCase = new UpdateQuizUseCase(quizRepository);
+  const deleteQuizUseCase = new DeleteQuizUseCase(quizRepository);
+  const listAllQuizzesUseCase = new ListAllQuizzesUseCase(quizRepository);
+
   const quizService = new QuizService(
     startQuizUseCase,
     endQuizUseCase,
@@ -90,7 +100,11 @@ export const getServices = (): ServiceContainer => {
     getQuizStateUseCase,
     advanceQuestionUseCase,
     resetQuizTimerUseCase,
-    snapshotLeaderboardUseCase
+    snapshotLeaderboardUseCase,
+    createQuizUseCase,
+    updateQuizUseCase,
+    deleteQuizUseCase,
+    listAllQuizzesUseCase
   );
 
   const submitAnswerUseCase = new SubmitAnswerUseCase(

@@ -1,0 +1,52 @@
+import { NextResponse } from 'next/server';
+import { getServices } from '@application/services/factories';
+import { CreateQuizDTO } from '@application/dtos/quiz-admin.dto';
+
+/**
+ * GET /api/admin/quizzes
+ * List all quizzes (admin)
+ */
+export async function GET() {
+  try {
+    const { quizService } = getServices();
+    const quizzes = await quizService.listAllQuizzes();
+
+    return NextResponse.json(quizzes);
+  } catch (error) {
+    console.error('[API] List quizzes error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch quizzes' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * POST /api/admin/quizzes
+ * Create a new quiz (admin)
+ */
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const data = CreateQuizDTO.parse(body);
+
+    const { quizService } = getServices();
+    const quizId = await quizService.createQuiz(data);
+
+    return NextResponse.json({ id: quizId }, { status: 201 });
+  } catch (error) {
+    console.error('[API] Create quiz error:', error);
+
+    if (error instanceof Error && error.name === 'ZodError') {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: error.message },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'Failed to create quiz' },
+      { status: 500 }
+    );
+  }
+}

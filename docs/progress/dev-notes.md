@@ -1,7 +1,21 @@
 # Dev Progress Log
 
+## 2025-12-20 (Continued - Quiz CRUD)
+- **Completed Quiz CRUD Implementation!** All R4 foundation goals achieved:
+  - Implemented complete backend stack: DTOs (CreateQuizDTO, UpdateQuizDTO, QuizListItemDTO), use cases (create/update/delete/list), extended repositories with admin methods
+  - Added `findEntityById()` to `IQuizRepository` to distinguish Quiz entity (admin ops) from QuizSessionAggregate (session ops) - fixed update/delete use cases
+  - Created API routes: POST/GET `/api/admin/quizzes`, GET/PATCH/DELETE `/api/admin/quizzes/[quizId]`
+  - Built UI components: QuizList (table with React Query), CreateQuizDialog, EditQuizDialog (pre-filled form), DeleteQuizDialog (confirmation)
+  - Added shadcn components: table, badge, dialog, checkbox
+  - Business rules enforced: only update Pending quizzes, cannot delete Active quizzes
+  - **E2E tests (4/4 passing)**: create quiz, update quiz, delete quiz, verify Active quiz restrictions
+  - Manual testing via Playwright MCP: created quiz → edited (title + timer) → deleted → verified in Supabase DB
+- **Testing methodology refined**: Use Playwright MCP for interactive exploration first, then write simplified E2E tests based on observed behavior
+- **Total E2E coverage**: 10/10 tests passing (6 admin auth + 4 quiz CRUD)
+- Ready for next session: Question CRUD implementation
+
 ## 2025-12-20
-- **Completed Player MVP (R2/R3)!** All 9 session goals achieved:
+- **Completed Admin Auth Foundation!** All R4 initial goals achieved:
   - Initialized database with Prisma 7 migrations and seed data
   - Fixed join form maxLength bug (8→16 chars) that was truncating join codes
   - Set up Playwright E2E tests with 5 passing scenarios (player join, host dashboard)
