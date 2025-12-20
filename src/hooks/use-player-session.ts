@@ -65,7 +65,8 @@ export const usePlayerSession = ({
   const realtimeClient = useRealtimeClient();
   const queryClient = useQueryClient();
   const queryKey = playerSessionQueryKey(quizId, playerId);
-  const channelName = `quiz:${quizId}`;
+  const quizChannelName = `quiz:${quizId}`;
+  const playerChannelName = `player:${quizId}:${playerId}`;
 
   const applyQuizState = useCallback(
     (nextQuizState: QuizDTO) => {
@@ -86,9 +87,10 @@ export const usePlayerSession = ({
     [queryClient, queryKey]
   );
 
+  // Subscribe to quiz state updates
   useEffect(() => {
     const unsubscribe = realtimeClient.subscribe<QuizDTO>(
-      channelName,
+      quizChannelName,
       'state:update',
       (updatedState) => {
         applyQuizState(updatedState);
@@ -96,7 +98,26 @@ export const usePlayerSession = ({
     );
 
     return unsubscribe;
-  }, [applyQuizState, channelName, realtimeClient]);
+  }, [applyQuizState, quizChannelName, realtimeClient]);
+
+  // Subscribe to player-specific events (answer acknowledgments)
+  useEffect(() => {
+    const unsubscribe = realtimeClient.subscribe<{
+      answerId: string;
+      isCorrect: boolean | null;
+      timestamp: string;
+    }>(playerChannelName, 'answer:ack', (ack) => {
+      // Optimistically update UI or show feedback
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Answer acknowledged:', ack);
+      }
+
+      // Invalidate to refetch updated session with latest answers
+      void queryClient.invalidateQueries({ queryKey });
+    });
+
+    return unsubscribe;
+  }, [playerChannelName, realtimeClient, queryClient, queryKey]);
 
   const submitAnswerMutation = useMutation({
     mutationFn: ({

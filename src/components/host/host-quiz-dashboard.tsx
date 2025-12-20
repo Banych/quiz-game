@@ -5,24 +5,13 @@ import type { QuizDTO } from '@application/dtos/quiz.dto';
 import { useHostQuizState } from '@/hooks/use-host-quiz-state';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { TimerCountdown } from './timer-countdown';
+import { QuestionTimeline } from './question-timeline';
 
 interface HostQuizDashboardProps {
   quizId: string;
   initialQuiz: QuizDTO;
 }
-
-const formatSeconds = (value: number | null | undefined) => {
-  if (typeof value !== 'number') {
-    return '—';
-  }
-  const minutes = Math.floor(value / 60)
-    .toString()
-    .padStart(2, '0');
-  const seconds = Math.floor(value % 60)
-    .toString()
-    .padStart(2, '0');
-  return `${minutes}:${seconds}`;
-};
 
 export function HostQuizDashboard({
   quizId,
@@ -168,30 +157,26 @@ export function HostQuizDashboard({
 
         <section className="grid gap-4 md:grid-cols-2">
           <article className="rounded-xl border border-border bg-card p-4 shadow-sm">
-            <header className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Timer</h2>
-              <span className="text-xs uppercase text-muted-foreground">
-                Duration: {quiz.timer.duration}s
-              </span>
-            </header>
-            <p className="mt-6 text-5xl font-mono">
-              {formatSeconds(quiz.timer.remainingSeconds)}
-            </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Started:{' '}
-              {quiz.timer.startTime
-                ? new Date(quiz.timer.startTime).toLocaleTimeString()
-                : '—'}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Current question:{' '}
-              {activeQuestion ? activeQuestion.text : 'No active question'}
-            </p>
-            {!hasActiveTimer && canControlTimer ? (
-              <p className="mt-2 text-sm text-muted-foreground">
-                Timer paused — reset to restart countdown.
+            <h2 className="mb-4 text-lg font-semibold">Timer</h2>
+            <div className="flex items-center justify-center">
+              <TimerCountdown
+                duration={quiz.timer.duration}
+                remainingSeconds={quiz.timer.remainingSeconds}
+                startTime={quiz.timer.startTime}
+                size="large"
+              />
+            </div>
+            <div className="mt-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                Current question:{' '}
+                {activeQuestion ? activeQuestion.text : 'No active question'}
               </p>
-            ) : null}
+              {!hasActiveTimer && canControlTimer ? (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Timer paused — reset to restart countdown.
+                </p>
+              ) : null}
+            </div>
           </article>
 
           <article className="rounded-xl border border-border bg-card p-4 shadow-sm">
@@ -226,42 +211,11 @@ export function HostQuizDashboard({
           </article>
         </section>
 
-        <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
-          <header className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Questions</h2>
-            <p className="text-sm text-muted-foreground">
-              Showing {quiz.questions.length} total questions
-            </p>
-          </header>
-          <ol className="space-y-3">
-            {quiz.questions.map((question, index) => {
-              const isActive = question.id === quiz.activeQuestionId;
-              return (
-                <li
-                  key={question.id}
-                  className={cn(
-                    'rounded-lg border px-4 py-3 transition-colors',
-                    isActive
-                      ? 'border-primary bg-primary/10'
-                      : 'border-transparent bg-muted/40'
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm uppercase text-muted-foreground">
-                        Question {index + 1}
-                      </p>
-                      <p className="text-base font-medium">{question.text}</p>
-                    </div>
-                    <span className="font-mono text-sm text-muted-foreground">
-                      {question.points} pts
-                    </span>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-        </section>
+        <QuestionTimeline
+          questions={quiz.questions}
+          activeQuestionId={quiz.activeQuestionId}
+          currentQuestionIndex={quiz.currentQuestionIndex}
+        />
 
         <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
           <header className="mb-4 flex items-center justify-between">

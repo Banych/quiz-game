@@ -1,5 +1,24 @@
 # Dev Progress Log
 
+## 2025-12-20
+- **Completed Player MVP (R2/R3)!** All 9 session goals achieved:
+  - Initialized database with Prisma 7 migrations and seed data
+  - Fixed join form maxLength bug (8→16 chars) that was truncating join codes
+  - Set up Playwright E2E tests with 5 passing scenarios (player join, host dashboard)
+  - Implemented realtime channel auth and player-specific event broadcasting
+  - **Polished host dashboard UI** with two new components:
+    - `timer-countdown.tsx`: Circular progress ring with color-coded warning states (green >30%, yellow ≤30%, red ≤10%)
+    - `question-timeline.tsx`: Progress bar + visual status indicators (active/completed/upcoming questions)
+  - Tested all UI polish changes via Playwright MCP - verified timer countdown, question progress transitions
+- Updated copilot instructions with MCP testing workflow: test interactively first, then write simplified tests
+- All E2E tests passing (5/5), database operational, ready for next release
+- **Timer UX enhancements (post-session):**
+  - Created `useCountdownTimer` hook with smooth client-side countdown (1s interval)
+  - Calculates accurate time from server's `startTime` + `duration`, syncs on refetches
+  - Enhanced `TimerCountdown` with `showElapsed` prop for elapsed/remaining time modes
+  - Added size variants (small/medium/large) and rich timer info display
+  - Supports countdown (quiz timer) and elapsed (session duration) use cases
+
 ## 2025-12-08
 - Shipped Supabase Realtime integration: `AppProviders` now instantiates `createSupabaseRealtimeClient` (with a noop fallback) and API routes broadcast `quiz:${quizId}` `state:update` payloads via the new server helper after every host action.
 - Added host control API endpoints (`advance`, `timer/reset`, `leaderboard/snapshot`) plus expanded `POST /api/quiz/start` to return/broadcast the updated `QuizDTO`.

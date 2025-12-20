@@ -5,6 +5,7 @@ generator client {
 
 // Supabase Postgres connection string will be supplied via prisma.config.ts
 // using DATABASE_URL from the environment (see docs/01-setup-project.md).
+// DIRECT_URL is used for migrations to bypass connection pooling.
 datasource db {
   provider = "postgresql"
 }
