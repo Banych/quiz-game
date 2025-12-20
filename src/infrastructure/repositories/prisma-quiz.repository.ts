@@ -55,6 +55,7 @@ const mapQuizRecordToAggregate = (
     }
 
     const answer = new Answer(
+      answerRecord.id,
       answerRecord.playerId,
       answerRecord.questionId,
       answerRecord.value,

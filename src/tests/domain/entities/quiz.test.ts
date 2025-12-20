@@ -135,7 +135,7 @@ describe('Quiz', () => {
     quiz.addPlayer('p1');
     quiz.startQuiz();
 
-    const answer = new Answer('p1', 'q1', '4', new Date());
+    const answer = new Answer('a1', 'p1', 'q1', '4', new Date());
     answer.markCorrect(10);
 
     quiz.submitAnswer('p1', answer);

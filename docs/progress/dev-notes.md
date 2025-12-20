@@ -1,5 +1,18 @@
 # Dev Progress Log
 
+## 2025-12-20 (Continued - Question CRUD)
+- **Completed Question CRUD Implementation!** All CRUD dialogs working perfectly:
+  - Fixed critical `factories.ts` corruption from previous session (ServiceContainer type had code fragments, missing closing parens)
+  - Enhanced Answer entity with `id` field to support answer acknowledgment broadcasts
+  - Fixed QuizSessionAggregate to return Answer from submitAnswer (was void)
+  - Implemented CreateQuestionDialog with type-specific fields (MC: 2-6 options, T/F: correct answer, Text: none)
+  - Implemented EditQuestionDialog with pre-filled data and type change warning (warns about data loss when switching types)
+  - Implemented DeleteConfirmDialog with question preview
+  - **Manual validation via Playwright MCP**: Created MC question → edited to T/F (warning appeared) → deleted (confirmation worked) → verified empty state
+  - Created comprehensive E2E test suite (e2e/admin-question-crud.spec.ts, 9 scenarios)
+  - **E2E tests blocked by authentication** - admin routes require Supabase auth, need global Playwright setup with test user credentials
+- All Question CRUD operations verified working in UI, ready for drag-to-reorder enhancement or move to R5 media upload
+
 ## 2025-12-20 (Continued - Quiz CRUD)
 - **Completed Quiz CRUD Implementation!** All R4 foundation goals achieved:
   - Implemented complete backend stack: DTOs (CreateQuizDTO, UpdateQuizDTO, QuizListItemDTO), use cases (create/update/delete/list), extended repositories with admin methods

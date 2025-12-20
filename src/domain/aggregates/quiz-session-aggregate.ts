@@ -140,7 +140,7 @@ export class QuizSessionAggregate {
     playerId: string,
     questionId: string,
     answerValue: string
-  ): void {
+  ): Answer {
     if (this.quiz.status !== QuizStatus.Active) {
       throw new Error('Quiz is not active.');
     }
@@ -154,6 +154,7 @@ export class QuizSessionAggregate {
     const points = isCorrect ? question.points : 0;
 
     const answer = new Answer(
+      crypto.randomUUID(),
       playerId,
       questionId,
       answerValue,
@@ -167,6 +168,7 @@ export class QuizSessionAggregate {
     }
 
     this.quiz.submitAnswer(playerId, answer);
+    return answer;
   }
 
   getLeaderboard(): LeaderboardScore[] {

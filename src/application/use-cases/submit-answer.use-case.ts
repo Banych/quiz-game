@@ -29,6 +29,7 @@ export class SubmitAnswerUseCase {
       throw new Error('Player not found.');
     }
 
+    // QuizSessionAggregate.submitAnswer handles Answer creation and returns it
     const submittedAnswer = quiz.submitAnswer(playerId, questionId, answer);
 
     await this.quizRepository.save(quiz);
@@ -36,7 +37,7 @@ export class SubmitAnswerUseCase {
 
     return {
       answerId: submittedAnswer.id,
-      isCorrect: submittedAnswer.isCorrect,
+      isCorrect: submittedAnswer.isCorrect ?? null,
     };
   }
 }

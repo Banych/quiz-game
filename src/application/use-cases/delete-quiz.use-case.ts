@@ -1,7 +1,7 @@
-import { QuizRepository } from '@domain/repositories/quiz-repository';
+import type { IQuizRepository } from '@domain/repositories/quiz-repository';
 
 export class DeleteQuizUseCase {
-  constructor(private readonly quizRepository: QuizRepository) {}
+  constructor(private readonly quizRepository: IQuizRepository) {}
 
   async execute(quizId: string): Promise<void> {
     const quiz = await this.quizRepository.findEntityById(quizId);
