@@ -77,6 +77,125 @@ When writing or debugging E2E tests, use **Playwright MCP** (`@playwright/mcp` s
 
 **Viewing test results:** After running E2E tests with `yarn test:e2e`, Playwright automatically serves an HTML report (usually on port 9323). Instead of parsing terminal output, navigate directly to the report using `mcp_microsoft_pla_browser_navigate('http://localhost:9323')` to inspect test results, click on failed tests, view screenshots, and see detailed error messages.
 
+## MCP Toolbox Configuration
+The project uses three MCP servers configured in `.vscode/mcp.json` for enhanced development workflows:
+
+### Supabase MCP (HTTP)
+**Purpose:** Manage Supabase project resources directly from Copilot
+**Capabilities:**
+- Execute SQL queries and manage database migrations
+- Create and manage development branches
+- Deploy and retrieve Edge Functions
+- Get security/performance advisors (check for missing RLS policies after DDL changes)
+- View logs by service type (api, postgres, auth, storage, realtime, edge-function)
+- Retrieve project URL and publishable API keys
+
+**Common workflows:**
+- After schema changes: `mcp_supabase_get_advisors(type: 'security')` to check for RLS policy issues
+- Debug runtime issues: `mcp_supabase_get_logs(service: 'postgres')` or `'edge-function'`
+- Get connection info: `mcp_supabase_get_project_url()`, `mcp_supabase_get_publishable_keys()`
+
+### Playwright MCP (stdio)
+**Purpose:** Interactive E2E testing and browser automation
+**Capabilities:**
+- Navigate pages, click, type, drag elements
+- Take screenshots and accessibility snapshots
+- Evaluate JavaScript on page or elements
+- View console messages and network requests
+- Install browser if missing
+
+**Usage pattern:** See "MCP-Assisted Testing (Playwright MCP)" section above
+
+### Postman MCP (stdio)
+**Purpose:** API testing, collection management, and API specification workflows
+**Capabilities:**
+- **Authentication & Discovery:**
+  - Get current user context via `mcp_com_postman_p_getAuthenticatedUser()`
+  - Discover available tools with `mcp_com_postman_p_getEnabledTools()`
+- **Collections:**
+  - Run collections with detailed test results via `mcp_com_postman_p_runCollection()`
+  - Create, update, retrieve collections
+  - Replace entire collection contents via `mcp_com_postman_p_putCollection()` (supports async with `Prefer: respond-async` header)
+  - Generate OpenAPI specs from collections via `mcp_com_postman_p_generateSpecFromCollection()`
+- **Environments:**
+  - Create, retrieve, update environments
+  - Replace environment contents via `mcp_com_postman_p_putEnvironment()`
+- **Mock Servers:**
+  - Create, update, retrieve, publish mock servers
+  - Update mock configuration via `mcp_com_postman_p_updateMock()`
+- **API Specifications:**
+  - Create spec files with `mcp_com_postman_p_createSpecFile()`
+  - Get spec info via `mcp_com_postman_p_getSpec()`
+  - Update spec properties via `mcp_com_postman_p_updateSpecProperties()`
+  - List generated collections from spec via `mcp_com_postman_p_getSpecCollections()`
+- **Tagging:**
+  - Get tagged entities (workspaces, APIs, collections) via `mcp_com_postman_p_getTaggedEntities()`
+- **Task Monitoring:**
+  - Check async task status via `mcp_com_postman_p_getStatusOfAnAsyncApiTask()`
+
+**Common workflows:**
+- **API testing:** `mcp_com_postman_p_runCollection(collectionId: '<owner>-<uuid>', environmentId: '<optional>')` with support for iteration count, timeouts, abort/stop on error
+- **User context:** `mcp_com_postman_p_getAuthenticatedUser()` to resolve "my workspaces" or "my collections" queries
+- **Spec generation:** Generate OpenAPI/AsyncAPI specs from existing collections, then sync back to collections
+- **Mock server setup:** Create mocks for testing, update default responses, publish for public access
+- **Collection sync:** Use `putCollection()` for bulk updates (include IDs to update, omit IDs to recreate)
+
+**Note:** All MCP servers require Node 22 (use `nvm use` if switching versions). Environment variables like `POSTMAN_API_KEY` are prompted on first use.
+
+### Git Operations (GitKraken MCP - Available but not in mcp.json)
+**Purpose:** Git version control operations via MCP tools
+**Available Capabilities:**
+- **Staging & Committing:**
+  - Add files to index or commit changes via `mcp_gitkraken_git_add_or_commit(directory, action: 'add'|'commit', files?, message?)`
+  - Push changes to remote via `mcp_gitkraken_git_push(directory)`
+- **History & Blame:**
+  - Show line-by-line authorship via `mcp_gitkraken_git_blame(directory, file)`
+- **Stash Management:**
+  - Stash working directory changes via `mcp_gitkraken_git_stash(directory, name?)`
+- **Branch Operations:**
+  - Branch management tools available via `activate_git_branch_management_tools()` (includes branch, checkout, log, diff, status, worktree)
+- **PR & Issue Management:**
+  - Pull request and issue tools available via `activate_pull_request_and_issue_management_tools()` (search PRs, create PRs, get PR details, comments)
+
+**Usage pattern:**
+```
+# Commit changes after implementing feature
+mcp_gitkraken_git_add_or_commit(
+  directory: '/Users/vladislavbanykin/Documents/repos/quiz-game',
+  action: 'add',
+  files: ['src/components/admin/quiz-list.tsx', 'src/components/admin/edit-quiz-dialog.tsx']
+)
+mcp_gitkraken_git_add_or_commit(
+  directory: '/Users/vladislavbanykin/Documents/repos/quiz-game',
+  action: 'commit',
+  message: 'feat: implement quiz CRUD dialogs'
+)
+```
+
+**Note:** These tools are available in the agent toolbox but NOT currently configured in `.vscode/mcp.json`. Add GitKraken MCP server configuration if frequent git operations are needed.
+
+### Prisma Operations (Prisma MCP - Available but not in mcp.json)
+**Purpose:** Database schema management and Prisma operations via MCP tools
+**Available Capabilities:**
+- **Migration Management:**
+  - Development migrations available via `activate_prisma_migration_tools()` (includes `prisma-migrate-dev`, `prisma-migrate-reset`)
+  - Check migration status via `prisma-migrate-status(projectCwd)` - shows local vs DB migration differences
+- **Database Management:**
+  - Prisma Postgres database tools available via `activate_prisma_postgres_management_tools()` (includes login, create database)
+- **Data Visualization:**
+  - Open Prisma Studio via `prisma-studio(projectCwd)` to view/edit data in visual UI
+
+**Usage pattern:**
+```
+# Check migration status before applying changes
+prisma-migrate-status(projectCwd: '/Users/vladislavbanykin/Documents/repos/quiz-game')
+
+# Open Prisma Studio to inspect data
+prisma-studio(projectCwd: '/Users/vladislavbanykin/Documents/repos/quiz-game')
+```
+
+**Note:** These tools are available in the agent toolbox but NOT currently configured in `.vscode/mcp.json`. The project currently uses direct yarn commands (`yarn prisma:migrate`, `yarn prisma:generate`, `yarn prisma:seed`) for Prisma operations. Consider adding Prisma MCP server if interactive migration management is needed.
+
 ## Essential Workflows
 
 ### MCP-Assisted Testing (Playwright MCP)
@@ -188,7 +307,7 @@ Example: Adding a field like `playerRank` requires touching:
 - Vercel serves Next.js + API routes
 - Supabase provides Postgres (via Prisma) + Storage
 - `prebuild` script ensures Prisma client regenerates on every deploy
-- MCP toolbox configured in `.vscode/mcp.json` (Supabase HTTP, Playwright, Postman servers)—all run via `nvm use` to ensure Node 22
+- **MCP toolbox:** `.vscode/mcp.json` configures Supabase HTTP, Playwright, and Postman MCP servers (all require Node 22 via `nvm use`)
 
 ## Common Pitfalls
 1. **Forgetting to await Next.js 15 params:** Route handlers must `await params` before accessing `params.quizId`

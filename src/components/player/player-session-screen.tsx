@@ -57,7 +57,8 @@ export function PlayerSessionScreen({
     remainingSeconds: session.quiz.timer.remainingSeconds,
     startTime: session.quiz.timer.startTime,
     duration: session.quiz.timer.duration,
-    isActive: session.quiz.status === 'Active' && !!session.quiz.timer.startTime,
+    isActive:
+      session.quiz.status === 'Active' && !!session.quiz.timer.startTime,
   });
 
   const activeQuestionId = useMemo(() => {

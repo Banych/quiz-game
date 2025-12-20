@@ -55,4 +55,79 @@ Wire Prisma + Supabase so repositories can talk to a real database while staying
 
 ## Next Steps
 Proceed to Step 4 to focus on presentation hooks, TanStack Query wiring, and realtime transport.
+
+---
+
+## Authentication & Authorization (Added R4)
+
+The project uses **Supabase Auth** with cookie-based sessions and an email allowlist for admin access.
+
+### Architecture
+
+1. **Auth Client** (`src/infrastructure/auth/supabase-auth-client.ts`)
+   - `createBrowserClient()` - Client-side Supabase auth client for login/logout
+   - `createServerClient(cookieStore)` - Server-side client for middleware/API routes (requires `cookies()` passed from server context)
+   - `isAdminUser(email)` - Checks if email is in `ADMIN_EMAILS` env var allowlist
+
+2. **Middleware** (`middleware.ts`)
+   - Protects all `/admin/*` routes (except `/login`)
+   - Uses `@supabase/ssr` to read/write auth cookies
+   - Verifies session exists and user email is in admin allowlist
+   - Redirects unauthenticated users to `/login`
+   - Returns 403 Forbidden for authenticated non-admin users
+
+3. **Admin Login** (`src/app/(admin)/login/page.tsx`)
+   - Client component with email/password form
+   - Calls `supabase.auth.signInWithPassword()`
+   - Redirects to `/admin` on success (middleware verifies admin access)
+   - Displays error messages for invalid credentials
+
+4. **Admin Dashboard** (`src/app/(admin)/admin/**`)
+   - Protected by middleware (requires authenticated admin user)
+   - Layout (`layout.tsx`) shows user email and logout button
+   - Dashboard (`page.tsx`) provides navigation to quiz management
+   - Logout calls `supabase.auth.signOut()` and redirects to `/login`
+
+### Route Structure
+```
+src/app/(admin)/
+  login/
+    layout.tsx       # Simple passthrough layout (no admin header)
+    page.tsx         # Login form
+  admin/
+    layout.tsx       # Admin header with logout button
+    page.tsx         # Dashboard landing page
+    quizzes/
+      page.tsx       # Quiz management (placeholder for R4 CRUD)
+```
+
+**URL Mapping:**
+- `/login` → Login page (no admin header)
+- `/admin` → Admin dashboard (protected, with header)
+- `/admin/quizzes` → Quiz management (protected, with header)
+
+### Environment Variables
+```bash
+# Required for Supabase Auth
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+# Admin allowlist (comma-separated emails)
+ADMIN_EMAILS=admin@example.com,host@example.com
+```
+
+### Testing Auth Flow
+1. Ensure `ADMIN_EMAILS` is set in `.env` with a test email
+2. Create a user in Supabase Dashboard (Authentication → Users)
+3. Navigate to `http://localhost:3000/login`
+4. Sign in with test credentials
+5. Verify redirect to `/admin` dashboard
+6. Test logout redirects back to `/login`
+7. Test non-admin email receives 403 Forbidden
+
+### Security Considerations
+- **Email allowlist for MVP**: Simple approach for R4, defer to Supabase RLS policies with custom claims in R5
+- **Cookie-based sessions**: Middleware uses `@supabase/ssr` for secure cookie handling
+- **No Prisma User model**: Relies on Supabase `auth.users` table directly to avoid duplication
+- **Middleware protects all admin routes**: Authentication check happens before route handlers execute
 ````

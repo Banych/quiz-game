@@ -206,4 +206,97 @@ export class PrismaQuizRepository implements IQuizRepository {
   async delete(id: string): Promise<void> {
     await prisma.quiz.delete({ where: { id } });
   }
+
+  // Admin CRUD operations
+  async create(quiz: Quiz): Promise<Quiz> {
+    const record = await prisma.quiz.create({
+      data: {
+        title: quiz.title,
+        status: quiz.status,
+        currentQuestionIndex: quiz.currentQuestionIndex,
+        timePerQuestion: quiz.settings.timePerQuestion,
+        allowSkipping: quiz.settings.allowSkipping,
+        joinCode: quiz.joinCode ?? null,
+      },
+    });
+
+    quiz.id = record.id;
+    return quiz;
+  }
+
+  async update(quiz: Quiz): Promise<void> {
+    await prisma.quiz.update({
+      where: { id: quiz.id },
+      data: {
+        title: quiz.title,
+        timePerQuestion: quiz.settings.timePerQuestion,
+        allowSkipping: quiz.settings.allowSkipping,
+      },
+    });
+  }
+
+  async findAll(): Promise<Quiz[]> {
+    const records = await prisma.quiz.findMany({
+      include: {
+        questions: true,
+        players: { select: { id: true } },
+        _count: {
+          select: { questions: true, players: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return records.map((record) => {
+      const questions = [...record.questions]
+        .sort((a, b) => a.orderIndex - b.orderIndex)
+        .map((question) => mapPrismaQuestionToDomain(question));
+
+      const quiz = new Quiz(record.id, record.title, questions, {
+        timePerQuestion: record.timePerQuestion,
+        allowSkipping: record.allowSkipping,
+      });
+
+      quiz.status = record.status as QuizStatus;
+      quiz.currentQuestionIndex = record.currentQuestionIndex;
+      quiz.startTime = record.startTime ?? undefined;
+      quiz.endTime = record.endTime ?? undefined;
+      quiz.joinCode = record.joinCode ?? undefined;
+
+      record.players.forEach(({ id }) => quiz.addPlayer(id));
+
+      return quiz;
+    });
+  }
+
+  async findEntityById(id: string): Promise<Quiz | null> {
+    const record = await prisma.quiz.findUnique({
+      where: { id },
+      include: {
+        questions: true,
+        players: { select: { id: true } },
+      },
+    });
+
+    if (!record) return null;
+
+    const questions = [...record.questions]
+      .sort((a, b) => a.orderIndex - b.orderIndex)
+      .map((question) => mapPrismaQuestionToDomain(question));
+
+    const quiz = new Quiz(record.id, record.title, questions, {
+      timePerQuestion: record.timePerQuestion,
+      allowSkipping: record.allowSkipping,
+    });
+
+    quiz.status = record.status as QuizStatus;
+    quiz.currentQuestionIndex = record.currentQuestionIndex;
+    quiz.startTime = record.startTime ?? undefined;
+    quiz.endTime = record.endTime ?? undefined;
+    quiz.joinCode = record.joinCode ?? undefined;
+
+    record.players.forEach(({ id }) => quiz.addPlayer(id));
+
+    return quiz;
+  }
 }

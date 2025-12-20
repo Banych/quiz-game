@@ -157,7 +157,9 @@ export function TimerCountdown({
 
       {/* Timer info */}
       <div className="flex flex-col items-center gap-1 text-center">
-        <span className={cn('font-medium uppercase tracking-wide', config.label)}>
+        <span
+          className={cn('font-medium uppercase tracking-wide', config.label)}
+        >
           {isActive ? (showElapsed ? 'Elapsed' : 'Remaining') : 'Timer Paused'}
         </span>
         {startTime && (
