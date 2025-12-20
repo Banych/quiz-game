@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getServices } from '@application/services/factories';
+import { broadcastAnswerAck } from '@infrastructure/realtime/broadcast-player-events';
 
 const SubmitAnswerBodySchema = z.object({
   quizId: z.string().min(1),
@@ -19,14 +20,22 @@ export async function POST(request: Request) {
     const parsed = SubmitAnswerBodySchema.parse(payload);
 
     const { answerService } = getServices();
-    await answerService.submitAnswer(
+    const result = await answerService.submitAnswer(
       parsed.quizId,
       parsed.playerId,
       parsed.questionId,
       parsed.answer
     );
 
-    return NextResponse.json({ status: 'submitted' });
+    // Broadcast acknowledgment to player's private channel
+    await broadcastAnswerAck(
+      parsed.quizId,
+      parsed.playerId,
+      result.answerId,
+      result.isCorrect
+    );
+
+    return NextResponse.json({ status: 'submitted', ...result });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Failed to submit answer.';

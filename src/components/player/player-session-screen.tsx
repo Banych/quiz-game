@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from 'react';
 import type { PlayerSessionDTO } from '@application/dtos/player-session.dto';
 import { usePlayerSession } from '@hooks/use-player-session';
+import { useCountdownTimer } from '@hooks/use-countdown-timer';
 import { Button } from '@/components/ui/button';
 
 interface PlayerSessionScreenProps {
@@ -50,6 +51,14 @@ export function PlayerSessionScreen({
   const [submissionMessage, setSubmissionMessage] = useState<string | null>(
     null
   );
+
+  // Client-side countdown for smooth timer updates
+  const currentRemaining = useCountdownTimer({
+    remainingSeconds: session.quiz.timer.remainingSeconds,
+    startTime: session.quiz.timer.startTime,
+    duration: session.quiz.timer.duration,
+    isActive: session.quiz.status === 'Active' && !!session.quiz.timer.startTime,
+  });
 
   const activeQuestionId = useMemo(() => {
     return (
@@ -148,7 +157,7 @@ export function PlayerSessionScreen({
           <div className="mt-2 flex items-baseline justify-between">
             <div>
               <p className="text-4xl font-mono">
-                {formatSeconds(session.quiz.timer.remainingSeconds)}
+                {formatSeconds(currentRemaining)}
               </p>
               <p className="text-xs text-muted-foreground">
                 Timer • {session.quiz.timer.duration}s total

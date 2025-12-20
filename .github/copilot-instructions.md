@@ -59,7 +59,41 @@ This codebase enforces an **iterative, incremental development style** via `.git
 
 **When adding features:** See the pattern in `docs/progress/sessions/*.md`—each session breaks goals into concrete steps, marks progress incrementally, and documents decisions. Follow this when implementing new quiz flows, player actions, or realtime features.
 
+## MCP-Assisted Testing (Playwright MCP)
+When writing or debugging E2E tests, use **Playwright MCP** (`@playwright/mcp` server) for interactive testing:
+
+1. **Activate tools:** Call `activate_browser_navigation_tools()` and `activate_page_capture_tools()`
+2. **Navigate:** `mcp_microsoft_pla_browser_navigate(url)` to load pages
+3. **Interact:** Use `mcp_microsoft_pla_browser_type()`, `mcp_microsoft_pla_browser_click()` to test flows
+4. **Inspect:** `mcp_microsoft_pla_browser_snapshot()` to see page state and locators
+5. **Verify:** Observe actual behavior before writing test assertions
+
+**Why this matters:** Writing E2E tests without manual verification often leads to:
+- Overcomplicated wait conditions and timeouts
+- Wrong locator strategies (e.g., strict mode violations from ambiguous selectors)
+- Tests that don't match real user flows
+
+**Best practice:** Test the actual flow interactively via MCP first, then write simplified tests based on what you observed working. Example: Discovered `getByText(/Active/i)` matched 9 elements (player statuses), fixed by scoping to `getByRole('banner').getByText(/Active/i)`.
+
+**Viewing test results:** After running E2E tests with `yarn test:e2e`, Playwright automatically serves an HTML report (usually on port 9323). Instead of parsing terminal output, navigate directly to the report using `mcp_microsoft_pla_browser_navigate('http://localhost:9323')` to inspect test results, click on failed tests, view screenshots, and see detailed error messages.
+
 ## Essential Workflows
+
+### MCP-Assisted Testing (Playwright MCP)
+When writing or debugging E2E tests, use **Playwright MCP** (`@playwright/mcp` server) for interactive testing:
+
+1. **Activate tools:** Call `activate_browser_navigation_tools()` and `activate_page_capture_tools()`
+2. **Navigate:** `mcp_microsoft_pla_browser_navigate(url)` to load pages
+3. **Interact:** Use `mcp_microsoft_pla_browser_type()`, `mcp_microsoft_pla_browser_click()` to test flows
+4. **Inspect:** `mcp_microsoft_pla_browser_snapshot()` to see page state and locators
+5. **Verify:** Observe actual behavior before writing test assertions
+
+**Why this matters:** Writing E2E tests without manual verification often leads to:
+- Overcomplicated wait conditions and timeouts
+- Wrong locator strategies (e.g., strict mode violations from ambiguous selectors)
+- Tests that don't match real user flows
+
+**Best practice:** Test the actual flow interactively via MCP first, then write simplified tests based on what you observed working. Example: Discovered `getByText(/Active/i)` matched 9 elements (player statuses), fixed by scoping to `getByRole('banner').getByText(/Active/i)`.
 
 ### Development Commands (Yarn ONLY—never use npm/npx)
 ```bash

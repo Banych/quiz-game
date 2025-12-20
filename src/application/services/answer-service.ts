@@ -1,4 +1,7 @@
-import { SubmitAnswerUseCase } from '@application/use-cases/submit-answer.use-case';
+import {
+  SubmitAnswerUseCase,
+  type SubmitAnswerResult,
+} from '@application/use-cases/submit-answer.use-case';
 
 export class AnswerService {
   constructor(private readonly submitAnswerUseCase: SubmitAnswerUseCase) {}
@@ -8,8 +11,8 @@ export class AnswerService {
     playerId: string,
     questionId: string,
     answer: string
-  ): Promise<void> {
-    await this.submitAnswerUseCase.execute(
+  ): Promise<SubmitAnswerResult> {
+    return await this.submitAnswerUseCase.execute(
       quizId,
       playerId,
       questionId,

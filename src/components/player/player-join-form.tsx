@@ -150,7 +150,7 @@ export function PlayerJoinForm() {
               <input
                 type="text"
                 value={joinCode}
-                maxLength={8}
+                maxLength={16}
                 onChange={(event) =>
                   setJoinCode(event.target.value.toUpperCase())
                 }
