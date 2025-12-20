@@ -1,4 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as dotenv from 'dotenv';
+
+// Load environment variables from .env file for tests
+dotenv.config();
 
 /**
  * Playwright configuration for E2E tests
@@ -8,7 +12,8 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 2 : 1, // Retry once in dev, twice in CI for flaky tests
+  // Parallel execution in dev, sequential in CI for auth stability
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   timeout: 60000, // 60 seconds per test
@@ -20,9 +25,19 @@ export default defineConfig({
   },
 
   projects: [
+    // Setup project - runs first to authenticate
+    {
+      name: 'setup',
+      testMatch: /.*\.setup\.ts/,
+    },
+    // Authenticated tests - use saved auth state
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'playwright/.auth/user.json',
+      },
+      dependencies: ['setup'],
     },
   ],
 

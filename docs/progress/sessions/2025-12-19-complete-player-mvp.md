@@ -9,6 +9,7 @@
 - [x] Set up Playwright for E2E tests
 - [x] Debug and fix E2E test failures
 - [x] Polish host dashboard UI components
+- [x] Implement Question CRUD (Create/Edit/Delete dialogs)
 
 ## Completed
 - [x] Updated Prisma 7 configuration to use `prisma.config.ts` for database URLs
@@ -45,9 +46,16 @@
 - [x] Enhanced `TimerCountdown` component with elapsed time mode via `showElapsed` prop
 - [x] Added size variants: small (96px), medium (128px), large (160px)
 - [x] Improved timer info display with elapsed/remaining mode toggle and completion percentage
+- [x] Implemented Question CRUD with CreateQuestionDialog, EditQuestionDialog, DeleteConfirmDialog
+- [x] Added type-specific question fields (MC: 2-6 options with correct answer, T/F: correct answer, Text: none)
+- [x] Implemented type change warning when editing questions (warns about data loss)
+- [x] Validated all CRUD operations via Playwright MCP browser testing
+- [x] Created comprehensive E2E test suite (e2e/admin-question-crud.spec.ts, 9 test scenarios)
 
 ## Notes
 - Prisma 7 requires database URLs in `prisma.config.ts`, not schema.prisma
+- E2E tests for Question CRUD blocked by authentication - admin routes require Supabase auth, tests need global setup with test user credentials
+- Question CRUD fully functional and manually validated via Playwright MCP
 - Migration commands need direct connection (port 5432), not pgbouncer (port 6543)
 - Runtime uses DATABASE_URL (pooled) via PrismaPg adapter
 - SUPABASE_SERVICE_ROLE_KEY missing from .env - broadcasts will be disabled until added

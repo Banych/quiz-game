@@ -1,6 +1,7 @@
 import { prisma } from '@infrastructure/database/prisma/client';
 import { PrismaPlayerRepository } from '@infrastructure/repositories/prisma-player.repository';
 import { PrismaQuizRepository } from '@infrastructure/repositories/prisma-quiz.repository';
+import { PrismaQuestionRepository } from '@infrastructure/repositories/prisma-question.repository';
 import { AddPlayerUseCase } from '@application/use-cases/add-player.use-case';
 import { FindPlayerByIdUseCase } from '@application/use-cases/find-player-by-id.use-case';
 import { ListQuizPlayersUseCase } from '@application/use-cases/list-quiz-players.use-case';
@@ -22,11 +23,42 @@ import { CreateQuizUseCase } from '@application/use-cases/create-quiz.use-case';
 import { UpdateQuizUseCase } from '@application/use-cases/update-quiz.use-case';
 import { DeleteQuizUseCase } from '@application/use-cases/delete-quiz.use-case';
 import { ListAllQuizzesUseCase } from '@application/use-cases/list-all-quizzes.use-case';
+import { CreateQuestionUseCase } from '@application/use-cases/create-question.use-case';
+import { UpdateQuestionUseCase } from '@application/use-cases/update-question.use-case';
+import { DeleteQuestionUseCase } from '@application/use-cases/delete-question.use-case';
+import { ListQuizQuestionsUseCase } from '@application/use-cases/list-quiz-questions.use-case';
+import { ReorderQuestionsUseCase } from '@application/use-cases/reorder-questions.use-case';
+import type {
+  CreateQuestionDTO,
+  UpdateQuestionDTO,
+  ReorderQuestionsDTO,
+} from '@application/dtos/question-admin.dto';
+
+type QuestionService = {
+  createQuestion: (
+    dto: CreateQuestionDTO
+  ) => ReturnType<CreateQuestionUseCase['execute']>;
+  updateQuestion: (
+    id: string,
+    dto: UpdateQuestionDTO
+  ) => ReturnType<UpdateQuestionUseCase['execute']>;
+  deleteQuestion: (id: string) => ReturnType<DeleteQuestionUseCase['execute']>;
+  getQuestionById: (
+    id: string
+  ) => Promise<import('@domain/entities/question').Question | null>;
+  listQuizQuestions: (
+    quizId: string
+  ) => ReturnType<ListQuizQuestionsUseCase['execute']>;
+  reorderQuestions: (
+    dto: ReorderQuestionsDTO
+  ) => ReturnType<ReorderQuestionsUseCase['execute']>;
+};
 
 type ServiceContainer = {
   playerService: PlayerService;
   quizService: QuizService;
   answerService: AnswerService;
+  questionService: QuestionService;
   joinSessionUseCase: JoinSessionUseCase;
 };
 
@@ -35,10 +67,12 @@ let container: ServiceContainer | null = null;
 const getRepositories = () => {
   const quizRepository = new PrismaQuizRepository();
   const playerRepository = new PrismaPlayerRepository();
+  const questionRepository = new PrismaQuestionRepository();
 
   return {
     quizRepository,
     playerRepository,
+    questionRepository,
   } as const;
 };
 
@@ -47,7 +81,8 @@ export const getServices = (): ServiceContainer => {
     return container;
   }
 
-  const { quizRepository, playerRepository } = getRepositories();
+  const { quizRepository, playerRepository, questionRepository } =
+    getRepositories();
 
   const addPlayerUseCase = new AddPlayerUseCase(
     quizRepository,
@@ -118,10 +153,34 @@ export const getServices = (): ServiceContainer => {
     playerRepository
   );
 
+  // Question service
+  const createQuestionUseCase = new CreateQuestionUseCase(
+    questionRepository,
+    quizRepository
+  );
+  const updateQuestionUseCase = new UpdateQuestionUseCase(questionRepository);
+  const deleteQuestionUseCase = new DeleteQuestionUseCase(questionRepository);
+  const listQuizQuestionsUseCase = new ListQuizQuestionsUseCase(
+    questionRepository
+  );
+  const reorderQuestionsUseCase = new ReorderQuestionsUseCase(
+    questionRepository
+  );
+
+  const questionService: QuestionService = {
+    createQuestion: (dto) => createQuestionUseCase.execute(dto),
+    updateQuestion: (id, dto) => updateQuestionUseCase.execute(id, dto),
+    deleteQuestion: (id) => deleteQuestionUseCase.execute(id),
+    getQuestionById: (id) => questionRepository.findById(id),
+    listQuizQuestions: (quizId) => listQuizQuestionsUseCase.execute(quizId),
+    reorderQuestions: (dto) => reorderQuestionsUseCase.execute(dto),
+  };
+
   container = {
     playerService,
     quizService,
     answerService,
+    questionService,
     joinSessionUseCase,
   };
 

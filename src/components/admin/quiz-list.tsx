@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import { Pencil, Trash2, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -77,7 +78,14 @@ export function QuizList() {
         <TableBody>
           {quizzes.map((quiz) => (
             <TableRow key={quiz.id}>
-              <TableCell className="font-medium">{quiz.title}</TableCell>
+              <TableCell className="font-medium">
+                <Link
+                  href={`/admin/quizzes/${quiz.id}`}
+                  className="hover:underline"
+                >
+                  {quiz.title}
+                </Link>
+              </TableCell>
               <TableCell>
                 <Badge
                   variant={

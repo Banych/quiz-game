@@ -60,22 +60,76 @@ This codebase enforces an **iterative, incremental development style** via `.git
 **When adding features:** See the pattern in `docs/progress/sessions/*.md`—each session breaks goals into concrete steps, marks progress incrementally, and documents decisions. Follow this when implementing new quiz flows, player actions, or realtime features.
 
 ## MCP-Assisted Testing (Playwright MCP)
-When writing or debugging E2E tests, use **Playwright MCP** (`@playwright/mcp` server) for interactive testing:
+**CRITICAL:** Always use **manual-first test development** when writing or debugging E2E tests:
 
-1. **Activate tools:** Call `activate_browser_navigation_tools()` and `activate_page_capture_tools()`
-2. **Navigate:** `mcp_microsoft_pla_browser_navigate(url)` to load pages
-3. **Interact:** Use `mcp_microsoft_pla_browser_type()`, `mcp_microsoft_pla_browser_click()` to test flows
-4. **Inspect:** `mcp_microsoft_pla_browser_snapshot()` to see page state and locators
-5. **Verify:** Observe actual behavior before writing test assertions
+### Required Workflow: Manual Testing → Write Test Cases
+
+1. **Manual Exploration Phase:**
+   - Activate tools: `activate_browser_navigation_tools()` and `activate_page_capture_tools()`
+   - Navigate: `mcp_microsoft_pla_browser_navigate(url)` to load pages
+   - Interact: Use `mcp_microsoft_pla_browser_type()`, `mcp_microsoft_pla_browser_click()` to test complete flows
+   - Inspect: `mcp_microsoft_pla_browser_snapshot()` to see page state and locators
+   - Document: Record every working selector, dialog behavior, timing issue, and validation rule
+
+2. **Test Writing Phase:**
+   - Write simple, focused tests that **exactly match** observed behavior
+   - Use role-based selectors discovered during manual testing
+   - Include timing checks for async operations (form loading, dialog closing)
+   - One assertion per test when possible
+
+3. **Debugging Phase:**
+   - Run tests and fix specific failures
+   - Use manual testing to verify fixes before updating test code
 
 **Why this matters:** Writing E2E tests without manual verification often leads to:
 - Overcomplicated wait conditions and timeouts
 - Wrong locator strategies (e.g., strict mode violations from ambiguous selectors)
 - Tests that don't match real user flows
+- Race conditions from async form loading/dialog operations
 
-**Best practice:** Test the actual flow interactively via MCP first, then write simplified tests based on what you observed working. Example: Discovered `getByText(/Active/i)` matched 9 elements (player statuses), fixed by scoping to `getByRole('banner').getByText(/Active/i)`.
+**Success Pattern (admin-question-crud.spec.ts):**
+- Manual testing discovered all working selectors and timing issues
+- Wrote 9 clean tests based on observations
+- Fixed 2 bugs during first run (API endpoint, async form loading)
+- Result: 9/9 tests passing, maintainable code
 
-**Viewing test results:** After running E2E tests with `yarn test:e2e`, Playwright automatically serves an HTML report (usually on port 9323). Instead of parsing terminal output, navigate directly to the report using `mcp_microsoft_pla_browser_navigate('http://localhost:9323')` to inspect test results, click on failed tests, view screenshots, and see detailed error messages.
+**Test Writing Examples:**
+```typescript
+// ❌ DON'T: Write tests without manual verification
+test('should edit question', async ({ page }) => {
+  await page.click('button:has-text("Edit")'); // Might match multiple buttons
+  await page.fill('input', 'New Text'); // Which input?
+  await page.click('button:has-text("Save")');
+  // Missing: Wait for async operations, form loading
+});
+
+// ✅ DO: Manual test first, then write based on observations
+test('should edit question', async ({ page }) => {
+  // Click edit (discovered selector via manual testing)
+  await page.getByRole('button').filter({ hasText: /^$/ }).first().click();
+
+  // Wait for form to load data (discovered during manual testing)
+  await expect(page.getByRole('textbox', { name: 'Question *' }))
+    .toHaveValue('Original Question');
+  await expect(page.getByRole('textbox', { name: 'Option 1' }))
+    .toHaveValue('A');
+
+  // Make changes
+  await page.getByRole('textbox', { name: 'Question *' }).fill('Updated');
+  await page.getByRole('button', { name: 'Save Changes' }).click();
+
+  // Wait for dialog to close (discovered timing issue)
+  await expect(page.getByRole('dialog', { name: 'Edit Question' }))
+    .not.toBeVisible();
+
+  // Verify result
+  await expect(page.getByRole('cell', { name: 'Updated' })).toBeVisible();
+});
+```
+
+**Viewing test results:** After running E2E tests with `yarn test:e2e`, Playwright automatically serves an HTML report (usually on port 9323). Navigate directly to the report using `mcp_microsoft_pla_browser_navigate('http://localhost:9323')` to inspect test results, click on failed tests, view screenshots, and see detailed error messages. If the report shows stale results, kill the old server with `lsof -ti:9323 | xargs kill -9` and restart with `yarn playwright show-report`.
+
+**Reference:** See `docs/progress/sessions/2025-12-20-admin-question-crud-rewrite.md` for complete example of manual-first test development workflow.
 
 ## MCP Toolbox Configuration
 The project uses three MCP servers configured in `.vscode/mcp.json` for enhanced development workflows:
@@ -224,7 +278,7 @@ yarn test:watch             # Vitest watch mode
 yarn prisma:migrate         # Create/apply Prisma migration
 yarn prisma:generate        # Regenerate Prisma client after schema edits
 yarn prisma:seed            # Reset DB and seed demo data via seed-helpers.ts
-yarn shadcn add <component> # Add shadcn UI primitive
+npx shadcn@latest add <component> # Add shadcn UI primitive
 ```
 
 ### Path Aliases (tsconfig.json + vitest.config.ts)

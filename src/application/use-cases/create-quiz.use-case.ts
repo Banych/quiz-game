@@ -1,9 +1,9 @@
-import { QuizRepository } from '@domain/repositories/quiz-repository';
+import type { IQuizRepository } from '@domain/repositories/quiz-repository';
 import type { CreateQuizDTO } from '@application/dtos/quiz-admin.dto';
 import { Quiz, QuizSettings } from '@domain/entities/quiz';
 
 export class CreateQuizUseCase {
-  constructor(private readonly quizRepository: QuizRepository) {}
+  constructor(private readonly quizRepository: IQuizRepository) {}
 
   async execute(data: CreateQuizDTO): Promise<string> {
     const settings: QuizSettings = {

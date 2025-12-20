@@ -1,4 +1,5 @@
 export class Answer {
+  id: string;
   playerId: string;
   questionId: string;
   value: string;
@@ -8,12 +9,14 @@ export class Answer {
   timeTaken?: number;
 
   constructor(
+    id: string,
     playerId: string,
     questionId: string,
     value: string,
     timestamp: Date,
     timeTaken?: number
   ) {
+    this.id = id;
     this.playerId = playerId;
     this.questionId = questionId;
     this.value = value;
