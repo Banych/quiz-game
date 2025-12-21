@@ -40,6 +40,8 @@ export async function GET(
       orderIndex: question.orderIndex ?? 0,
       createdAt: new Date().toISOString(), // TODO: Get from entity
       updatedAt: new Date().toISOString(), // TODO: Get from entity
+      mediaUrl: question.media ?? null,
+      mediaType: question.mediaType ?? null,
     };
 
     return NextResponse.json(response);
@@ -81,6 +83,7 @@ export async function PATCH(
       points: question.points,
       orderIndex: question.orderIndex ?? 0,
       hasCorrectAnswers: question.correctAnswers.length > 0,
+      mediaUrl: question.mediaUrl ?? null,
     };
 
     return NextResponse.json(response);

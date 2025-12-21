@@ -12,9 +12,8 @@ export const CreateQuestionDTO = z.object({
     .array(z.string().min(1))
     .min(1, 'At least one correct answer is required'),
   points: z.number().int().positive().default(10),
-  // TODO: R5 - Media upload support
-  // mediaUrl: z.string().url().optional(),
-  // mediaType: z.enum(['image', 'video', 'audio']).optional(),
+  mediaUrl: z.string().url().nullable().optional(),
+  mediaType: z.enum(['image', 'video', 'audio']).nullable().optional(),
 });
 
 export type CreateQuestionDTO = z.infer<typeof CreateQuestionDTO>;
@@ -28,9 +27,8 @@ export const UpdateQuestionDTO = z.object({
   options: z.array(z.string()).optional(),
   correctAnswers: z.array(z.string().min(1)).min(1).optional(),
   points: z.number().int().positive().optional(),
-  // TODO: R5 - Media upload support
-  // mediaUrl: z.string().url().optional(),
-  // mediaType: z.enum(['image', 'video', 'audio']).optional(),
+  mediaUrl: z.string().url().nullable().optional(),
+  mediaType: z.enum(['image', 'video', 'audio']).nullable().optional(),
 });
 
 export type UpdateQuestionDTO = z.infer<typeof UpdateQuestionDTO>;
@@ -50,9 +48,8 @@ export const QuestionAdminDTO = z.object({
   orderIndex: z.number().int().nonnegative(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
-  // TODO: R5 - Media fields
-  // mediaUrl: z.string().url().optional(),
-  // mediaType: z.enum(['image', 'video', 'audio']).optional(),
+  mediaUrl: z.string().url().nullable().optional(),
+  mediaType: z.enum(['image', 'video', 'audio']).nullable().optional(),
 });
 
 export type QuestionAdminDTO = z.infer<typeof QuestionAdminDTO>;
@@ -68,6 +65,7 @@ export const QuestionListItemDTO = z.object({
   points: z.number().int().nonnegative(),
   orderIndex: z.number().int().nonnegative(),
   hasCorrectAnswers: z.boolean(), // Validation indicator
+  mediaUrl: z.string().url().nullable().optional(),
 });
 
 export type QuestionListItemDTO = z.infer<typeof QuestionListItemDTO>;

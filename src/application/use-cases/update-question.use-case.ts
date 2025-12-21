@@ -59,6 +59,12 @@ export class UpdateQuestionUseCase {
     if (dto.points !== undefined) {
       question.points = dto.points;
     }
+    if (dto.mediaUrl !== undefined) {
+      question.media = dto.mediaUrl ?? undefined;
+    }
+    if (dto.mediaType !== undefined) {
+      question.mediaType = dto.mediaType ?? undefined;
+    }
 
     // Persist
     await this.questionRepository.save(question);

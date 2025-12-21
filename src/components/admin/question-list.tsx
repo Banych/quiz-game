@@ -1,8 +1,9 @@
 'use client';
 
+import Image from 'next/image';
 import type { QuestionListItemDTO } from '@application/dtos/question-admin.dto';
-import { DeleteQuestionDialog } from "@components/admin/delete-question-dialog";
-import { EditQuestionDialog } from "@components/admin/edit-question-dialog";
+import { DeleteQuestionDialog } from '@components/admin/delete-question-dialog';
+import { EditQuestionDialog } from '@components/admin/edit-question-dialog';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@ui/badge';
 import { Button } from '@ui/button';
@@ -14,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@ui/table';
-import { GripVertical, Pencil, Trash2 } from 'lucide-react';
+import { GripVertical, Pencil, Trash2, ImageIcon } from 'lucide-react';
 import { useState } from 'react';
 
 interface QuestionListProps {
@@ -72,6 +73,7 @@ export function QuestionList({ quizId }: QuestionListProps) {
             <TableRow>
               <TableHead className="w-12"></TableHead>
               <TableHead className="w-12">#</TableHead>
+              <TableHead className="w-16">Media</TableHead>
               <TableHead>Question</TableHead>
               <TableHead className="w-32">Type</TableHead>
               <TableHead className="w-20">Points</TableHead>
@@ -86,6 +88,22 @@ export function QuestionList({ quizId }: QuestionListProps) {
                 </TableCell>
                 <TableCell className="font-medium">
                   {question.orderIndex + 1}
+                </TableCell>
+                <TableCell>
+                  {question.mediaUrl ? (
+                    <div className="relative h-10 w-10 rounded overflow-hidden bg-muted">
+                      <Image
+                        src={question.mediaUrl}
+                        alt="Question thumbnail"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-10 w-10 rounded bg-muted flex items-center justify-center">
+                      <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">

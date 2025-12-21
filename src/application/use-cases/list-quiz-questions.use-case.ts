@@ -19,6 +19,7 @@ export class ListQuizQuestionsUseCase {
         points: question.points,
         orderIndex: question.orderIndex ?? 0,
         hasCorrectAnswers: question.correctAnswers.length > 0,
+        mediaUrl: question.media ?? null,
       })
     );
   }
