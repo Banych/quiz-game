@@ -17,7 +17,7 @@ After completing R4 (Content Admin) and resolving all E2E test suite auth confli
 ## Tasks
 
 ### 1. Create Testing Guide (`docs/05-testing-strategies.md`)
-**Priority**: Medium  
+**Priority**: Medium
 **Effort**: 2-3 hours
 
 **Content Structure**:
@@ -76,7 +76,7 @@ For complex parallel execution scenarios:
 ```
 
 ### 2. Add Aria-Labels to Icon Buttons
-**Priority**: Low  
+**Priority**: Low
 **Effort**: 1 hour
 
 **Files to Update**:
@@ -91,18 +91,18 @@ For complex parallel execution scenarios:
 </Button>
 
 // After
-<Button 
-  variant="ghost" 
-  size="icon" 
+<Button
+  variant="ghost"
+  size="icon"
   onClick={() => onEdit(question)}
   aria-label={`Edit question: ${question.text}`}
 >
   <Pencil className="h-4 w-4" />
 </Button>
 
-<Button 
-  variant="ghost" 
-  size="icon" 
+<Button
+  variant="ghost"
+  size="icon"
   onClick={() => onDelete(question)}
   aria-label={`Delete question: ${question.text}`}
 >
@@ -121,7 +121,7 @@ await page.getByRole('button', { name: /^Delete question:/ }).first().click();
 ```
 
 ### 3. Document Per-Worker Admin Account Pattern
-**Priority**: Low  
+**Priority**: Low
 **Effort**: 1 hour
 
 **Add to Testing Guide**:
@@ -161,7 +161,7 @@ await page.getByRole('button', { name: /^Delete question:/ }).first().click();
 4. Update `playwright.config.ts`:
    ```typescript
    use: {
-     storageState: (testInfo) => 
+     storageState: (testInfo) =>
        `playwright/.auth/user-worker-${testInfo.workerIndex}.json`,
    },
    ```
@@ -179,7 +179,7 @@ await page.getByRole('button', { name: /^Delete question:/ }).first().click();
 ```
 
 ### 4. Document Flaky Test Investigation
-**Priority**: Low  
+**Priority**: Low
 **Effort**: 30 minutes
 
 **Add to Testing Guide** (from Session 3 learnings):

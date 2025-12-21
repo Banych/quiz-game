@@ -83,7 +83,7 @@ export async function PATCH(
       points: question.points,
       orderIndex: question.orderIndex ?? 0,
       hasCorrectAnswers: question.correctAnswers.length > 0,
-      mediaUrl: question.mediaUrl ?? null,
+      mediaUrl: question.media ?? null,
     };
 
     return NextResponse.json(response);
