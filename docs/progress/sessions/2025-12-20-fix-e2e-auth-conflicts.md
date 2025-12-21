@@ -184,19 +184,33 @@ await expect(page.getByRole('button', { name: /logout/i }))
 4. **Use shared page in serial mode** to maintain state
 5. **Test in isolation first** before running full suite
 
-## Next Steps (TO BE CONTINUED)
-- ❌ E2E tests NOT fully resolved - still failing in full suite
-- ⚠️ Need to investigate why shared page approach doesn't work
-- 🔍 Possible issues:
-  - Shared page instance may not properly isolate between tests
-  - Auth state corruption still happening in full suite
-  - Race conditions between parallel files and serial tests
-  - Storage state file may be getting corrupted/shared incorrectly
-- 📋 Alternative approaches to explore:
-  - Multiple admin user accounts (admin1@test.com, admin2@test.com, etc.)
-  - Per-worker storage state files
-  - Complete test isolation with fresh contexts per test
-  - Database cleanup between test files
+## Resolution (2025-12-20 Evening)
+
+**Status**: ✅ RESOLVED by Session 4 (Fix E2E Auth Parallel Execution)
+
+**Solution**: Combination of serial mode + shared context pattern in `admin-quiz-crud.spec.ts`:
+- Serial execution mode prevents parallel conflicts within file
+- `beforeAll` creates persistent browser context with auth storage state
+- Shared page instance maintains auth across tests
+- Retry configuration handles transient failures
+
+**Verification Results** (2025-12-20 Evening):
+- ✅ Run 1: 24/24 passing (21.4s)
+- ✅ Run 2: 24/24 passing (21.9s)
+- ✅ Run 3: 24/24 passing (21.2s)
+- **Conclusion**: No flaky failures detected, auth conflicts fully resolved
+
+**Files Changed**:
+- `e2e/admin-quiz-crud.spec.ts` - Serial mode + beforeAll pattern
+- `playwright.config.ts` - Retry configuration
+
+**See**: [2025-12-20-fix-e2e-auth-parallel-execution.md](./2025-12-20-fix-e2e-auth-parallel-execution.md) for detailed implementation
+
+## Deferred to R6 (Polish & Launch)
+- 📋 Testing improvements documented in `docs/progress/actions/05-testing-improvements.md`
+- Alternative isolation patterns (per-worker admin accounts, separate storage state files)
+- Selector improvements (aria-labels for icon buttons)
+- Testing guide with manual-first MCP workflow
 
 ## Outstanding Issues
 1. **Full suite failures**: Tests pass individually but fail when run together

@@ -23,6 +23,8 @@ import {
 } from '@ui/select';
 import { Alert, AlertDescription } from '@ui/alert';
 import { X, AlertTriangle } from 'lucide-react';
+import { ImageUpload } from '@components/admin/image-upload';
+import { createStorageService } from '@infrastructure/storage/supabase-storage';
 import type {
   UpdateQuestionDTO,
   QuestionListItemDTO,
@@ -50,6 +52,9 @@ export function EditQuestionDialog({
   const [correctAnswers, setCorrectAnswers] = useState<string[]>([]);
   const [points, setPoints] = useState(10);
   const [typeChanged, setTypeChanged] = useState(false);
+  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+
+  const storageService = createStorageService();
 
   // Fetch full question details when dialog opens
   useEffect(() => {
@@ -66,6 +71,7 @@ export function EditQuestionDialog({
         .then((data) => {
           if (data.options) setOptions(data.options);
           if (data.correctAnswers) setCorrectAnswers(data.correctAnswers);
+          if (data.mediaUrl) setMediaUrl(data.mediaUrl);
         })
         .catch(console.error);
     }
@@ -113,6 +119,8 @@ export function EditQuestionDialog({
         type === 'multiple-choice' ? options.filter((o) => o.trim()) : [],
       correctAnswers,
       points,
+      mediaUrl: mediaUrl || null,
+      mediaType: mediaUrl ? 'image' : null,
     };
 
     updateMutation.mutate(dto);
@@ -301,6 +309,24 @@ export function EditQuestionDialog({
               value={points}
               onChange={(e) => setPoints(Number(e.target.value))}
               min={1}
+            />
+          </div>
+
+          {/* Image Upload */}
+          <div>
+            <Label>Question Image (optional)</Label>
+            <ImageUpload
+              value={mediaUrl}
+              onUpload={async (file) => {
+                const result = await storageService.upload({
+                  file,
+                  bucket: 'quiz-media',
+                  path: `questions/${quizId}/`,
+                });
+                setMediaUrl(result.url);
+                return result.url;
+              }}
+              onRemove={() => setMediaUrl(null)}
             />
           </div>
         </div>

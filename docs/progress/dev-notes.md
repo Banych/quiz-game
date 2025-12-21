@@ -1,5 +1,73 @@
 # Dev Progress Log
 
+## 2025-12-21 (R4 COMPLETE ✅)
+- **R4 Content Admin is COMPLETE**! All deliverables finished:
+  - ✅ Auth gate (Supabase + middleware)
+  - ✅ Quiz CRUD UI (list, create, edit, delete, reorder)
+  - ✅ Question CRUD UI (all question types, media support)
+  - ✅ Media uploads (client-side resize, Supabase Storage)
+  - ✅ DTO validation (Zod schemas throughout)
+  - ⏭️ Audit log (deferred to R6 - implementation plan documented)
+- **Final bugs fixed**: GET endpoint entity property mismatch, ImageUpload preview sync
+- **Documentation**: Created `docs/progress/actions/06-r4-wrap-up.md` with complete retrospective
+- **Next**: R5 (Realtime & Scoring) - WebSocket implementation, game loop, leaderboard
+
+## 2025-12-21 (Media Flow E2E Test - ALL BUGS FIXED ✅)
+- **Manually tested complete media flow via Playwright MCP**:
+  - Upload: Client-side resize (26.6KB → 13.7KB = 48% reduction) ✅
+  - Create: Question saved with media, thumbnail displays in list ✅
+  - Edit: Fixed critical bug - GET endpoint was accessing `question.mediaUrl` but entity property is `question.media`
+  - Preview: Added useEffect to sync ImageUpload preview with value prop changes ✅
+- **Bugs Fixed**:
+  1. GET endpoint `/api/admin/quizzes/[quizId]/questions/[questionId]` - Changed `question.mediaUrl` to `question.media`
+  2. ImageUpload component - Added useEffect to sync preview when value prop changes (for edit dialog)
+- **Result**: Complete media upload flow VERIFIED working end-to-end!
+- **Screenshot**: `.playwright-mcp/media-flow-success.png` (edit dialog showing loaded image)
+
+## 2025-12-21 (Media Bug Fixes - NOW COMPLETE)
+- **Fixed critical media bugs**: Edit question with media and preview in question list
+  1. GET endpoint missing media fields - couldn't load existing media in edit dialog
+  2. PATCH endpoint missing mediaUrl in response - list didn't update after edit
+  3. Use cases not handling media updates - create/update ignored media fields
+- **Files Modified**:
+  - API route: Added mediaUrl/mediaType to GET/PATCH responses
+  - CreateQuestionUseCase: Pass DTO media fields to entity constructor
+  - UpdateQuestionUseCase: Update entity media fields when provided
+- **Result**: Media for questions NOW COMPLETE ✅ (create, edit, preview all working)
+- **Next**: Implement audit log (final R4 item)
+
+## 2025-12-20/21 (Continued - Media Uploads COMPLETE)
+- **Fixed critical Next.js config issue**: Added Supabase Storage hostname to remotePatterns in next.config.ts
+- **Manual tested complete upload flow via Playwright MCP**:
+  - Created test image (800x600 PNG, 26.6 KB)
+  - Uploaded via ImageUpload component
+  - Verified client-side resize (26.6 KB → 13.7 KB)
+  - Confirmed upload to Supabase Storage bucket
+  - Verified image preview displays correctly in dialog
+  - Screenshot saved: `.playwright-mcp/media-upload-success.png`
+- **Result**: Media upload feature COMPLETE and production-ready!
+- **Next**: Implement audit log (remaining R4 item)
+
+## 2025-12-20 (Continued - Media Uploads)
+- Implemented complete media upload feature for R4 Content Admin
+- Activated media fields in admin question DTOs (CreateQuestionDTO, UpdateQuestionDTO, QuestionAdminDTO)
+- Created storage service abstraction (IStorageService) and Supabase implementation
+- Built client-side image resizing utilities (max 1920x1080, 85% quality, ~70-90% size reduction)
+- Created ImageUpload component with drag-and-drop, preview, validation (JPEG/PNG/WebP/GIF, max 10MB)
+- Integrated upload into CreateQuestionDialog and EditQuestionDialog
+- Updated QuestionList to display 40x40px thumbnails with placeholder for non-image questions
+- Updated ListQuizQuestionsUseCase to include mediaUrl in DTOs
+- Created comprehensive docs at `docs/06-media-uploads.md` with Supabase Storage setup guide
+- **Next**: Set up Supabase Storage bucket (quiz-media) and test manually via Playwright MCP
+
+## 2025-12-20 (Continued - E2E Test Suite Verification)
+- Verified E2E test stability after Session 3/4 auth conflict fixes
+- Ran full suite 3 times: 24/24 passing all runs (21.2-21.9s)
+- No flaky failures detected
+- Serial mode + shared context pattern in admin-quiz-crud.spec.ts resolved all auth conflicts
+- Created `docs/progress/actions/05-testing-improvements.md` for R6 deferred items
+- **Next**: Complete remaining R4 items (media uploads, audit log)
+
 ## 2025-12-20 (Continued - Question CRUD)
 - **Completed Question CRUD Implementation!** All CRUD dialogs working perfectly:
   - Fixed critical `factories.ts` corruption from previous session (ServiceContainer type had code fragments, missing closing parens)

@@ -48,8 +48,8 @@ export class CreateQuestionUseCase {
       dto.correctAnswers,
       dto.type,
       dto.points,
-      undefined, // media (TODO: R5)
-      undefined, // mediaType (TODO: R5)
+      dto.mediaUrl ?? undefined,
+      dto.mediaType ?? undefined,
       options
     );
 

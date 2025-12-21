@@ -23,6 +23,8 @@ import {
   SelectValue,
 } from '@ui/select';
 import { Plus, X } from 'lucide-react';
+import { ImageUpload } from '@components/admin/image-upload';
+import { createStorageService } from '@infrastructure/storage/supabase-storage';
 import type { CreateQuestionDTO } from '@application/dtos/question-admin.dto';
 
 interface CreateQuestionDialogProps {
@@ -39,6 +41,9 @@ export function CreateQuestionDialog({ quizId }: CreateQuestionDialogProps) {
   const [options, setOptions] = useState<string[]>(['', '', '', '']);
   const [correctAnswers, setCorrectAnswers] = useState<string[]>([]);
   const [points, setPoints] = useState(10);
+  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+
+  const storageService = createStorageService();
 
   const createMutation = useMutation({
     mutationFn: async (dto: CreateQuestionDTO) => {
@@ -69,6 +74,7 @@ export function CreateQuestionDialog({ quizId }: CreateQuestionDialogProps) {
     setOptions(['', '', '', '']);
     setCorrectAnswers([]);
     setPoints(10);
+    setMediaUrl(null);
   };
 
   const handleSubmit = () => {
@@ -90,6 +96,8 @@ export function CreateQuestionDialog({ quizId }: CreateQuestionDialogProps) {
         type === 'multiple-choice' ? options.filter((o) => o.trim()) : [],
       correctAnswers,
       points,
+      mediaUrl: mediaUrl || undefined,
+      mediaType: mediaUrl ? 'image' : undefined,
     };
 
     createMutation.mutate(dto);
@@ -277,15 +285,23 @@ export function CreateQuestionDialog({ quizId }: CreateQuestionDialogProps) {
             />
           </div>
 
-          {/* TODO: R5 - Media Upload */}
-          {/* <div>
-            <Label htmlFor="media-url">Media URL (optional)</Label>
-            <Input
-              id="media-url"
-              disabled
-              placeholder="Coming soon..."
+          {/* Image Upload */}
+          <div>
+            <Label>Question Image (optional)</Label>
+            <ImageUpload
+              value={mediaUrl}
+              onUpload={async (file) => {
+                const result = await storageService.upload({
+                  file,
+                  bucket: 'quiz-media',
+                  path: `questions/${quizId}/`,
+                });
+                setMediaUrl(result.url);
+                return result.url;
+              }}
+              onRemove={() => setMediaUrl(null)}
             />
-          </div> */}
+          </div>
         </div>
 
         <DialogFooter>
