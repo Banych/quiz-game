@@ -25,15 +25,15 @@
 - **Tooling**: Yarn as package manager, ESLint/Prettier/Vitest, Playwright (later) for flows.
 
 ## Release Roadmap
-| Release                     | Goal                             | Scope / Acceptance                                                                                                                    |
-| --------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **R0 – Foundation**         | Stable scaffolding               | Upgrade lint/test config, Tailwind, TanStack Query, Yarn scripts, CI smoke test, health page.                                         |
-| **R1 – Domain & Data**      | DDD-lite core established        | DTO catalog, Prisma schema + migrations, repositories for Quiz/Player/Question, seed data, Supabase project wiring, SDK wrappers.     |
-| **R2 – Host MVP**           | Run a scripted quiz from desktop | Host dashboard per mockups, question timeline view, timer component, TanStack hooks calling stubbed services, optimistic stats cards. |
-| **R3 – Player MVP**         | Join + submit answers            | Join screen, answer pad, timer sync via WebSocket, player session persistence, latency budget instrumentation.                        |
-| **R4 – Content Admin**      | Manage quizzes and media         | Auth gate, CRUD UI for quizzes/questions, uploads to Supabase storage, DTO validation, audit log.                                     |
-| **R5 – Realtime & Scoring** | Production-ready game loop       | Full scoring logic, round transitions, leaderboard, reconnect flows, analytics events, load testing.                                  |
-| **R6 – Polish & Launch**    | Fit/finish                       | Accessibility pass, responsive tweaks, marketing landing, incident docs, deployment promotion to Vercel prod.                         |
+| Release                     | Goal                             | Scope / Acceptance                                                                                                                              | Status              |
+| --------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| **R0 – Foundation**         | Stable scaffolding               | Upgrade lint/test config, Tailwind, TanStack Query, Yarn scripts, CI smoke test, health page.                                                   | ✅ Complete          |
+| **R1 – Domain & Data**      | DDD-lite core established        | DTO catalog, Prisma schema + migrations, repositories for Quiz/Player/Question, seed data, Supabase project wiring, SDK wrappers.               | ✅ Complete          |
+| **R2 – Host MVP**           | Run a scripted quiz from desktop | Host dashboard per mockups, question timeline view, timer component, TanStack hooks calling stubbed services, optimistic stats cards.           | ✅ Complete          |
+| **R3 – Player MVP**         | Join + submit answers            | Join screen, answer pad, timer sync via WebSocket, player session persistence, latency budget instrumentation.                                  | ✅ Complete          |
+| **R4 – Content Admin**      | Manage quizzes and media         | Auth gate, CRUD UI for quizzes/questions, uploads to Supabase storage, DTO validation, audit log (deferred to R6).                              | ✅ Complete (Dec 21) |
+| **R5 – Realtime & Scoring** | Production-ready game loop       | Speed-based scoring, round transitions, reconnection flows, load testing. See `docs/progress/actions/07-r5-realtime-scoring-implementation.md`. | 📋 In Progress       |
+| **R6 – Polish & Launch**    | Fit/finish                       | Accessibility pass, responsive tweaks, audit log, PostHog analytics, marketing landing, incident docs, Vercel prod deployment.                  | 📅 Planned           |
 
 ## Cross-Cutting Workstreams
 - **Authentication & Sessions**: Supabase Auth or Vercel middleware; host/admin vs player roles defined in R1 but activated before R4.
