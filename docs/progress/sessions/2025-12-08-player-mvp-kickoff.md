@@ -1,8 +1,8 @@
 # 2025-12-08 – Player MVP Kickoff
 
 ## Active Goals
-- [ ] Document/implement realtime channel auth + player-specific events before expanding beyond internal tests.
-- [ ] Backfill Playwright smoke scenarios for the `/join → /play` flow once CI has a stable player DB seed.
+- [x] Document/implement realtime channel auth + player-specific events before expanding beyond internal tests. (Completed 2025-12-19)
+- [ ] Backfill Playwright smoke scenarios for the `/join → /play` flow once CI has a stable player DB seed. (Partially complete - 3/3 tests passing, can expand during R5)
 
 ## Completed
 - [x] Exposed `GET /api/quiz/[quizId]/player/[playerId]` so the mobile app can hydrate `PlayerSessionDTO` via TanStack Query.

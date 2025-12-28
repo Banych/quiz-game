@@ -1,4 +1,4 @@
-# Action 03 – Draft Prisma Schema
+# Action 03 – Draft Prisma Schema ✅ (Completed 2025-12-19)
 
 - Introduced `src/infrastructure/database/prisma/schema.prisma` with enums for quiz/player/question states plus concrete models for `Quiz`, `Question`, `Player`, and `Answer`.
 - Models align with DTO catalog: quizzes track timing/settings, questions include publication/order flags, players carry status/score/rank, and answers record timing/accuracy metadata.

@@ -1,4 +1,4 @@
-# Action 02 – Audit Domain Repositories
+# Action 02 – Audit Domain Repositories ✅ (Completed 2025-12-19)
 
 - `src/domain/repositories/quiz-repository.ts` currently supports CRUD only; documented need for lookup by join code, status filtering, and partial persistence to avoid rewriting whole aggregates.
 - `src/domain/repositories/player-repository.ts` lacks quiz scoping helpers such as `listByQuizId` or `findByQuizIdAndName`; upcoming Prisma layer must expose these so DTOs can include names/status.

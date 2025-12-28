@@ -1,4 +1,4 @@
-# Action 04 – Fill Use Cases & Services
+# Action 04 – Fill Use Cases & Services ✅ (Completed 2025-12-19)
 
 - Added DTO mappers (`src/application/mappers/player-mapper.ts`, updated `quiz-mapper.ts`) so player/quiz shapes line up with the shared zod contracts TanStack hooks expect.
 - Extended domain aggregate getters (player IDs, timers, active question metadata) to hydrate DTOs without leaking entity internals.
