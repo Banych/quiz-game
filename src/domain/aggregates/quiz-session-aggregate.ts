@@ -156,7 +156,9 @@ export class QuizSessionAggregate {
 
     // Use provided strategy or get from quiz settings
     const scoringStrategy = strategy || this.quiz.getScoringStrategy();
-    const timeTaken = this.timer.getRemainingTime();
+    // Calculate elapsed time (not remaining time) for scoring
+    const timeTaken =
+      this.quiz.settings.timePerQuestion - this.timer.getRemainingTime();
 
     // Calculate points using scoring strategy
     const points = isCorrect

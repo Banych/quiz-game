@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ScoringAlgorithmDTO } from './quiz.dto';
 
 /**
  * DTO for creating a new quiz (admin)
@@ -7,6 +8,8 @@ export const CreateQuizDTO = z.object({
   title: z.string().min(1, 'Title is required').max(200),
   timePerQuestion: z.number().int().positive().default(30),
   allowSkipping: z.boolean().default(false),
+  scoringAlgorithm: ScoringAlgorithmDTO.default('EXPONENTIAL_DECAY'),
+  scoringDecayRate: z.number().min(0.1).max(5.0).optional(),
 });
 
 export type CreateQuizDTO = z.infer<typeof CreateQuizDTO>;
@@ -18,6 +21,8 @@ export const UpdateQuizDTO = z.object({
   title: z.string().min(1).max(200).optional(),
   timePerQuestion: z.number().int().positive().optional(),
   allowSkipping: z.boolean().optional(),
+  scoringAlgorithm: ScoringAlgorithmDTO.optional(),
+  scoringDecayRate: z.number().min(0.1).max(5.0).optional(),
 });
 
 export type UpdateQuizDTO = z.infer<typeof UpdateQuizDTO>;
@@ -33,6 +38,8 @@ export const QuizListItemDTO = z.object({
   playerCount: z.number().int().nonnegative(),
   timePerQuestion: z.number().int().positive(),
   allowSkipping: z.boolean(),
+  scoringAlgorithm: ScoringAlgorithmDTO,
+  scoringDecayRate: z.number().nullable(),
   joinCode: z.string().nullable(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
