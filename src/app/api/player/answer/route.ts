@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getServices } from '@application/services/factories';
 import { broadcastAnswerAck } from '@infrastructure/realtime/broadcast-player-events';
+import { broadcastLeaderboard } from '@infrastructure/realtime/broadcast-leaderboard';
+import { getGlobalBroadcaster } from '@lib/debounce-broadcast';
 
 const SubmitAnswerBodySchema = z.object({
   quizId: z.string().min(1),
@@ -13,6 +15,13 @@ const SubmitAnswerBodySchema = z.object({
 type ErrorResponse = {
   error: string;
 };
+
+// Initialize debounced broadcaster for leaderboard updates
+const leaderboardBroadcaster = getGlobalBroadcaster(async (quizId: string) => {
+  const { quizService } = getServices();
+  const quizState = await quizService.getQuizState(quizId);
+  await broadcastLeaderboard(quizId, quizState.leaderboard);
+});
 
 export async function POST(request: Request) {
   try {
@@ -34,6 +43,9 @@ export async function POST(request: Request) {
       result.answerId,
       result.isCorrect
     );
+
+    // Schedule debounced leaderboard broadcast (batched within 500ms)
+    leaderboardBroadcaster.schedule(parsed.quizId);
 
     return NextResponse.json({ status: 'submitted', ...result });
   } catch (error) {
