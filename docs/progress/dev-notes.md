@@ -1,5 +1,15 @@
 # Dev Progress Log
 
+## 2026-01-11 (R5 Phase 2 UI Enhancements ✅)
+- **Player scoring UX complete**: Live point preview, speed indicators, scoring info badges
+- Created `ScoringInfoBadge` component (Radix tooltip showing algorithm descriptions)
+- Built `scoring-client.ts` with formulas matching domain layer (exponential/linear/fixed)
+- Player sees real-time point calculations updating each second during countdown
+- Speed bonus indicator on submission: ⚡ Lightning / 🚀 Fast / ✓ Good / 🐢 Steady / ⏱️ Last second
+- Host dashboard shows scoring config in new 3-column settings card
+- **Deferred**: Animated leaderboard (rank arrows, smooth transitions) to later phase
+- Session: [2026-01-11-r5-phase2-ui-enhancements.md](sessions/2026-01-11-r5-phase2-ui-enhancements.md)
+
 ## 2025-12-21 (R4 COMPLETE ✅)
 - **R4 Content Admin is COMPLETE**! All deliverables finished:
   - ✅ Auth gate (Supabase + middleware)

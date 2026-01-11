@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { ScoringInfoBadge } from './scoring-info-badge';
 
 const STORAGE_KEY = 'quiz-game-player-session';
 
@@ -16,6 +17,10 @@ type JoinResponse = {
   quiz: {
     id: string;
     title: string;
+    settings?: {
+      scoringAlgorithm?: 'EXPONENTIAL_DECAY' | 'LINEAR' | 'FIXED';
+      scoringDecayRate?: number;
+    };
   };
   player: {
     id: string;
@@ -32,6 +37,7 @@ export function PlayerJoinForm() {
   const [storedSession, setStoredSession] = useState<StoredSession | null>(
     null
   );
+  const [quizInfo, setQuizInfo] = useState<JoinResponse['quiz'] | null>(null);
 
   useEffect(() => {
     try {
@@ -45,22 +51,13 @@ export function PlayerJoinForm() {
     }
   }, []);
 
-  const persistSession = (session: StoredSession) => {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-      setStoredSession(session);
-    } catch (storageError) {
-      console.warn('Unable to persist player session', storageError);
-    }
-  };
-
   const clearStoredSession = () => {
     try {
       window.localStorage.removeItem(STORAGE_KEY);
+      setStoredSession(null);
     } catch (storageError) {
       console.warn('Unable to clear stored session', storageError);
     }
-    setStoredSession(null);
   };
 
   const handleJoin = async (event: FormEvent<HTMLFormElement>) => {
@@ -103,7 +100,15 @@ export function PlayerJoinForm() {
         playerName: payload.player.name,
       };
 
-      persistSession(session);
+      // Store session in localStorage
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+        setStoredSession(session);
+      } catch (storageError) {
+        console.warn('Unable to persist player session', storageError);
+      }
+
+      setQuizInfo(payload.quiz);
       setJoinCode('');
       setPlayerName('');
       router.push(`/play/${payload.quiz.id}/${payload.player.id}`);
@@ -136,7 +141,15 @@ export function PlayerJoinForm() {
           <h1 className="mt-3 text-4xl font-semibold">Join the action</h1>
           <p className="mt-2 text-base text-slate-200/80">
             Enter the code from the host screen and pick a display name. We’ll
-            keep you synced the moment the round starts.
+            ke{' '}
+            {quizInfo?.settings?.scoringAlgorithm && (
+              <div className="mt-4 flex justify-center">
+                <ScoringInfoBadge
+                  algorithm={quizInfo.settings.scoringAlgorithm}
+                  decayRate={quizInfo.settings.scoringDecayRate}
+                />
+              </div>
+            )}{' '}
           </p>
         </header>
 
