@@ -10,6 +10,7 @@ const buildAggregate = () => {
   const quiz = new Quiz('quiz-1', 'Math', [question], {
     allowSkipping: false,
     timePerQuestion: 30,
+    scoringAlgorithm: 'FIXED',
   });
   const aggregate = new QuizSessionAggregate(quiz, 30);
   aggregate.addPlayer('p1');

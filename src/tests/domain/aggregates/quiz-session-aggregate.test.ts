@@ -9,6 +9,7 @@ describe('QuizSessionAggregate', () => {
     const quiz = new Quiz('quiz1', 'Math Quiz', [], {
       timePerQuestion: 30,
       allowSkipping: true,
+      scoringAlgorithm: 'FIXED',
     });
     const aggregate = new QuizSessionAggregate(quiz, 30);
 
@@ -28,6 +29,7 @@ describe('QuizSessionAggregate', () => {
     const quiz = new Quiz('quiz1', 'Math Quiz', [], {
       timePerQuestion: 30,
       allowSkipping: true,
+      scoringAlgorithm: 'FIXED',
     });
     const timerStart = new Date('2025-01-01T00:00:00Z');
     const timerEnd = new Date('2025-01-01T00:00:30Z');
@@ -45,6 +47,7 @@ describe('QuizSessionAggregate', () => {
     const quiz = new Quiz('quiz1', 'Math Quiz', [], {
       timePerQuestion: 30,
       allowSkipping: true,
+      scoringAlgorithm: 'FIXED',
     });
     const aggregate = new QuizSessionAggregate(quiz, 30);
 
@@ -58,6 +61,7 @@ describe('QuizSessionAggregate', () => {
     const quiz = new Quiz('quiz1', 'Math Quiz', [], {
       timePerQuestion: 30,
       allowSkipping: true,
+      scoringAlgorithm: 'FIXED',
     });
     const aggregate = new QuizSessionAggregate(quiz, 30);
 
@@ -72,6 +76,7 @@ describe('QuizSessionAggregate', () => {
     const quiz = new Quiz('quiz1', 'Math Quiz', questions, {
       timePerQuestion: 30,
       allowSkipping: true,
+      scoringAlgorithm: 'FIXED',
     });
     const player = new Player('p1', 'John Doe', 'quiz1');
 
@@ -101,6 +106,7 @@ describe('QuizSessionAggregate', () => {
     const quiz = new Quiz('quiz1', 'Math Quiz', questions, {
       timePerQuestion: 30,
       allowSkipping: true,
+      scoringAlgorithm: 'FIXED',
     });
     const player = new Player('p1', 'John Doe', 'quiz1');
 
@@ -130,6 +136,7 @@ describe('QuizSessionAggregate', () => {
     const quiz = new Quiz('quiz1', 'Math Quiz', questions, {
       timePerQuestion: 30,
       allowSkipping: true,
+      scoringAlgorithm: 'FIXED',
     });
     const player = new Player('p1', 'John Doe', 'quiz1');
     const aggregate = new QuizSessionAggregate(quiz, 30);
@@ -145,6 +152,7 @@ describe('QuizSessionAggregate', () => {
     const quiz = new Quiz('quiz1', 'Math Quiz', questions, {
       timePerQuestion: 30,
       allowSkipping: true,
+      scoringAlgorithm: 'FIXED',
     });
     const player = new Player('p1', 'John Doe', 'quiz1');
     const aggregate = new QuizSessionAggregate(quiz, 30);
@@ -163,6 +171,7 @@ describe('QuizSessionAggregate', () => {
       {
         timePerQuestion: 30,
         allowSkipping: true,
+        scoringAlgorithm: 'FIXED',
       }
     );
     const aggregate = new QuizSessionAggregate(quiz, 30);
@@ -178,6 +187,7 @@ describe('QuizSessionAggregate', () => {
     const quiz = new Quiz('quiz1', 'Math Quiz', questions, {
       timePerQuestion: 30,
       allowSkipping: true,
+      scoringAlgorithm: 'FIXED',
     });
     const player1 = new Player('p1', 'John Doe', 'quiz1');
     const player2 = new Player('p2', 'Jane Doe', 'quiz1');

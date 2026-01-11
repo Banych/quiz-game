@@ -5,9 +5,17 @@ import { AnswerDTO } from './answer.dto';
 
 export const QuizStatusDTO = z.enum(['Pending', 'Active', 'Completed']);
 
+export const ScoringAlgorithmDTO = z.enum([
+  'EXPONENTIAL_DECAY',
+  'LINEAR',
+  'FIXED',
+]);
+
 export const QuizSettingsDTO = z.object({
   timePerQuestion: z.number().int().positive(),
   allowSkipping: z.boolean(),
+  scoringAlgorithm: ScoringAlgorithmDTO.optional(),
+  scoringDecayRate: z.number().min(0.1).max(5.0).optional(),
 });
 
 export const LeaderboardEntryDTO = z.object({
@@ -41,5 +49,6 @@ export const QuizDTO = z.object({
 
 export type QuizDTO = z.infer<typeof QuizDTO>;
 export type QuizSettingsDTO = z.infer<typeof QuizSettingsDTO>;
+export type ScoringAlgorithmDTO = z.infer<typeof ScoringAlgorithmDTO>;
 export type LeaderboardEntryDTO = z.infer<typeof LeaderboardEntryDTO>;
 export type QuizTimerDTO = z.infer<typeof QuizTimerDTO>;

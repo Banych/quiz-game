@@ -50,6 +50,7 @@ describe('Quiz Session Integration', () => {
     const quiz = new Quiz('quiz1', 'General Knowledge Quiz', questions, {
       timePerQuestion: 30,
       allowSkipping: true,
+      scoringAlgorithm: 'FIXED',
     });
 
     const player1 = new Player('p1', 'Alice', 'quiz1');

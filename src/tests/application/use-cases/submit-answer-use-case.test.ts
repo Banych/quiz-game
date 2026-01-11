@@ -43,6 +43,7 @@ describe('SubmitAnswerUseCase', () => {
       new Quiz('quiz1', 'Sample Quiz', [question], {
         timePerQuestion: 30,
         allowSkipping: true,
+        scoringAlgorithm: 'FIXED',
       }),
       30
     );

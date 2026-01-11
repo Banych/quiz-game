@@ -61,6 +61,8 @@ describe('PrismaQuizRepository', () => {
       activeQuestionId: 'q1',
       timePerQuestion: 30,
       allowSkipping: false,
+      scoringAlgorithm: 'FIXED',
+      scoringDecayRate: null,
       joinCode: 'JOIN',
       startTime: now,
       endTime: null,
@@ -147,6 +149,7 @@ describe('PrismaQuizRepository', () => {
     const quiz = new Quiz('quiz-1', 'Math', [question], {
       timePerQuestion: 30,
       allowSkipping: false,
+      scoringAlgorithm: 'FIXED',
     });
     const aggregate = new QuizSessionAggregate(quiz, 30);
     aggregate.addPlayer('player-1');
