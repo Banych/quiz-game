@@ -5,6 +5,8 @@ import type { PlayerSessionDTO } from '@application/dtos/player-session.dto';
 import { usePlayerSession } from '@hooks/use-player-session';
 import { useCountdownTimer } from '@hooks/use-countdown-timer';
 import { Button } from '@/components/ui/button';
+import { ScoringInfoBadge } from './scoring-info-badge';
+import { calculatePoints, getSpeedIndicator } from '@/lib/scoring-client';
 
 interface PlayerSessionScreenProps {
   quizId: string;
@@ -83,6 +85,40 @@ export function PlayerSessionScreen({
 
   const playerScore = leaderboardEntry?.score ?? session.player.score ?? 0;
 
+  // Calculate live point preview based on elapsed time
+  const livePointPreview = useMemo(() => {
+    if (!activeQuestionId || !session.quiz.timer.startTime) {
+      return null;
+    }
+
+    const currentQuestion = session.quiz.questions.find(
+      (q) => q.id === activeQuestionId
+    );
+    if (!currentQuestion) {
+      return null;
+    }
+
+    const algorithm =
+      session.quiz.settings.scoringAlgorithm ?? 'EXPONENTIAL_DECAY';
+    const decayRate = session.quiz.settings.scoringDecayRate ?? 2.0;
+    const totalTime = session.quiz.timer.duration;
+    const timeTaken = Math.max(0, totalTime - (currentRemaining ?? 0));
+
+    return calculatePoints({
+      basePoints: currentQuestion.points,
+      timeTaken,
+      totalTime,
+      algorithm,
+      decayRate,
+    });
+  }, [
+    activeQuestionId,
+    session.quiz.questions,
+    session.quiz.settings,
+    session.quiz.timer,
+    currentRemaining,
+  ]);
+
   const handleSubmit = async () => {
     if (!activeQuestionId) {
       setSubmissionMessage(
@@ -99,11 +135,20 @@ export function PlayerSessionScreen({
 
     setSubmissionMessage(null);
 
+    // Calculate speed bonus if we have timing info
+    let speedBonusMessage = '';
+    if (livePointPreview !== null && session.quiz.timer.duration) {
+      const totalTime = session.quiz.timer.duration;
+      const timeTaken = Math.max(0, totalTime - (currentRemaining ?? 0));
+      const speedInfo = getSpeedIndicator(timeTaken, totalTime);
+      speedBonusMessage = ` ${speedInfo.emoji} ${speedInfo.label} — ${livePointPreview} pts if correct!`;
+    }
+
     try {
       await submitAnswer({ questionId: activeQuestionId, answer: trimmed });
       setAnswerValue('');
       setSubmissionMessage(
-        'Answer received! You can adjust until the host locks it in.'
+        `Answer received!${speedBonusMessage} You can adjust until the host locks it in.`
       );
     } catch (submitError) {
       setSubmissionMessage(
@@ -134,7 +179,16 @@ export function PlayerSessionScreen({
           <p className="mt-1 text-sm text-muted-foreground">
             Quiz: {session.quiz.title}
           </p>
-          <p className="mt-2 text-sm text-muted-foreground">
+          {session.quiz.settings.scoringAlgorithm && (
+            <div className="mt-3 flex justify-center">
+              <ScoringInfoBadge
+                algorithm={session.quiz.settings.scoringAlgorithm}
+                decayRate={session.quiz.settings.scoringDecayRate}
+                className="bg-card/50 border-border text-foreground"
+              />
+            </div>
+          )}
+          <p className="mt-3 text-sm text-muted-foreground">
             Status:{' '}
             <span className="font-semibold">{session.player.status}</span>
           </p>
@@ -173,6 +227,16 @@ export function PlayerSessionScreen({
               </p>
             </div>
           </div>
+          {livePointPreview !== null && (
+            <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-center">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                If you answer now
+              </p>
+              <p className="mt-0.5 text-2xl font-bold text-primary">
+                {livePointPreview} pts
+              </p>
+            </div>
+          )}
           {waitingForQuestion ? (
             <p className="mt-3 text-sm text-muted-foreground">
               Waiting for the host to launch the next question.

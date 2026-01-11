@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { TimerCountdown } from './timer-countdown';
 import { QuestionTimeline } from './question-timeline';
+import { ScoringInfoBadge } from '@/components/player/scoring-info-badge';
 
 interface HostQuizDashboardProps {
   quizId: string;
@@ -82,6 +83,15 @@ export function HostQuizDashboard({
                 {quiz.joinCode ?? '—'}
               </span>
             </p>
+            {quiz.settings.scoringAlgorithm && (
+              <div className="mt-2">
+                <ScoringInfoBadge
+                  algorithm={quiz.settings.scoringAlgorithm}
+                  decayRate={quiz.settings.scoringDecayRate}
+                  className="bg-card/50 border-border text-foreground"
+                />
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <span
@@ -155,7 +165,41 @@ export function HostQuizDashboard({
           ) : null}
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2">
+        <section className="grid gap-4 md:grid-cols-3">
+          <article className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold">Settings</h2>
+            <div className="space-y-3 text-sm">
+              <div>
+                <p className="text-muted-foreground">Time per question</p>
+                <p className="font-mono text-lg">
+                  {quiz.settings.timePerQuestion}s
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Skip allowed</p>
+                <p className="font-medium">
+                  {quiz.settings.allowSkipping ? 'Yes' : 'No'}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Scoring</p>
+                <p className="font-medium">
+                  {quiz.settings.scoringAlgorithm === 'EXPONENTIAL_DECAY' &&
+                    'Speed Scoring'}
+                  {quiz.settings.scoringAlgorithm === 'LINEAR' && 'Balanced'}
+                  {quiz.settings.scoringAlgorithm === 'FIXED' && 'Fixed Points'}
+                  {!quiz.settings.scoringAlgorithm && 'Default'}
+                </p>
+                {quiz.settings.scoringAlgorithm === 'EXPONENTIAL_DECAY' &&
+                  quiz.settings.scoringDecayRate && (
+                    <p className="text-xs text-muted-foreground">
+                      Rate: {quiz.settings.scoringDecayRate.toFixed(1)}
+                    </p>
+                  )}
+              </div>
+            </div>
+          </article>
+
           <article className="rounded-xl border border-border bg-card p-4 shadow-sm">
             <h2 className="mb-4 text-lg font-semibold">Timer</h2>
             <div className="flex items-center justify-center">
