@@ -14,8 +14,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ScoringSettings } from '@/components/admin/scoring-settings';
 import type { UpdateQuizDTO } from '@application/dtos/quiz-admin.dto';
 import type { QuizListItemDTO } from '@application/dtos/quiz-admin.dto';
+import type { ScoringAlgorithmType } from '@lib/scoring-preview';
 
 type EditQuizDialogProps = {
   open: boolean;
@@ -32,6 +34,13 @@ export function EditQuizDialog({
   const [title, setTitle] = useState(quiz.title);
   const [timePerQuestion, setTimePerQuestion] = useState(quiz.timePerQuestion);
   const [allowSkipping, setAllowSkipping] = useState(quiz.allowSkipping);
+  const [scoringAlgorithm, setScoringAlgorithm] =
+    useState<ScoringAlgorithmType>(
+      quiz.scoringAlgorithm || 'EXPONENTIAL_DECAY'
+    );
+  const [scoringDecayRate, setScoringDecayRate] = useState<number | undefined>(
+    quiz.scoringDecayRate || 2.0
+  );
 
   // Reset form when quiz changes or dialog opens
   useEffect(() => {
@@ -39,6 +48,8 @@ export function EditQuizDialog({
       setTitle(quiz.title);
       setTimePerQuestion(quiz.timePerQuestion);
       setAllowSkipping(quiz.allowSkipping);
+      setScoringAlgorithm(quiz.scoringAlgorithm || 'EXPONENTIAL_DECAY');
+      setScoringDecayRate(quiz.scoringDecayRate || 2.0);
     }
   }, [open, quiz]);
 
@@ -63,7 +74,13 @@ export function EditQuizDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateMutation.mutate({ title, timePerQuestion, allowSkipping });
+    updateMutation.mutate({
+      title,
+      timePerQuestion,
+      allowSkipping,
+      scoringAlgorithm,
+      scoringDecayRate,
+    });
   };
 
   return (
@@ -116,6 +133,15 @@ export function EditQuizDialog({
               Allow players to skip questions
             </Label>
           </div>
+
+          <ScoringSettings
+            timePerQuestion={timePerQuestion}
+            scoringAlgorithm={scoringAlgorithm}
+            scoringDecayRate={scoringDecayRate}
+            onScoringAlgorithmChange={setScoringAlgorithm}
+            onScoringDecayRateChange={setScoringDecayRate}
+            disabled={updateMutation.isPending}
+          />
 
           {updateMutation.isError && (
             <p className="text-sm text-destructive">

@@ -14,7 +14,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ScoringSettings } from '@/components/admin/scoring-settings';
 import type { CreateQuizDTO } from '@application/dtos/quiz-admin.dto';
+import type { ScoringAlgorithmType } from '@lib/scoring-preview';
 
 type CreateQuizDialogProps = {
   open: boolean;
@@ -29,6 +31,11 @@ export function CreateQuizDialog({
   const [title, setTitle] = useState('');
   const [timePerQuestion, setTimePerQuestion] = useState(30);
   const [allowSkipping, setAllowSkipping] = useState(false);
+  const [scoringAlgorithm, setScoringAlgorithm] =
+    useState<ScoringAlgorithmType>('EXPONENTIAL_DECAY');
+  const [scoringDecayRate, setScoringDecayRate] = useState<number | undefined>(
+    2.0
+  );
 
   const createMutation = useMutation({
     mutationFn: async (data: CreateQuizDTO) => {
@@ -48,13 +55,21 @@ export function CreateQuizDialog({
       setTitle('');
       setTimePerQuestion(30);
       setAllowSkipping(false);
+      setScoringAlgorithm('EXPONENTIAL_DECAY');
+      setScoringDecayRate(2.0);
       onOpenChange(false);
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createMutation.mutate({ title, timePerQuestion, allowSkipping });
+    createMutation.mutate({
+      title,
+      timePerQuestion,
+      allowSkipping,
+      scoringAlgorithm,
+      scoringDecayRate,
+    });
   };
 
   return (
@@ -105,6 +120,15 @@ export function CreateQuizDialog({
               Allow players to skip questions
             </Label>
           </div>
+
+          <ScoringSettings
+            timePerQuestion={timePerQuestion}
+            scoringAlgorithm={scoringAlgorithm}
+            scoringDecayRate={scoringDecayRate}
+            onScoringAlgorithmChange={setScoringAlgorithm}
+            onScoringDecayRateChange={setScoringDecayRate}
+            disabled={createMutation.isPending}
+          />
 
           {createMutation.isError && (
             <p className="text-sm text-destructive">
