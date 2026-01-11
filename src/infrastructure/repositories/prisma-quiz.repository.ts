@@ -35,6 +35,11 @@ const mapQuizRecordToAggregate = (
   const quiz = new Quiz(record.id, record.title, questions, {
     timePerQuestion: record.timePerQuestion,
     allowSkipping: record.allowSkipping,
+    scoringAlgorithm: record.scoringAlgorithm as
+      | 'EXPONENTIAL_DECAY'
+      | 'LINEAR'
+      | 'FIXED',
+    scoringDecayRate: record.scoringDecayRate ?? undefined,
   });
   quiz.joinCode = record.joinCode ?? undefined;
 
@@ -149,6 +154,9 @@ export class PrismaQuizRepository implements IQuizRepository {
         timerExpiresAt: quizAggregate.timerEndTime ?? null,
         timePerQuestion: quizAggregate.quizSettings.timePerQuestion,
         allowSkipping: quizAggregate.quizSettings.allowSkipping,
+        scoringAlgorithm:
+          quizAggregate.quizSettings.scoringAlgorithm ?? 'EXPONENTIAL_DECAY',
+        scoringDecayRate: quizAggregate.quizSettings.scoringDecayRate ?? 2.0,
         joinCode: quizAggregate.joinCode ?? null,
       },
     });
@@ -217,6 +225,8 @@ export class PrismaQuizRepository implements IQuizRepository {
         currentQuestionIndex: quiz.currentQuestionIndex,
         timePerQuestion: quiz.settings.timePerQuestion,
         allowSkipping: quiz.settings.allowSkipping,
+        scoringAlgorithm: quiz.settings.scoringAlgorithm ?? 'EXPONENTIAL_DECAY',
+        scoringDecayRate: quiz.settings.scoringDecayRate ?? 2.0,
         joinCode: quiz.joinCode ?? null,
       },
     });
@@ -232,6 +242,8 @@ export class PrismaQuizRepository implements IQuizRepository {
         title: quiz.title,
         timePerQuestion: quiz.settings.timePerQuestion,
         allowSkipping: quiz.settings.allowSkipping,
+        scoringAlgorithm: quiz.settings.scoringAlgorithm ?? 'EXPONENTIAL_DECAY',
+        scoringDecayRate: quiz.settings.scoringDecayRate ?? 2.0,
       },
     });
   }

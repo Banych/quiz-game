@@ -3,6 +3,7 @@ import { Timer } from '@domain/value-objects/timer';
 import { Answer } from '@domain/entities/answer';
 import { LeaderboardScore } from '@domain/types/leaderboard-score';
 import { Question } from '@domain/entities/question';
+import { type ScoringStrategy } from '@domain/value-objects/scoring-strategy';
 
 type QuizSessionAggregateOptions = {
   timerStartTime?: Date;
@@ -139,7 +140,8 @@ export class QuizSessionAggregate {
   submitAnswer(
     playerId: string,
     questionId: string,
-    answerValue: string
+    answerValue: string,
+    strategy?: ScoringStrategy
   ): Answer {
     if (this.quiz.status !== QuizStatus.Active) {
       throw new Error('Quiz is not active.');
@@ -151,7 +153,19 @@ export class QuizSessionAggregate {
     }
 
     const isCorrect = question.validateAnswer(answerValue);
-    const points = isCorrect ? question.points : 0;
+
+    // Use provided strategy or get from quiz settings
+    const scoringStrategy = strategy || this.quiz.getScoringStrategy();
+    const timeTaken = this.timer.getRemainingTime();
+
+    // Calculate points using scoring strategy
+    const points = isCorrect
+      ? scoringStrategy.calculate(
+          question.points,
+          timeTaken || 0,
+          this.quiz.settings.timePerQuestion
+        )
+      : 0;
 
     const answer = new Answer(
       crypto.randomUUID(),
@@ -159,7 +173,7 @@ export class QuizSessionAggregate {
       questionId,
       answerValue,
       new Date(),
-      this.timer.getRemainingTime()
+      timeTaken
     );
     if (isCorrect) {
       answer.markCorrect(points);

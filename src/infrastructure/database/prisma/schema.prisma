@@ -34,21 +34,29 @@ enum QuestionMediaType {
   audio
 }
 
+enum ScoringAlgorithm {
+  EXPONENTIAL_DECAY
+  LINEAR
+  FIXED
+}
+
 model Quiz {
-  id                   String     @id @default(cuid())
+  id                   String           @id @default(cuid())
   title                String
-  status               QuizStatus @default(Pending)
-  currentQuestionIndex Int        @default(0)
+  status               QuizStatus       @default(Pending)
+  currentQuestionIndex Int              @default(0)
   activeQuestionId     String?
-  timePerQuestion      Int        @default(30)
-  allowSkipping        Boolean    @default(false)
-  joinCode             String?    @unique
+  timePerQuestion      Int              @default(30)
+  allowSkipping        Boolean          @default(false)
+  scoringAlgorithm     ScoringAlgorithm @default(EXPONENTIAL_DECAY)
+  scoringDecayRate     Float            @default(2.0)
+  joinCode             String?          @unique
   startTime            DateTime?
   endTime              DateTime?
   timerStartedAt       DateTime?
   timerExpiresAt       DateTime?
-  createdAt            DateTime   @default(now())
-  updatedAt            DateTime   @updatedAt
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
 
   questions Question[]
   players   Player[]
