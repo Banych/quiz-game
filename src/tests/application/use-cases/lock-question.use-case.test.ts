@@ -1,0 +1,327 @@
+import { LockQuestionUseCase } from '@application/use-cases/lock-question.use-case';
+import { QuizSessionAggregate } from '@domain/aggregates/quiz-session-aggregate';
+import { Quiz, QuizStatus } from '@domain/entities/quiz';
+import { Question } from '@domain/entities/question';
+import { Player, PlayerStatus } from '@domain/entities/player';
+import { Answer } from '@domain/entities/answer';
+import type { IQuizRepository } from '@domain/repositories/quiz-repository';
+import type { IPlayerRepository } from '@domain/repositories/player-repository';
+import type { ILeaderboardSnapshotRepository } from '@domain/repositories/leaderboard-snapshot-repository';
+import { beforeEach, describe, expect, it, vi, type Mocked } from 'vitest';
+
+describe('LockQuestionUseCase', () => {
+  let quizRepository: Mocked<IQuizRepository>;
+  let playerRepository: Mocked<IPlayerRepository>;
+  let snapshotRepository: Mocked<ILeaderboardSnapshotRepository>;
+  let useCase: LockQuestionUseCase;
+
+  beforeEach(() => {
+    quizRepository = {
+      findById: vi.fn(),
+      save: vi.fn(),
+      findByJoinCode: vi.fn(),
+      listByStatus: vi.fn(),
+      updateCurrentQuestion: vi.fn(),
+      updateLeaderboard: vi.fn(),
+      delete: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      findAll: vi.fn(),
+      findEntityById: vi.fn(),
+    } as unknown as Mocked<IQuizRepository>;
+
+    playerRepository = {
+      findById: vi.fn(),
+      listByQuizId: vi.fn(),
+      findByQuizIdAndName: vi.fn(),
+      save: vi.fn(),
+      updateStatus: vi.fn(),
+      updateScore: vi.fn(),
+      delete: vi.fn(),
+    } as unknown as Mocked<IPlayerRepository>;
+
+    snapshotRepository = {
+      saveSnapshots: vi.fn(),
+      findByQuizAndQuestion: vi.fn(),
+      findByQuizAndPlayer: vi.fn(),
+      findByQuiz: vi.fn(),
+      deleteByQuiz: vi.fn(),
+    } as unknown as Mocked<ILeaderboardSnapshotRepository>;
+
+    useCase = new LockQuestionUseCase(
+      quizRepository,
+      playerRepository,
+      snapshotRepository
+    );
+  });
+
+  it('should lock current question and return round summary', async () => {
+    // Setup quiz with active question
+    const question1 = new Question(
+      'q1',
+      'What is 2+2?',
+      ['4'],
+      'multiple-choice',
+      100,
+      undefined,
+      undefined,
+      ['2', '3', '4', '5']
+    );
+    const quiz = new QuizSessionAggregate(
+      new Quiz('quiz-1', 'Math Quiz', [question1], {
+        timePerQuestion: 30,
+        allowSkipping: false,
+      }),
+      30
+    );
+    quiz.addPlayer('p1');
+    quiz.addPlayer('p2');
+    quiz.startQuiz();
+
+    // Setup players
+    const player1 = new Player('p1', 'Alice', 'quiz-1');
+    player1.updateScore(100);
+    const player2 = new Player('p2', 'Bob', 'quiz-1');
+    player2.updateScore(0);
+
+    // Setup answers
+    const answer1 = new Answer('a1', 'p1', 'q1', '4', new Date(), 5);
+    answer1.markCorrect(100);
+    const answer2 = new Answer('a2', 'p2', 'q1', '5', new Date(), 10);
+    answer2.markIncorrect();
+    quiz.answers.set('p1', [answer1]);
+    quiz.answers.set('p2', [answer2]);
+
+    quizRepository.findById.mockResolvedValue(quiz);
+    playerRepository.listByQuizId.mockResolvedValue([player1, player2]);
+    snapshotRepository.findByQuizAndQuestion.mockResolvedValue([]);
+
+    const result = await useCase.execute('quiz-1');
+
+    expect(result).toMatchObject({
+      questionId: 'q1',
+      questionText: 'What is 2+2?',
+      correctAnswer: '4',
+      questionIndex: 0,
+      totalPlayers: 2,
+      correctCount: 1,
+    });
+    expect(result.playerResults).toHaveLength(2);
+    expect(result.leaderboardDeltas).toHaveLength(2);
+    expect(snapshotRepository.saveSnapshots).toHaveBeenCalledWith(
+      'quiz-1',
+      0,
+      expect.any(Array)
+    );
+    expect(quizRepository.save).toHaveBeenCalledWith(quiz);
+    expect(question1.answersLockedAt).toBeDefined();
+  });
+
+  it('should throw error if quiz is not found', async () => {
+    quizRepository.findById.mockResolvedValue(null);
+
+    await expect(useCase.execute('quiz-1')).rejects.toThrow(
+      'Quiz is not active or does not exist.'
+    );
+    expect(snapshotRepository.saveSnapshots).not.toHaveBeenCalled();
+  });
+
+  it('should throw error if quiz is not active', async () => {
+    const quiz = new QuizSessionAggregate(
+      new Quiz('quiz-1', 'Test', [], {
+        timePerQuestion: 30,
+        allowSkipping: false,
+      }),
+      30
+    );
+    // Quiz is in Pending state
+    quizRepository.findById.mockResolvedValue(quiz);
+
+    await expect(useCase.execute('quiz-1')).rejects.toThrow(
+      'Quiz is not active or does not exist.'
+    );
+  });
+
+  it('should throw error if no active question', async () => {
+    const quiz = new QuizSessionAggregate(
+      new Quiz('quiz-1', 'Test', [], {
+        timePerQuestion: 30,
+        allowSkipping: false,
+      }),
+      30
+    );
+    quiz.startQuiz();
+    // Quiz is active but has no questions, so currentQuestion is null
+    quizRepository.findById.mockResolvedValue(quiz);
+
+    await expect(useCase.execute('quiz-1')).rejects.toThrow(
+      'No active question to lock.'
+    );
+  });
+
+  it('should calculate leaderboard deltas with rank changes', async () => {
+    const question1 = new Question(
+      'q1',
+      'Question 1',
+      ['A'],
+      'multiple-choice',
+      100
+    );
+    const question2 = new Question(
+      'q2',
+      'Question 2',
+      ['B'],
+      'multiple-choice',
+      100
+    );
+    const quiz = new QuizSessionAggregate(
+      new Quiz('quiz-1', 'Test', [question1, question2], {
+        timePerQuestion: 30,
+        allowSkipping: false,
+      }),
+      30
+    );
+    quiz.addPlayer('p1');
+    quiz.addPlayer('p2');
+    quiz.startQuiz();
+    // Advance to question 2
+    quiz.nextQuestion();
+
+    // Setup answers to give p1 score of 150, p2 score of 100
+    const answer1 = new Answer('a1', 'p1', 'q2', '4', new Date(), 5);
+    answer1.markCorrect(150);
+    const answer2 = new Answer('a2', 'p2', 'q2', '4', new Date(), 10);
+    answer2.markCorrect(100);
+    quiz.answers.set('p1', [answer1]);
+    quiz.answers.set('p2', [answer2]);
+
+    const player1 = new Player('p1', 'Alice', 'quiz-1');
+    player1.updateScore(150); // Was rank 2, now rank 1
+    const player2 = new Player('p2', 'Bob', 'quiz-1');
+    player2.updateScore(100); // Was rank 1, now rank 2
+
+    quizRepository.findById.mockResolvedValue(quiz);
+    playerRepository.listByQuizId.mockResolvedValue([player1, player2]);
+
+    // Previous question snapshots (Bob was ahead after question 1)
+    snapshotRepository.findByQuizAndQuestion.mockResolvedValue([
+      {
+        playerId: 'p2',
+        score: 100,
+        rank: 1,
+        quizId: 'quiz-1',
+        questionIndex: 0,
+        capturedAt: new Date(),
+      },
+      {
+        playerId: 'p1',
+        score: 50,
+        rank: 2,
+        quizId: 'quiz-1',
+        questionIndex: 0,
+        capturedAt: new Date(),
+      },
+    ]);
+
+    const result = await useCase.execute('quiz-1');
+
+    const alice = result.leaderboardDeltas.find((d) => d.playerId === 'p1');
+    const bob = result.leaderboardDeltas.find((d) => d.playerId === 'p2');
+
+    expect(alice).toMatchObject({
+      currentRank: 1,
+      previousRank: 2,
+      rankChange: 1, // Moved up 1 position
+    });
+    expect(bob).toMatchObject({
+      currentRank: 2,
+      previousRank: 1,
+      rankChange: -1, // Moved down 1 position
+    });
+  });
+
+  it('should handle first question with no previous snapshots', async () => {
+    const question1 = new Question(
+      'q1',
+      'Question 1',
+      ['A'],
+      'multiple-choice',
+      100
+    );
+    const quiz = new QuizSessionAggregate(
+      new Quiz('quiz-1', 'Test', [question1], {
+        timePerQuestion: 30,
+        allowSkipping: false,
+      }),
+      30
+    );
+    quiz.addPlayer('p1');
+    quiz.startQuiz();
+
+    const answer1 = new Answer('a1', 'p1', 'q1', 'A', new Date(), 5);
+    answer1.markCorrect(100);
+    quiz.answers.set('p1', [answer1]);
+
+    const player1 = new Player('p1', 'Alice', 'quiz-1');
+    player1.updateScore(100);
+
+    quizRepository.findById.mockResolvedValue(quiz);
+    playerRepository.listByQuizId.mockResolvedValue([player1]);
+    snapshotRepository.findByQuizAndQuestion.mockResolvedValue([]);
+
+    const result = await useCase.execute('quiz-1');
+
+    expect(result.leaderboardDeltas[0]).toMatchObject({
+      previousRank: null,
+      currentRank: 1,
+      rankChange: 0,
+    });
+  });
+
+  it('should calculate average time correctly', async () => {
+    const question1 = new Question(
+      'q1',
+      'Question 1',
+      ['A'],
+      'multiple-choice',
+      100
+    );
+    const quiz = new QuizSessionAggregate(
+      new Quiz('quiz-1', 'Test', [question1], {
+        timePerQuestion: 30,
+        allowSkipping: false,
+      }),
+      30
+    );
+    quiz.addPlayer('p1');
+    quiz.addPlayer('p2');
+    quiz.addPlayer('p3');
+    quiz.startQuiz();
+
+    const player1 = new Player('p1', 'Alice', 'quiz-1');
+    const player2 = new Player('p2', 'Bob', 'quiz-1');
+    const player3 = new Player('p3', 'Charlie', 'quiz-1');
+
+    // Alice answered in 5s, Bob in 10s, Charlie didn't answer
+    const answer1 = new Answer('a1', 'p1', 'q1', 'A', new Date(), 5);
+    answer1.markCorrect(100);
+    const answer2 = new Answer('a2', 'p2', 'q1', 'A', new Date(), 10);
+    answer2.markCorrect(100);
+    quiz.answers.set('p1', [answer1]);
+    quiz.answers.set('p2', [answer2]);
+
+    quizRepository.findById.mockResolvedValue(quiz);
+    playerRepository.listByQuizId.mockResolvedValue([
+      player1,
+      player2,
+      player3,
+    ]);
+    snapshotRepository.findByQuizAndQuestion.mockResolvedValue([]);
+
+    const result = await useCase.execute('quiz-1');
+
+    expect(result.averageTime).toBe(7.5); // (5 + 10) / 2
+    expect(result.correctCount).toBe(2);
+    expect(result.totalPlayers).toBe(3);
+  });
+});

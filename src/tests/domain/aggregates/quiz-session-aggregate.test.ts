@@ -207,4 +207,87 @@ describe('QuizSessionAggregate', () => {
       { playerId: 'p2', score: 0 },
     ]);
   });
+
+  it('should lock the current question', () => {
+    const questions = [new Question('q1', 'What is 2 + 2?', ['4'], 'text', 10)];
+    const quiz = new Quiz('quiz1', 'Math Quiz', questions, {
+      timePerQuestion: 30,
+      allowSkipping: true,
+      scoringAlgorithm: 'FIXED',
+    });
+    const aggregate = new QuizSessionAggregate(quiz, 30);
+    aggregate.startQuiz();
+
+    expect(aggregate.isQuestionLocked()).toBe(false);
+
+    aggregate.lockCurrentQuestion();
+
+    expect(aggregate.isQuestionLocked()).toBe(true);
+    expect(aggregate.currentQuestion?.answersLockedAt).toBeDefined();
+  });
+
+  it('should throw error when locking with no active question', () => {
+    const quiz = new Quiz('quiz1', 'Math Quiz', [], {
+      timePerQuestion: 30,
+      allowSkipping: true,
+      scoringAlgorithm: 'FIXED',
+    });
+    const aggregate = new QuizSessionAggregate(quiz, 30);
+
+    expect(() => aggregate.lockCurrentQuestion()).toThrow(
+      'No active question to lock'
+    );
+  });
+
+  it('should throw error when locking already locked question', () => {
+    const questions = [new Question('q1', 'What is 2 + 2?', ['4'], 'text', 10)];
+    const quiz = new Quiz('quiz1', 'Math Quiz', questions, {
+      timePerQuestion: 30,
+      allowSkipping: true,
+      scoringAlgorithm: 'FIXED',
+    });
+    const aggregate = new QuizSessionAggregate(quiz, 30);
+    aggregate.startQuiz();
+    aggregate.lockCurrentQuestion();
+
+    expect(() => aggregate.lockCurrentQuestion()).toThrow(
+      'Question already locked'
+    );
+  });
+
+  it('should reject answer submission when question is locked', () => {
+    const questions = [new Question('q1', 'What is 2 + 2?', ['4'], 'text', 10)];
+    const quiz = new Quiz('quiz1', 'Math Quiz', questions, {
+      timePerQuestion: 30,
+      allowSkipping: true,
+      scoringAlgorithm: 'FIXED',
+    });
+    const aggregate = new QuizSessionAggregate(quiz, 30);
+    aggregate.addPlayer('p1');
+    aggregate.startQuiz();
+    aggregate.lockCurrentQuestion();
+
+    expect(() => aggregate.submitAnswer('p1', 'q1', '4')).toThrow(
+      'Answers are locked for this question.'
+    );
+  });
+
+  it('should check if specific question is locked by id', () => {
+    const questions = [
+      new Question('q1', 'Question 1', ['A'], 'text', 10),
+      new Question('q2', 'Question 2', ['B'], 'text', 10),
+    ];
+    const quiz = new Quiz('quiz1', 'Math Quiz', questions, {
+      timePerQuestion: 30,
+      allowSkipping: true,
+      scoringAlgorithm: 'FIXED',
+    });
+    const aggregate = new QuizSessionAggregate(quiz, 30);
+    aggregate.startQuiz();
+
+    aggregate.lockCurrentQuestion(); // Lock q1
+
+    expect(aggregate.isQuestionLocked('q1')).toBe(true);
+    expect(aggregate.isQuestionLocked('q2')).toBe(false);
+  });
 });
