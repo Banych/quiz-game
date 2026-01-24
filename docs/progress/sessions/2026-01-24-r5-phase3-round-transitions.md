@@ -1,7 +1,7 @@
 # R5 Phase 3: Round Transitions & Answer Locking - Implementation Plan
 
 **Date:** 2026-01-24
-**Status:** 🚧 In Progress (Step 4/11)
+**Status:** 🎉 Steps 1-6 Complete | Next: Realtime & UI
 **Branch:** feat/start-over
 **Previous:** R5 Phase 1 (Scoring ✅), Phase 2 (UI Enhancements ✅)
 
@@ -9,8 +9,11 @@
 - ✅ Step 1: Database schema updates (migration applied, Prisma client regenerated)
 - ✅ Step 2: Domain layer - question locking methods (lockCurrentQuestion, isQuestionLocked, Question.answersLockedAt)
 - ✅ Step 3: DTOs for round summaries (RoundSummaryDTO, PlayerResult, LeaderboardDelta)
-- 🚧 Step 4: Use cases (LockQuestionUseCase, ILeaderboardSnapshotRepository)
-- ⏳ Step 5-11: Pending
+- ✅ Step 4: Use cases (LockQuestionUseCase with proper type safety, ILeaderboardSnapshotRepository interface)
+- ✅ Step 5: Repository implementation (PrismaLeaderboardSnapshotRepository, wired in factories.ts)
+- ✅ Step 6: API routes (POST /api/quiz/[quizId]/lock-question)
+- ⏳ Step 7: Realtime broadcasting (question-locked events)
+- ⏳ Step 8-11: Host/player UI components + testing
 
 ## Context
 We're now in R5 Phase 3, implementing round transitions with answer locking, round summaries, and leaderboard snapshots. This enables proper quiz flow control and post-question analytics.

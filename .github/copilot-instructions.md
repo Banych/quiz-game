@@ -40,16 +40,66 @@ Next.js request → DTO (zod) → use-case/service → domain entities → Prism
 - ❌ Importing from `@prisma/client` directly
 - ❌ Forgetting to run `yarn prisma:generate` after schema changes
 - ❌ Trying to instantiate PrismaClient without the adapter
+- ❌ Using `any` type instead of proper domain types (entities, DTOs, aggregates)
+
+## Type Safety Guidelines
+**CRITICAL:** Maintain strict TypeScript typing throughout the codebase:
+
+**Never use `any` type unless absolutely necessary:**
+- ✅ Use proper domain types: `Player`, `Quiz`, `Question`, `Answer`, `QuizSessionAggregate`
+- ✅ Import types explicitly: `import type { Player } from '@domain/entities/player'`
+- ✅ Use generic constraints: `Map<string, Player>` not `Map<string, any>`
+- ✅ Define explicit return types on all functions and methods
+- ❌ Never use `any` in function parameters or return types
+- ❌ Never use `any` in variable declarations
+- ❌ Never use `any` in type assertions or casts
+
+**When encountering missing types:**
+1. Check if the type exists in domain/application/infrastructure layers
+2. If missing, create a proper type definition or DTO schema (zod)
+3. Use `unknown` with type guards if the type truly cannot be known
+4. Document why `unknown` is necessary with inline comments
+
+**Examples:**
+```typescript
+// ❌ BAD: Using any
+private buildSummary(quiz: any, question: any): SummaryDTO {
+  const answers = quiz.answers.get(question.id);
+  return { ... };
+}
+
+// ✅ GOOD: Explicit types
+private buildSummary(
+  quiz: QuizSessionAggregate,
+  question: Question
+): RoundSummaryDTO {
+  const answers: Answer[] = quiz.answers.get(question.id) || [];
+  return { ... };
+}
+```
 
 ## Iterative Development Approach
 This codebase enforces an **iterative, incremental development style** via `.github/instructions/iterative-approach-for-work-with-code.instructions.md` (applies to all files):
 
 **Core principles:**
 - Break complex tasks into small, testable increments (single function/class/module)
-- Test each piece immediately before moving to the next
+- **Test each piece immediately before moving to the next** - this is mandatory, not optional
 - Refactor after each working increment—don't accumulate technical debt
 - Document as you go (inline comments + session logs in `docs/progress/`)
 - Plan work upfront: outline sub-tasks before coding
+
+**Testing Requirements (MANDATORY):**
+1. **Write tests WHILE implementing**, not after - they guide your design
+2. **Every new use case** requires a test file in `src/tests/application/use-cases/`
+3. **Every new repository** requires a test file in `src/tests/infrastructure/repositories/`
+4. **New domain methods** must have tests added to existing test files (e.g., `quiz-session-aggregate.test.ts`)
+5. **Minimum coverage:** Happy path + error cases + edge cases
+6. **Test patterns:**
+   - Use cases: Mock repositories, test success + "not found" + validation errors
+   - Repositories: Mock Prisma client, test CRUD operations + edge cases
+   - Domain: Direct entity/aggregate testing, no mocks needed
+
+**When you skip tests, you break the development flow.** Tests catch integration issues immediately and serve as living documentation.
 
 **Why this matters:** This project uses DDD layers with strict boundaries (domain → application → infrastructure → presentation). Attempting to implement features "all at once" across layers leads to mismatched contracts between DTOs/entities/repos. Instead:
 1. Start with domain entities and test behavior

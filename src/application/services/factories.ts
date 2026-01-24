@@ -2,6 +2,7 @@ import { prisma } from '@infrastructure/database/prisma/client';
 import { PrismaPlayerRepository } from '@infrastructure/repositories/prisma-player.repository';
 import { PrismaQuizRepository } from '@infrastructure/repositories/prisma-quiz.repository';
 import { PrismaQuestionRepository } from '@infrastructure/repositories/prisma-question.repository';
+import { PrismaLeaderboardSnapshotRepository } from '@infrastructure/repositories/prisma-leaderboard-snapshot.repository';
 import { AddPlayerUseCase } from '@application/use-cases/add-player.use-case';
 import { FindPlayerByIdUseCase } from '@application/use-cases/find-player-by-id.use-case';
 import { ListQuizPlayersUseCase } from '@application/use-cases/list-quiz-players.use-case';
@@ -19,6 +20,7 @@ import { AnswerService } from '@application/services/answer-service';
 import { JoinSessionUseCase } from '@application/use-cases/join-session.use-case';
 import { ResetQuizTimerUseCase } from '@application/use-cases/reset-quiz-timer.use-case';
 import { SnapshotLeaderboardUseCase } from '@application/use-cases/snapshot-leaderboard.use-case';
+import { LockQuestionUseCase } from '@application/use-cases/lock-question.use-case';
 import { CreateQuizUseCase } from '@application/use-cases/create-quiz.use-case';
 import { UpdateQuizUseCase } from '@application/use-cases/update-quiz.use-case';
 import { DeleteQuizUseCase } from '@application/use-cases/delete-quiz.use-case';
@@ -60,6 +62,7 @@ type ServiceContainer = {
   answerService: AnswerService;
   questionService: QuestionService;
   joinSessionUseCase: JoinSessionUseCase;
+  lockQuestionUseCase: LockQuestionUseCase;
 };
 
 let container: ServiceContainer | null = null;
@@ -68,11 +71,14 @@ const getRepositories = () => {
   const quizRepository = new PrismaQuizRepository();
   const playerRepository = new PrismaPlayerRepository();
   const questionRepository = new PrismaQuestionRepository();
+  const leaderboardSnapshotRepository =
+    new PrismaLeaderboardSnapshotRepository();
 
   return {
     quizRepository,
     playerRepository,
     questionRepository,
+    leaderboardSnapshotRepository,
   } as const;
 };
 
@@ -81,8 +87,12 @@ export const getServices = (): ServiceContainer => {
     return container;
   }
 
-  const { quizRepository, playerRepository, questionRepository } =
-    getRepositories();
+  const {
+    quizRepository,
+    playerRepository,
+    questionRepository,
+    leaderboardSnapshotRepository,
+  } = getRepositories();
 
   const addPlayerUseCase = new AddPlayerUseCase(
     quizRepository,
@@ -120,6 +130,11 @@ export const getServices = (): ServiceContainer => {
   const resetQuizTimerUseCase = new ResetQuizTimerUseCase(quizRepository);
   const snapshotLeaderboardUseCase = new SnapshotLeaderboardUseCase(
     quizRepository
+  );
+  const lockQuestionUseCase = new LockQuestionUseCase(
+    quizRepository,
+    playerRepository,
+    leaderboardSnapshotRepository
   );
 
   // Admin use cases
@@ -182,6 +197,7 @@ export const getServices = (): ServiceContainer => {
     answerService,
     questionService,
     joinSessionUseCase,
+    lockQuestionUseCase,
   };
 
   return container;
