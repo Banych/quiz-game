@@ -36,14 +36,14 @@ Presentation (hooks, components, pages)
 - **Error handling**: typed errors bubble up for React to render friendly states.
 
 ### Infrastructure / Data Access
-- **Prisma + Supabase**: `src/infrastructure/database` (new) holds Prisma client, migrations, and repository implementations that fulfill the domain interfaces in `src/domain/repositories`.
-- **Realtime transports**: `src/infrastructure/websocket` for Socket.IO/WS gateway bindings. Emits domain events and forwards them to the host/player channels.
+- **Prisma + Supabase**: `src/infrastructure/database/prisma` holds the Prisma schema, generated client, and adapter-wired client (`@prisma/adapter-pg`). Repository implementations live under `src/infrastructure/repositories`, fulfilling the domain interfaces in `src/domain/repositories`.
+- **Realtime**: `src/infrastructure/realtime` provides the Supabase Realtime adapter (`RealtimeClient`), replacing the earlier generic WebSocket placeholder.
 - **External APIs**: wrappers for media/CDN, analytics, etc., live here.
 
 ### Presentation
 - **Next.js routes**: `src/app/**` contains host, player, admin routes (App Router). Server components fetch initial DTOs; client components rely on TanStack Query.
 - **UI kit**: `src/components/ui` for primitive components, plus feature-specific components under `src/components/feature-name`.
-- **Hooks**: Create `src/hooks/` (or `src/app/(feature)/hooks`) to house TanStack Query + WebSocket hooks (`useHostSession`, `usePlayerSession`, etc.). Hooks wrap application services, manage caching, and expose optimistic updates.
+- **Hooks**: `src/hooks/**` houses TanStack Query hooks plus realtime wiring (`useHostSession`, `usePlayerSession`, etc.). Hooks wrap application services, manage caching, and expose optimistic updates; presentation code does not talk to Supabase directly.
 - **State sync**: TanStack Query handles server state; local component state only for ephemeral UI (input text, modal toggles).
 
 ## Data Contracts
@@ -60,7 +60,7 @@ src/
 ├── components/
 │   ├── ui/                # Reusable primitives
 │   └── feature/           # Host/Player/Admin composites
-├── hooks/                 # TanStack Query + WebSocket hooks
+├── hooks/                 # TanStack Query + realtime hooks
 ├── domain/
 │   ├── entities/
 │   ├── value-objects/
@@ -73,10 +73,9 @@ src/
 │   └── use-cases/
 ├── infrastructure/
 │   ├── database/
-│   │   ├── prisma/        # schema.prisma + migrations
-│   │   └── client.ts      # Prisma client wrapper
+│   │   ├── prisma/        # schema.prisma + generated client + adapter-wired Prisma client
 │   ├── repositories/      # Prisma implementations
-│   ├── websocket/
+│   ├── realtime/          # Supabase Realtime adapter
 │   └── media/             # integrations (Supabase Storage, etc.)
 └── lib/                   # Shared utils (formatters, logger, config)
 ```
@@ -90,9 +89,9 @@ src/
 ## Hooks & TanStack Query Usage
 - Each feature page gets a `queries.ts` file that exports hook factories (e.g., `useHostRoundStats(sessionId)`).
 - Hooks call application services through thin API routes (`app/api/**`). Server routes validate DTOs, call services, and return JSON.
-- WebSocket hooks subscribe to session channels and update Query caches via `queryClient.setQueryData` for low-latency UI updates.
+- Realtime hooks subscribe to Supabase channels and update Query caches via `queryClient.setQueryData` for low-latency UI updates.
 
 ## Deployment Flow
 - Yarn scripts orchestrate build/test/lint.
 - Vercel handles Next.js deployment; Prisma migrations run via GitHub Action + Supabase connection.
-- Optional Fly.io worker for dedicated WebSocket server if we outgrow Vercel's limits. Infrastructure docs will capture the final decision before R5.
+- If Supabase Realtime limits are reached, we can swap the adapter to another transport (e.g., self-hosted WebSocket worker) without changing hooks. Track the decision in Infrastructure docs before R5.
