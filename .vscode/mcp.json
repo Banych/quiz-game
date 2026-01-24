@@ -6,7 +6,10 @@
     },
     "microsoft/playwright-mcp": {
       "command": "node",
-      "args": ["servers/shared/mcp-runner.mjs", "npx @playwright/mcp@latest"],
+      "args": [
+        "servers/shared/mcp-runner.mjs",
+        "npx @playwright/mcp@latest"
+      ],
       "type": "stdio"
     },
     "com.postman/postman-mcp-server": {
@@ -18,6 +21,13 @@
       ],
       "env": {
         "POSTMAN_API_KEY": "${input:POSTMAN_API_KEY}"
+      }
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "${input:CONTEXT7_API_KEY}"
       }
     }
   },
