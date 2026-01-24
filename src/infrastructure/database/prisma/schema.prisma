@@ -58,25 +58,27 @@ model Quiz {
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
 
-  questions Question[]
-  players   Player[]
-  answers   Answer[]
+  questions            Question[]
+  players              Player[]
+  answers              Answer[]
+  leaderboardSnapshots LeaderboardSnapshot[]
 }
 
 model Question {
-  id             String             @id @default(cuid())
-  quizId         String?
-  text           String
-  mediaUrl       String?
-  mediaType      QuestionMediaType?
-  options        String[]           @default([])
-  correctAnswers String[]           @default([])
-  type           QuestionType
-  points         Int                @default(0)
-  orderIndex     Int                @default(0)
-  isPublished    Boolean            @default(false)
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
+  id              String             @id @default(cuid())
+  quizId          String?
+  text            String
+  mediaUrl        String?
+  mediaType       QuestionMediaType?
+  options         String[]           @default([])
+  correctAnswers  String[]           @default([])
+  type            QuestionType
+  points          Int                @default(0)
+  orderIndex      Int                @default(0)
+  isPublished     Boolean            @default(false)
+  answersLockedAt DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
 
   quiz    Quiz?    @relation(fields: [quizId], references: [id], onDelete: Cascade)
   answers Answer[]
@@ -95,8 +97,9 @@ model Player {
   disconnectedAt DateTime?
   updatedAt      DateTime     @updatedAt
 
-  quiz    Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  answers Answer[]
+  quiz                 Quiz                  @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  answers              Answer[]
+  leaderboardSnapshots LeaderboardSnapshot[]
 
   @@index([quizId])
   @@index([quizId, status])
@@ -120,4 +123,21 @@ model Answer {
   @@index([quizId])
   @@index([questionId])
   @@index([playerId])
+}
+
+model LeaderboardSnapshot {
+  id            String   @id @default(cuid())
+  quizId        String
+  questionIndex Int
+  playerId      String
+  score         Int
+  rank          Int
+  capturedAt    DateTime @default(now())
+
+  quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([quizId, questionIndex])
+  @@index([playerId])
+  @@map("leaderboard_snapshots")
 }

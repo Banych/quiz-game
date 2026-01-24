@@ -10,6 +10,7 @@ export class Question {
   quizId?: string;
   orderIndex?: number;
   isPublished?: boolean;
+  answersLockedAt?: Date;
 
   constructor(
     id: string,

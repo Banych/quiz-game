@@ -152,6 +152,11 @@ export class QuizSessionAggregate {
       throw new Error('Invalid question.');
     }
 
+    // Check if answers are locked for this question
+    if (question.answersLockedAt) {
+      throw new Error('Answers are locked for this question.');
+    }
+
     const isCorrect = question.validateAnswer(answerValue);
 
     // Use provided strategy or get from quiz settings
@@ -216,5 +221,29 @@ export class QuizSessionAggregate {
       startTime: this.timer.startTime,
       endTime: this.timer.endTime,
     };
+  }
+
+  lockCurrentQuestion(): void {
+    const question = this.currentQuestion;
+    if (!question) {
+      throw new Error('No active question to lock');
+    }
+    if (question.answersLockedAt) {
+      throw new Error('Question already locked');
+    }
+
+    question.answersLockedAt = new Date();
+  }
+
+  isQuestionLocked(questionId?: string): boolean {
+    if (questionId) {
+      const question = this.quiz.questions.find((q) => q.id === questionId);
+      return !!question?.answersLockedAt;
+    }
+    return !!this.currentQuestion?.answersLockedAt;
+  }
+
+  getCurrentQuestion(): Question | null {
+    return this.currentQuestion;
   }
 }

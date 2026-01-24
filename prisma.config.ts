@@ -1,4 +1,8 @@
+import { config } from 'dotenv';
 import { defineConfig } from 'prisma/config';
+
+// Load environment variables from .env file
+config();
 
 const schemaPath = './src/infrastructure/database/prisma/schema.prisma';
 
