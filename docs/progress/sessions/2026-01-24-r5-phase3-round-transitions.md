@@ -12,8 +12,10 @@
 - ✅ Step 4: Use cases (LockQuestionUseCase with proper type safety, ILeaderboardSnapshotRepository interface)
 - ✅ Step 5: Repository implementation (PrismaLeaderboardSnapshotRepository, wired in factories.ts)
 - ✅ Step 6: API routes (POST /api/quiz/[quizId]/lock-question)
-- ⏳ Step 7: Realtime broadcasting (question-locked events)
-- ⏳ Step 8-11: Host/player UI components + testing
+- ✅ Step 7: Realtime broadcasting (broadcastRoundSummary on `question:locked` event)
+- ⏳ Step 8: Host UI - Lock Question button + Round Summary dialog
+- ⏳ Step 9: Player UI - "Answers Locked" indicator
+- ⏳ Step 10-11: Integration and E2E tests
 
 ## Context
 We're now in R5 Phase 3, implementing round transitions with answer locking, round summaries, and leaderboard snapshots. This enables proper quiz flow control and post-question analytics.
@@ -387,4 +389,28 @@ useEffect(() => {
 **Total: ~11 hours (1.5-2 days)**
 
 ## Follow-up (Phase 4)
+
+---
+
+## Implementation Notes
+
+### Step 7 Completion (2026-01-24 14:30)
+**Status:** ✅ Complete
+
+**Files Created:**
+- [src/infrastructure/realtime/broadcast-round-summary.ts](c:/Users/banyk/repos/quiz-game-1/src/infrastructure/realtime/broadcast-round-summary.ts) - Broadcasts `question:locked` event with RoundSummaryDTO payload
+
+**Files Modified:**
+- [src/app/api/quiz/[quizId]/lock-question/route.ts](c:/Users/banyk/repos/quiz-game-1/src/app/api/quiz/[quizId]/lock-question/route.ts) - Added `broadcastRoundSummary()` call after locking
+
+**Validation:**
+- Answer locking already enforced in [QuizSessionAggregate.submitAnswer()](c:/Users/banyk/repos/quiz-game-1/src/domain/aggregates/quiz-session-aggregate.ts#L156-L158) - throws "Answers are locked for this question" error
+- All 211 tests still passing
+
+**Realtime Event:**
+- Channel: `quiz:{quizId}`
+- Event: `question:locked`
+- Payload: Full RoundSummaryDTO (questionId, correctAnswer, playerResults, leaderboardDeltas, averageTime, etc.)
+
+**Next:** Step 8 - Host UI components for lock button and round summary dialog
 After Phase 3 is complete, move to connection health and reconnection flows per action plan.

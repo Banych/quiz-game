@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { TimerCountdown } from './timer-countdown';
 import { QuestionTimeline } from './question-timeline';
 import { ScoringInfoBadge } from '@/components/player/scoring-info-badge';
+import { RoundSummaryDialog } from './round-summary-dialog';
 
 interface HostQuizDashboardProps {
   quizId: string;
@@ -32,6 +33,10 @@ export function HostQuizDashboard({
     isResettingTimer,
     snapshotLeaderboard,
     isSnapshottingLeaderboard,
+    lockQuestion,
+    isLockingQuestion,
+    roundSummary,
+    clearRoundSummary,
   } = useHostQuizState({
     quizId,
     initialData: initialQuiz,
@@ -61,9 +66,14 @@ export function HostQuizDashboard({
     isStartingQuiz ||
     isAdvancingQuestion ||
     isResettingTimer ||
-    isSnapshottingLeaderboard;
+    isSnapshottingLeaderboard ||
+    isLockingQuestion;
   const canControlTimer = quiz.status === 'Active';
   const canAdvance = quiz.status === 'Active' && quiz.questions.length > 0;
+  const canLockQuestion =
+    quiz.status === 'Active' &&
+    activeQuestion &&
+    !activeQuestion.answersLockedAt;
   const startButtonLabel =
     quiz.status === 'Pending' ? 'Start quiz' : 'Resume quiz';
   const hasActiveTimer = typeof quiz.timer.remainingSeconds === 'number';
@@ -151,6 +161,13 @@ export function HostQuizDashboard({
               onClick={() => runAction(() => resetTimer(undefined))}
             >
               {isResettingTimer ? 'Resetting…' : 'Reset timer'}
+            </Button>
+            <Button
+              variant={canLockQuestion ? 'default' : 'ghost'}
+              disabled={!canLockQuestion || isLockingQuestion}
+              onClick={() => runAction(() => lockQuestion())}
+            >
+              {isLockingQuestion ? 'Locking…' : 'Lock Question'}
             </Button>
             <Button
               variant="ghost"
@@ -283,6 +300,8 @@ export function HostQuizDashboard({
           </div>
         </section>
       </div>
+
+      <RoundSummaryDialog summary={roundSummary} onClose={clearRoundSummary} />
     </div>
   );
 }

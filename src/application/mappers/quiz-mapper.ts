@@ -20,6 +20,7 @@ export const mapQuestionToDTO = (question: Question): QuestionDTOType => ({
   type: question.type,
   points: question.points,
   orderIndex: question.orderIndex,
+  answersLockedAt: question.answersLockedAt?.toISOString() ?? null,
 });
 
 export const mapAnswerToDTO = (answer: Answer): AnswerDTOType => ({

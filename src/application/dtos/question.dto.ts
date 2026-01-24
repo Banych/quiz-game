@@ -16,6 +16,7 @@ export const QuestionDTO = z.object({
   type: QuestionTypeDTO,
   points: z.number().nonnegative(),
   orderIndex: z.number().int().nonnegative().optional(),
+  answersLockedAt: z.string().datetime().nullable().optional(),
 });
 
 export type QuestionDTO = z.infer<typeof QuestionDTO>;
