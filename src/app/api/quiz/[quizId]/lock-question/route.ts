@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getServices } from '@application/services/factories';
+import { broadcastRoundSummary } from '@infrastructure/realtime/broadcast-round-summary';
 
 const ParamsSchema = z.object({
   quizId: z.string().min(1),
@@ -22,6 +23,9 @@ export async function POST(_request: Request, { params }: RouteContext) {
     const { lockQuestionUseCase } = getServices();
 
     const roundSummary = await lockQuestionUseCase.execute(quizId);
+
+    // Broadcast to all quiz participants
+    await broadcastRoundSummary(quizId, roundSummary);
 
     return NextResponse.json(roundSummary);
   } catch (error) {

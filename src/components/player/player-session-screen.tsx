@@ -4,8 +4,10 @@ import { FormEvent, useMemo, useState } from 'react';
 import type { PlayerSessionDTO } from '@application/dtos/player-session.dto';
 import { usePlayerSession } from '@hooks/use-player-session';
 import { useCountdownTimer } from '@hooks/use-countdown-timer';
+import { useRoundSummaryListener } from '@hooks/use-round-summary-listener';
 import { Button } from '@/components/ui/button';
 import { ScoringInfoBadge } from './scoring-info-badge';
+import { AnswersLockedIndicator } from './answers-locked-indicator';
 import { calculatePoints, getSpeedIndicator } from '@/lib/scoring-client';
 
 interface PlayerSessionScreenProps {
@@ -47,6 +49,8 @@ export function PlayerSessionScreen({
     playerId,
     initialData: initialSession,
   });
+
+  const roundSummary = useRoundSummaryListener(quizId);
 
   const session = data ?? initialSession;
   const [answerValue, setAnswerValue] = useState('');
@@ -167,6 +171,7 @@ export function PlayerSessionScreen({
   const waitingForQuestion =
     !activeQuestionId && session.quiz.status !== 'Completed';
   const canSubmit = Boolean(activeQuestionId) && Boolean(answerValue.trim());
+  const answersLocked = roundSummary !== null;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -204,6 +209,10 @@ export function PlayerSessionScreen({
               : 'Unable to sync with the quiz. Try refreshing.'}
           </div>
         ) : null}
+
+        {answersLocked && (
+          <AnswersLockedIndicator roundSummary={roundSummary} />
+        )}
 
         <section className="rounded-2xl border border-border bg-card/90 p-5 shadow-sm">
           <p className="text-sm uppercase tracking-wide text-muted-foreground">
@@ -262,11 +271,17 @@ export function PlayerSessionScreen({
                 type="text"
                 value={answerValue}
                 disabled={
-                  isSubmittingAnswer || session.quiz.status !== 'Active'
+                  isSubmittingAnswer ||
+                  session.quiz.status !== 'Active' ||
+                  answersLocked
                 }
                 onChange={(event) => setAnswerValue(event.target.value)}
                 placeholder={
-                  waitingForQuestion ? 'Waiting for host…' : 'Type your answer'
+                  answersLocked
+                    ? 'Answers are locked'
+                    : waitingForQuestion
+                      ? 'Waiting for host…'
+                      : 'Type your answer'
                 }
                 className="mt-1 w-full rounded-xl border border-border/70 bg-background/80 px-4 py-3 text-base focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60"
               />
@@ -277,10 +292,15 @@ export function PlayerSessionScreen({
               disabled={
                 isSubmittingAnswer ||
                 !canSubmit ||
-                session.quiz.status !== 'Active'
+                session.quiz.status !== 'Active' ||
+                answersLocked
               }
             >
-              {isSubmittingAnswer ? 'Sending…' : 'Send answer'}
+              {answersLocked
+                ? 'Answers Locked'
+                : isSubmittingAnswer
+                  ? 'Sending…'
+                  : 'Send answer'}
             </Button>
           </form>
           {submissionMessage ? (

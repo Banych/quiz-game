@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { QuizDTO } from '@application/dtos/quiz.dto';
+import type { RoundSummaryDTO } from '@application/dtos/round-summary.dto';
 import { useRealtimeClient } from '@hooks/use-realtime-client';
 
 export const hostQuizQueryKey = (quizId: string) =>
@@ -57,6 +58,9 @@ export const useHostQuizState = ({
   const realtimeClient = useRealtimeClient();
   const queryClient = useQueryClient();
   const channelName = `quiz:${quizId}`;
+  const [roundSummary, setRoundSummary] = useState<RoundSummaryDTO | null>(
+    null
+  );
 
   const applyState = useCallback(
     (nextState: QuizDTO) => {
@@ -101,6 +105,16 @@ export const useHostQuizState = ({
     onSuccess: applyState,
   });
 
+  const lockQuestionMutation = useMutation({
+    mutationFn: () =>
+      postQuizState<RoundSummaryDTO>(`/api/quiz/${quizId}/lock-question`),
+    onSuccess: (summary) => {
+      setRoundSummary(summary);
+      // Refetch quiz state to get updated answersLockedAt
+      queryClient.invalidateQueries({ queryKey: hostQuizQueryKey(quizId) });
+    },
+  });
+
   const queryResult = useQuery({
     queryKey: hostQuizQueryKey(quizId),
     queryFn: () => fetchQuizState(quizId),
@@ -119,5 +133,9 @@ export const useHostQuizState = ({
     isResettingTimer: resetTimerMutation.isPending,
     snapshotLeaderboard: snapshotLeaderboardMutation.mutateAsync,
     isSnapshottingLeaderboard: snapshotLeaderboardMutation.isPending,
+    lockQuestion: lockQuestionMutation.mutateAsync,
+    isLockingQuestion: lockQuestionMutation.isPending,
+    roundSummary,
+    clearRoundSummary: () => setRoundSummary(null),
   } as const;
 };

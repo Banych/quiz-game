@@ -1,12 +1,12 @@
 import { LockQuestionUseCase } from '@application/use-cases/lock-question.use-case';
 import { QuizSessionAggregate } from '@domain/aggregates/quiz-session-aggregate';
-import { Quiz, QuizStatus } from '@domain/entities/quiz';
-import { Question } from '@domain/entities/question';
-import { Player, PlayerStatus } from '@domain/entities/player';
 import { Answer } from '@domain/entities/answer';
-import type { IQuizRepository } from '@domain/repositories/quiz-repository';
-import type { IPlayerRepository } from '@domain/repositories/player-repository';
+import { Player } from '@domain/entities/player';
+import { Question } from '@domain/entities/question';
+import { Quiz } from '@domain/entities/quiz';
 import type { ILeaderboardSnapshotRepository } from '@domain/repositories/leaderboard-snapshot-repository';
+import type { IPlayerRepository } from '@domain/repositories/player-repository';
+import type { IQuizRepository } from '@domain/repositories/quiz-repository';
 import { beforeEach, describe, expect, it, vi, type Mocked } from 'vitest';
 
 describe('LockQuestionUseCase', () => {
