@@ -142,3 +142,22 @@ mcp__playwright__snapshot()
 3. **Leaking entities to UI**: Components must receive DTOs only
 4. **Skipping prisma:generate**: Required after any schema.prisma changes
 5. **Test isolation**: Call `resetServices({ force: true })` for fresh Prisma client in tests
+
+## Claude Code Preferences
+
+### Commands
+- **Always use yarn scripts from package.json** - never run raw CLI commands when a script exists (e.g., use `yarn lint` not `npx eslint`)
+- Reference `package.json` scripts section before running any command
+
+### Dev Server
+- **Assume dev server is running** in a separate terminal at `http://localhost:3000` (or 3001 if 3000 is busy)
+- If needed and not running, ask the user to start it rather than starting it in background
+
+### Manual Testing
+- **Use Playwright MCP for manual verification** of UI features before considering them complete
+- Navigate, click, snapshot to verify flows work as expected
+- Especially useful for testing realtime features and complex UI interactions
+
+### Git Commits
+- **Do NOT add Co-Authored-By** lines to commit messages
+- Keep commit messages concise and descriptive
