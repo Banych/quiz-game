@@ -151,6 +151,7 @@ export const getServices = (): ServiceContainer => {
     advanceQuestionUseCase,
     resetQuizTimerUseCase,
     snapshotLeaderboardUseCase,
+    lockQuestionUseCase,
     createQuizUseCase,
     updateQuizUseCase,
     deleteQuizUseCase,

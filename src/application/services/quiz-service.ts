@@ -10,6 +10,7 @@ import type {
   UpdateQuizDTO,
   QuizListItemDTO,
 } from '@application/dtos/quiz-admin.dto';
+import type { RoundSummaryDTO } from '@application/dtos/round-summary.dto';
 import { QuizSessionAggregate } from '@domain/aggregates/quiz-session-aggregate';
 import { FindQuizByIdUseCase } from '@application/use-cases/find-quiz-by-id.use-case';
 import { GetQuizStateUseCase } from '@application/use-cases/get-quiz-state.use-case';
@@ -19,6 +20,7 @@ import {
 } from '@application/use-cases/advance-question.use-case';
 import { ResetQuizTimerUseCase } from '@application/use-cases/reset-quiz-timer.use-case';
 import { SnapshotLeaderboardUseCase } from '@application/use-cases/snapshot-leaderboard.use-case';
+import { LockQuestionUseCase } from '@application/use-cases/lock-question.use-case';
 import { CreateQuizUseCase } from '@application/use-cases/create-quiz.use-case';
 import { UpdateQuizUseCase } from '@application/use-cases/update-quiz.use-case';
 import { DeleteQuizUseCase } from '@application/use-cases/delete-quiz.use-case';
@@ -33,6 +35,7 @@ export class QuizService {
     private readonly advanceQuestionUseCase: AdvanceQuestionUseCase,
     private readonly resetQuizTimerUseCase: ResetQuizTimerUseCase,
     private readonly snapshotLeaderboardUseCase: SnapshotLeaderboardUseCase,
+    private readonly lockQuestionUseCase: LockQuestionUseCase,
     // Admin use cases
     private readonly createQuizUseCase: CreateQuizUseCase,
     private readonly updateQuizUseCase: UpdateQuizUseCase,
@@ -73,6 +76,10 @@ export class QuizService {
     quizId: string
   ): Promise<LeaderboardEntryDTOType[]> {
     return this.snapshotLeaderboardUseCase.execute(quizId);
+  }
+
+  async lockQuestion(quizId: string): Promise<RoundSummaryDTO> {
+    return this.lockQuestionUseCase.execute(quizId);
   }
 
   // Admin methods

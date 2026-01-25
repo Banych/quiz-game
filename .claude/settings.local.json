@@ -23,5 +23,11 @@
       "Bash(git reset --hard*)",
       "Bash(git clean -f*)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "github",
+    "supabase",
+    "playwright",
+    "context7"
+  ]
 }
