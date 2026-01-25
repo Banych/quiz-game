@@ -9,6 +9,12 @@ import { GetQuizStateUseCase } from '@application/use-cases/get-quiz-state.use-c
 import { AdvanceQuestionUseCase } from '@application/use-cases/advance-question.use-case';
 import { ResetQuizTimerUseCase } from '@application/use-cases/reset-quiz-timer.use-case';
 import { SnapshotLeaderboardUseCase } from '@application/use-cases/snapshot-leaderboard.use-case';
+import { LockQuestionUseCase } from '@application/use-cases/lock-question.use-case';
+import { CreateQuizUseCase } from '@application/use-cases/create-quiz.use-case';
+import { UpdateQuizUseCase } from '@application/use-cases/update-quiz.use-case';
+import { DeleteQuizUseCase } from '@application/use-cases/delete-quiz.use-case';
+import { ListAllQuizzesUseCase } from '@application/use-cases/list-all-quizzes.use-case';
+import type { RoundSummaryDTO } from '@application/dtos/round-summary.dto';
 
 type QuizStateDTO = Awaited<ReturnType<GetQuizStateUseCase['execute']>>;
 type AdvanceQuestionResponse = Awaited<
@@ -18,6 +24,7 @@ type ResetTimerResponse = Awaited<ReturnType<ResetQuizTimerUseCase['execute']>>;
 type LeaderboardSnapshot = Awaited<
   ReturnType<SnapshotLeaderboardUseCase['execute']>
 >;
+type LockQuestionResponse = Awaited<ReturnType<LockQuestionUseCase['execute']>>;
 
 describe('QuizService', () => {
   let startQuizUseCase: Mocked<StartQuizUseCase>;
@@ -27,6 +34,11 @@ describe('QuizService', () => {
   let advanceQuestionUseCase: Mocked<AdvanceQuestionUseCase>;
   let resetQuizTimerUseCase: Mocked<ResetQuizTimerUseCase>;
   let snapshotLeaderboardUseCase: Mocked<SnapshotLeaderboardUseCase>;
+  let lockQuestionUseCase: Mocked<LockQuestionUseCase>;
+  let createQuizUseCase: Mocked<CreateQuizUseCase>;
+  let updateQuizUseCase: Mocked<UpdateQuizUseCase>;
+  let deleteQuizUseCase: Mocked<DeleteQuizUseCase>;
+  let listAllQuizzesUseCase: Mocked<ListAllQuizzesUseCase>;
   let quizService: QuizService;
 
   beforeEach(() => {
@@ -58,6 +70,26 @@ describe('QuizService', () => {
       execute: vi.fn(),
     } as unknown as Mocked<SnapshotLeaderboardUseCase>;
 
+    lockQuestionUseCase = {
+      execute: vi.fn(),
+    } as unknown as Mocked<LockQuestionUseCase>;
+
+    createQuizUseCase = {
+      execute: vi.fn(),
+    } as unknown as Mocked<CreateQuizUseCase>;
+
+    updateQuizUseCase = {
+      execute: vi.fn(),
+    } as unknown as Mocked<UpdateQuizUseCase>;
+
+    deleteQuizUseCase = {
+      execute: vi.fn(),
+    } as unknown as Mocked<DeleteQuizUseCase>;
+
+    listAllQuizzesUseCase = {
+      execute: vi.fn(),
+    } as unknown as Mocked<ListAllQuizzesUseCase>;
+
     quizService = new QuizService(
       startQuizUseCase,
       endQuizUseCase,
@@ -65,7 +97,12 @@ describe('QuizService', () => {
       getQuizStateUseCase,
       advanceQuestionUseCase,
       resetQuizTimerUseCase,
-      snapshotLeaderboardUseCase
+      snapshotLeaderboardUseCase,
+      lockQuestionUseCase,
+      createQuizUseCase,
+      updateQuizUseCase,
+      deleteQuizUseCase,
+      listAllQuizzesUseCase
     );
   });
 
@@ -195,5 +232,70 @@ describe('QuizService', () => {
     const response = await quizService.snapshotLeaderboard('quiz1');
     expect(snapshotLeaderboardUseCase.execute).toHaveBeenCalledWith('quiz1');
     expect(response).toEqual(leaderboard);
+  });
+
+  describe('lockQuestion', () => {
+    it('should lock question and return round summary', async () => {
+      const roundSummary: RoundSummaryDTO = {
+        questionId: 'q1',
+        questionText: 'What is 2+2?',
+        correctAnswer: '4',
+        questionIndex: 0,
+        playerResults: [
+          {
+            playerId: 'p1',
+            playerName: 'Alice',
+            answerSubmitted: true,
+            correct: true,
+            timeTaken: 5,
+            pointsEarned: 100,
+          },
+        ],
+        averageTime: 5,
+        correctCount: 1,
+        totalPlayers: 1,
+        leaderboardDeltas: [
+          {
+            playerId: 'p1',
+            playerName: 'Alice',
+            previousRank: null,
+            currentRank: 1,
+            rankChange: 0,
+            previousScore: null,
+            currentScore: 100,
+          },
+        ],
+        lockedAt: '2025-01-01T00:00:00.000Z',
+      };
+
+      lockQuestionUseCase.execute.mockResolvedValue(
+        roundSummary as LockQuestionResponse
+      );
+
+      const result = await quizService.lockQuestion('quiz1');
+
+      expect(lockQuestionUseCase.execute).toHaveBeenCalledWith('quiz1');
+      expect(result).toEqual(roundSummary);
+    });
+
+    it('should throw error if quiz is not active', async () => {
+      lockQuestionUseCase.execute.mockRejectedValue(
+        new Error('Quiz is not active or does not exist.')
+      );
+
+      await expect(quizService.lockQuestion('quiz1')).rejects.toThrow(
+        'Quiz is not active or does not exist.'
+      );
+    });
+
+    it('should throw error if no active question', async () => {
+      lockQuestionUseCase.execute.mockRejectedValue(
+        new Error('No active question to lock.')
+      );
+
+      await expect(quizService.lockQuestion('quiz1')).rejects.toThrow(
+        'No active question to lock.'
+      );
+    });
   });
 });

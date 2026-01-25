@@ -1,7 +1,7 @@
 # R5 Phase 3: Round Transitions & Answer Locking - Implementation Plan
 
 **Date:** 2026-01-24
-**Status:** 🎉 Steps 1-6 Complete | Next: Realtime & UI
+**Status:** ✅ Phase 3 Complete | All 11 Steps Done
 **Branch:** feat/start-over
 **Previous:** R5 Phase 1 (Scoring ✅), Phase 2 (UI Enhancements ✅)
 
@@ -13,9 +13,10 @@
 - ✅ Step 5: Repository implementation (PrismaLeaderboardSnapshotRepository, wired in factories.ts)
 - ✅ Step 6: API routes (POST /api/quiz/[quizId]/lock-question)
 - ✅ Step 7: Realtime broadcasting (broadcastRoundSummary on `question:locked` event)
-- ⏳ Step 8: Host UI - Lock Question button + Round Summary dialog
-- ⏳ Step 9: Player UI - "Answers Locked" indicator
-- ⏳ Step 10-11: Integration and E2E tests
+- ✅ Step 8: Host UI - Lock Question button + Round Summary dialog
+- ✅ Step 9: Host Hooks - lockQuestion mutation, roundSummary state
+- ✅ Step 10: Player UI - AnswersLockedIndicator + useRoundSummaryListener hook
+- ✅ Step 11: E2E tests for round transitions (e2e/round-transitions.spec.ts)
 
 ## Context
 We're now in R5 Phase 3, implementing round transitions with answer locking, round summaries, and leaderboard snapshots. This enables proper quiz flow control and post-question analytics.
@@ -414,3 +415,35 @@ useEffect(() => {
 
 **Next:** Step 8 - Host UI components for lock button and round summary dialog
 After Phase 3 is complete, move to connection health and reconnection flows per action plan.
+
+---
+
+### Phase 3 Completion (2026-01-25)
+**Status:** ✅ All Steps Complete
+
+**Summary:**
+R5 Phase 3 (Round Transitions & Answer Locking) is now complete. All 11 steps implemented:
+
+1. Database schema with LeaderboardSnapshot table
+2. Domain layer locking methods
+3. RoundSummaryDTO with player results and leaderboard deltas
+4. LockQuestionUseCase orchestrating the flow
+5. PrismaLeaderboardSnapshotRepository for persistence
+6. API route POST /api/quiz/[quizId]/lock-question
+7. Realtime broadcasting on `question:locked` event
+8. Host UI - Lock Question button + Round Summary dialog
+9. Host Hooks - lockQuestion mutation with roundSummary state
+10. Player UI - AnswersLockedIndicator + useRoundSummaryListener hook
+11. E2E tests in e2e/round-transitions.spec.ts
+
+**Test Results:**
+- 214 unit/integration tests passing
+- Build successful
+- ESLint clean (except pre-existing admin layout warning)
+
+**Files Created This Session:**
+- `e2e/round-transitions.spec.ts` - E2E test for lock question flow
+
+**Next Phase:**
+- Connection health and reconnection flows
+- Or proceed with Phase 4 per action plan
