@@ -9,6 +9,18 @@ describe('Player', () => {
     expect(player.status).toBe(PlayerStatus.Active);
   });
 
+  it('should initialize with lastSeenAt set to current time', () => {
+    const before = new Date();
+    const player = new Player('1', 'John Doe', 'quiz-1');
+    const after = new Date();
+
+    expect(player.lastSeenAt).not.toBeNull();
+    expect(player.lastSeenAt!.getTime()).toBeGreaterThanOrEqual(
+      before.getTime()
+    );
+    expect(player.lastSeenAt!.getTime()).toBeLessThanOrEqual(after.getTime());
+  });
+
   it('should update the player status', () => {
     const player = new Player('1', 'John Doe', 'quiz-1');
     player.updateStatus(PlayerStatus.Disconnected);
@@ -30,5 +42,85 @@ describe('Player', () => {
 
     player.updateRank(null);
     expect(player.rank).toBeUndefined();
+  });
+
+  describe('lastSeenAt', () => {
+    it('should update lastSeenAt with current time when no argument provided', () => {
+      const player = new Player('1', 'John Doe', 'quiz-1');
+
+      const before = new Date();
+      player.updateLastSeenAt();
+      const after = new Date();
+
+      expect(player.lastSeenAt).not.toBeNull();
+      expect(player.lastSeenAt!.getTime()).toBeGreaterThanOrEqual(
+        before.getTime()
+      );
+      expect(player.lastSeenAt!.getTime()).toBeLessThanOrEqual(after.getTime());
+    });
+
+    it('should update lastSeenAt with specific timestamp', () => {
+      const player = new Player('1', 'John Doe', 'quiz-1');
+      const specificTime = new Date('2024-01-15T12:00:00Z');
+
+      player.updateLastSeenAt(specificTime);
+
+      expect(player.lastSeenAt).toEqual(specificTime);
+    });
+  });
+
+  describe('getConnectionStatus', () => {
+    it('should return connected when recently seen', () => {
+      const player = new Player('1', 'John Doe', 'quiz-1');
+      const now = new Date();
+
+      const status = player.getConnectionStatus(now);
+
+      expect(status.isConnected()).toBe(true);
+    });
+
+    it('should return away when lastSeenAt is between 30s and 2min ago', () => {
+      const player = new Player('1', 'John Doe', 'quiz-1');
+      const now = new Date();
+      player.lastSeenAt = new Date(now.getTime() - 60_000); // 1 minute ago
+
+      const status = player.getConnectionStatus(now);
+
+      expect(status.isAway()).toBe(true);
+    });
+
+    it('should return disconnected when lastSeenAt is beyond 2min ago', () => {
+      const player = new Player('1', 'John Doe', 'quiz-1');
+      const now = new Date();
+      player.lastSeenAt = new Date(now.getTime() - 180_000); // 3 minutes ago
+
+      const status = player.getConnectionStatus(now);
+
+      expect(status.isDisconnected()).toBe(true);
+    });
+
+    it('should return disconnected when lastSeenAt is null', () => {
+      const player = new Player('1', 'John Doe', 'quiz-1');
+      player.lastSeenAt = null;
+
+      const status = player.getConnectionStatus();
+
+      expect(status.isDisconnected()).toBe(true);
+    });
+  });
+
+  describe('getConnectionStatusType', () => {
+    it('should return the status type string', () => {
+      const player = new Player('1', 'John Doe', 'quiz-1');
+      const now = new Date();
+
+      expect(player.getConnectionStatusType(now)).toBe('connected');
+
+      player.lastSeenAt = new Date(now.getTime() - 60_000);
+      expect(player.getConnectionStatusType(now)).toBe('away');
+
+      player.lastSeenAt = new Date(now.getTime() - 180_000);
+      expect(player.getConnectionStatusType(now)).toBe('disconnected');
+    });
   });
 });

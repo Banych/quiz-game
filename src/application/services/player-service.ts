@@ -3,6 +3,7 @@ import type { PlayerSessionDTO as PlayerSessionDTOType } from '@application/dtos
 import { AddPlayerUseCase } from '@application/use-cases/add-player.use-case';
 import { FindPlayerByIdUseCase } from '@application/use-cases/find-player-by-id.use-case';
 import { UpdatePlayerStatusUseCase } from '@application/use-cases/update-player-status.use-case';
+import { UpdatePlayerPresenceUseCase } from '@application/use-cases/update-player-presence.use-case';
 import { ListQuizPlayersUseCase } from '@application/use-cases/list-quiz-players.use-case';
 import { GetPlayerSessionUseCase } from '@application/use-cases/get-player-session.use-case';
 import { Player, PlayerStatus } from '@domain/entities/player';
@@ -11,6 +12,7 @@ export class PlayerService {
   constructor(
     private readonly addPlayerUseCase: AddPlayerUseCase,
     private readonly updatePlayerStatusUseCase: UpdatePlayerStatusUseCase,
+    private readonly updatePlayerPresenceUseCase: UpdatePlayerPresenceUseCase,
     private readonly findPlayerByIdUseCase: FindPlayerByIdUseCase,
     private readonly listQuizPlayersUseCase: ListQuizPlayersUseCase,
     private readonly getPlayerSessionUseCase: GetPlayerSessionUseCase
@@ -44,5 +46,9 @@ export class PlayerService {
     playerId: string
   ): Promise<PlayerSessionDTOType> {
     return this.getPlayerSessionUseCase.execute(quizId, playerId);
+  }
+
+  async updatePresence(playerId: string, timestamp?: Date): Promise<void> {
+    await this.updatePlayerPresenceUseCase.execute({ playerId, timestamp });
   }
 }

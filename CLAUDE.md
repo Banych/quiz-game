@@ -82,11 +82,11 @@ yarn test:watch              # TDD watch mode
 
 Configured in `.mcp.json` (project root):
 
-| Server | Purpose |
-|--------|---------|
-| **Supabase** | Database queries, migrations, logs, Edge Functions, storage |
+| Server         | Purpose                                                          |
+| -------------- | ---------------------------------------------------------------- |
+| **Supabase**   | Database queries, migrations, logs, Edge Functions, storage      |
 | **Playwright** | Browser automation for E2E testing - navigate, click, screenshot |
-| **Context7** | Documentation and context retrieval |
+| **Context7**   | Documentation and context retrieval                              |
 
 ### Common MCP Workflows
 ```bash
@@ -146,7 +146,7 @@ mcp__playwright__snapshot()
 ## Claude Code Preferences
 
 ### Commands
-- **Always use yarn scripts from package.json** - never run raw CLI commands when a script exists (e.g., use `yarn lint` not `npx eslint`)
+- **Always use yarn scripts from package.json** - never run raw CLI commands when a script exists (e.g., use `yarn lint` not `npx eslint`). Might be exceptions when you need to run for all files in the repo e.g. test suites included (it's avoided with `next lint`).
 - Reference `package.json` scripts section before running any command
 
 ### Dev Server
