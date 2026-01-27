@@ -399,12 +399,108 @@ Example: Adding a field like `playerRank` requires touching:
 - Add new primitives via `yarn shadcn add <component>` (auto-tracked in registry)
 - **Avoid inline styles**—use design tokens
 
+## Authentication Workflows
+**Supabase Auth** manages user sessions via Next.js middleware.
+
+### Session Management
+- Middleware in `src/middleware.ts` verifies JWT and protects routes (admin → `/admin`, host → `/host`, player → `/player`)
+- Store user context in React state via `useAuth()` hook (if implemented) or custom context provider
+- Redirect unauthenticated users to login; check role for route access
+
+### Auth Patterns
+- API routes should call `getUser()` from Supabase client to verify session
+- Return 401 if session invalid; return 403 if role insufficient
+- Use Supabase RLS (Row-Level Security) policies to restrict database access by user ID and role
+- Never store auth tokens in localStorage—rely on Supabase session cookies
+
+### Implementation Reference
+See `docs/04-presentation-and-realtime.md` for full auth setup guide and RLS policy patterns.
+
 ## Realtime & State Management
-- **TanStack Query** handles server state (queries/mutations)
-- `src/hooks/**` wraps TanStack Query + domain service calls
+### Server State
+- **TanStack Query** handles caching, synchronization, and invalidation of server state
+- `src/hooks/**` wraps TanStack Query + domain service calls (queries for reads, mutations for writes)
+- Optimistic updates: Use `setQueryData` before mutation completes to improve perceived performance
+
+### Realtime Subscriptions
 - `src/infrastructure/realtime/` contains WebSocket adapter contract (`RealtimeClient`, currently using `createNoopRealtimeClient` stub)
-- Components access via `RealtimeClientProvider`/`useRealtimeClient` so event handlers can `setQueryData` for optimistic updates
-- **Never** subscribe to raw WebSocket events in components—always via hooks
+- Components access via `RealtimeClientProvider`/`useRealtimeClient` hook
+- Event handlers call `queryClient.setQueryData()` to update cache when server pushes updates (e.g., quiz state changes)
+- **Never** subscribe to raw WebSocket events in components—always wrap in custom hooks
+
+### Implementation Reference
+See `docs/04-presentation-and-realtime.md` for realtime subscription patterns, event types, and optimistic update strategies.
+
+## Error Handling Patterns
+**Errors propagate through layers with structured logging and user-friendly messages.**
+
+### Domain & Application Layer
+- Domain entities/aggregates throw domain-specific errors: `InvalidQuizStateError`, `PlayerNotFoundError`, etc.
+- Application use cases catch domain errors and map to application errors (or re-throw)
+- Services return errors as part of success/failure unions (if using Result pattern) or throw
+
+### API Route Error Mapping
+- Catch errors from services and map to HTTP status codes:
+  - `404` if error message matches `/not found/i`
+  - `400` for validation errors (zod parse failures)
+  - `403` for permission errors
+  - `500` for unexpected errors (log to Supabase via MCP: `mcp_supabase_get_logs(service: 'api')`)
+- Return JSON error response with `{ error: string, code?: string }` structure
+
+### Client-Side Error Handling
+- TanStack Query mutations automatically handle errors via `onError` callback
+- Display user-friendly messages (toast/snackbar) from error response
+- Log unexpected errors to Sentry or error tracking service (if integrated)
+
+**Example Error Path:**
+```typescript
+// Domain: Throw specific error
+if (quiz.isEnded) throw new QuizAlreadyEndedError();
+
+// API Route: Catch and map
+try {
+  const result = await endQuizUseCase.execute(quizId);
+  return NextResponse.json(result);
+} catch (err) {
+  if (err instanceof QuizNotFoundError) return NextResponse.json({ error: 'Quiz not found' }, { status: 404 });
+  return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+}
+```
+
+## Performance Optimization
+**Optimize for quiz gameplay: fast turn-taking, responsive UI, and efficient data loading.**
+
+### Query Optimization
+- Use TanStack Query `staleTime` and `gcTime` to minimize API calls:
+  - Quiz state: `staleTime: 5s` (updates via realtime; refetch on blur)
+  - Player list: `staleTime: 10s` (updates via realtime)
+  - Quiz questions: `staleTime: Infinity` (immutable during session)
+- Combine related queries into single API call when possible (e.g., quiz + questions + player state)
+- Use `useQuery` for reads, `useMutation` for writes; batch writes when safe
+
+### Pagination & Lazy Loading
+- Admin quiz list: Use cursor-based pagination or limit to 20 per page
+- Question bank: Load on demand in dialogs (don't load all questions upfront)
+- Player results: Stream to UI incrementally as scoring completes
+
+### Bundle & Code Splitting
+- Route-based code splitting: Next.js auto-splits by `(admin)`, `(host)`, `(player)` route groups
+- Lazy load heavy components: Dialog modals, chart libraries via dynamic imports
+- Monitor bundle size: `yarn build` output shows size per route; keep client bundles < 100KB
+
+### Database Optimization
+- Index frequently queried columns: `quizId`, `playerId`, `sessionId` (already in schema)
+- Use Supabase MCP to check slow queries: `mcp_supabase_get_logs(service: 'postgres')` for slow logs
+- Avoid N+1 queries: Prisma's `include` strategy rebuilds aggregates efficiently
+- Use `selectMany` for bulk operations instead of loops
+
+**Realtime Performance:**
+- Debounce broadcast events (e.g., player score updates) to avoid flooding WebSocket
+- Use `src/lib/debounce-broadcast.ts` to batch updates every 500ms
+- Unsubscribe from unused channels to reduce server load
+
+**Implementation Reference:**
+See `docs/progress/sessions/` for real examples of optimization decisions and measured impact.
 
 ## Environment & Deployment
 - `.env.example` documents all required vars (`DATABASE_URL`, Supabase keys, etc.)

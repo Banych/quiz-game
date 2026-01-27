@@ -113,6 +113,16 @@ mcp__playwright__snapshot()
 - `/product-owner` - Business perspective, requirements clarification, documentation
 - `/fullstack-planner` - Create detailed implementation plans, execute with tests
 
+## Pattern Reference
+
+For detailed patterns on **authentication**, **realtime state management**, **error handling**, and **performance optimization**, see `.github/copilot-instructions.md` sections:
+- Authentication Workflows
+- Realtime & State Management
+- Error Handling Patterns
+- Performance Optimization
+
+This file is a condensed quick reference; the full guide has comprehensive examples and implementation guidance.
+
 ## Key Patterns
 
 ### API Routes
