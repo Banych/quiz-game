@@ -2,6 +2,7 @@ import { PlayerService } from '@application/services/player-service';
 import { AddPlayerUseCase } from '@application/use-cases/add-player.use-case';
 import { FindPlayerByIdUseCase } from '@application/use-cases/find-player-by-id.use-case';
 import { UpdatePlayerStatusUseCase } from '@application/use-cases/update-player-status.use-case';
+import { UpdatePlayerPresenceUseCase } from '@application/use-cases/update-player-presence.use-case';
 import { ListQuizPlayersUseCase } from '@application/use-cases/list-quiz-players.use-case';
 import { GetPlayerSessionUseCase } from '@application/use-cases/get-player-session.use-case';
 import { Player, PlayerStatus } from '@domain/entities/player';
@@ -12,6 +13,7 @@ import type { PlayerSessionDTO } from '@application/dtos/player-session.dto';
 describe('PlayerService', () => {
   let addPlayerUseCase: Mocked<AddPlayerUseCase>;
   let updatePlayerStatusUseCase: Mocked<UpdatePlayerStatusUseCase>;
+  let updatePlayerPresenceUseCase: Mocked<UpdatePlayerPresenceUseCase>;
   let findPlayerByIdUseCase: Mocked<FindPlayerByIdUseCase>;
   let listQuizPlayersUseCase: Mocked<ListQuizPlayersUseCase>;
   let getPlayerSessionUseCase: Mocked<GetPlayerSessionUseCase>;
@@ -25,6 +27,10 @@ describe('PlayerService', () => {
     updatePlayerStatusUseCase = {
       execute: vi.fn(),
     } as unknown as Mocked<UpdatePlayerStatusUseCase>;
+
+    updatePlayerPresenceUseCase = {
+      execute: vi.fn(),
+    } as unknown as Mocked<UpdatePlayerPresenceUseCase>;
 
     findPlayerByIdUseCase = {
       execute: vi.fn(),
@@ -41,6 +47,7 @@ describe('PlayerService', () => {
     playerService = new PlayerService(
       addPlayerUseCase,
       updatePlayerStatusUseCase,
+      updatePlayerPresenceUseCase,
       findPlayerByIdUseCase,
       listQuizPlayersUseCase,
       getPlayerSessionUseCase

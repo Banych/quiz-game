@@ -95,6 +95,7 @@ model Player {
   rank           Int?
   connectedAt    DateTime     @default(now())
   disconnectedAt DateTime?
+  lastSeenAt     DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
   quiz                 Quiz                  @relation(fields: [quizId], references: [id], onDelete: Cascade)

@@ -11,6 +11,7 @@ const mapToDomain = (record: PrismaPlayer): Player => {
   player.status = record.status as PlayerStatus;
   player.updateScore(record.score ?? 0);
   player.updateRank(record.rank ?? null);
+  player.lastSeenAt = record.lastSeenAt ?? null;
   return player;
 };
 
@@ -82,6 +83,13 @@ export class PrismaPlayerRepository implements IPlayerRepository {
         score: update.score,
         rank: update.rank ?? null,
       },
+    });
+  }
+
+  async updateLastSeenAt(playerId: string, timestamp: Date): Promise<void> {
+    await prisma.player.update({
+      where: { id: playerId },
+      data: { lastSeenAt: timestamp },
     });
   }
 
