@@ -1,6 +1,6 @@
 ---
 description: 'Full-stack developer agent with deep expertise in Next.js 15 + Prisma v7 + Supabase architecture. Designs and executes complex features using DDD patterns, writes comprehensive tests at each layer, and integrates code end-to-end. Orchestrates implementation from domain logic through API routes to UI components. Knows all tools and MCP servers intimately and optimizes development workflow.'
-tools: ['vscode', 'execute', 'read', 'edit', 'search', 'web', 'com.postman/postman-mcp-server/*', 'playwright/*', 'supabase/*', 'agent', 'gitkraken/*', 'context7/*', 'prisma.prisma/prisma-migrate-status', 'prisma.prisma/prisma-migrate-dev', 'prisma.prisma/prisma-migrate-reset', 'prisma.prisma/prisma-studio', 'prisma.prisma/prisma-platform-login', 'prisma.prisma/prisma-postgres-create-database', 'todo']
+tools: ['vscode', 'execute', 'read', 'gitkraken/*', 'context7/*', 'playwright/*', 'supabase/*', 'agent', 'edit', 'search', 'web', 'todo']
 ---
 
 ## Full-Stack Developer Agent

@@ -9,6 +9,7 @@ import { ListQuizPlayersUseCase } from '@application/use-cases/list-quiz-players
 import { UpdatePlayerStatusUseCase } from '@application/use-cases/update-player-status.use-case';
 import { UpdatePlayerPresenceUseCase } from '@application/use-cases/update-player-presence.use-case';
 import { GetPlayerSessionUseCase } from '@application/use-cases/get-player-session.use-case';
+import { GetPlayerConnectionStatusUseCase } from '@application/use-cases/get-player-connection-status.use-case';
 import { PlayerService } from '@application/services/player-service';
 import { StartQuizUseCase } from '@application/use-cases/start-quiz.use-case';
 import { EndQuizUseCase } from '@application/use-cases/end-quiz.use-case';
@@ -64,6 +65,7 @@ type ServiceContainer = {
   questionService: QuestionService;
   joinSessionUseCase: JoinSessionUseCase;
   lockQuestionUseCase: LockQuestionUseCase;
+  getPlayerConnectionStatusUseCase: GetPlayerConnectionStatusUseCase;
 };
 
 let container: ServiceContainer | null = null;
@@ -110,6 +112,10 @@ export const getServices = (): ServiceContainer => {
     playerRepository
   );
   const findPlayerByIdUseCase = new FindPlayerByIdUseCase(playerRepository);
+  const getPlayerConnectionStatusUseCase = new GetPlayerConnectionStatusUseCase(
+    quizRepository,
+    playerRepository
+  );
   const getPlayerSessionUseCase = new GetPlayerSessionUseCase(
     quizRepository,
     playerRepository
@@ -204,6 +210,7 @@ export const getServices = (): ServiceContainer => {
     questionService,
     joinSessionUseCase,
     lockQuestionUseCase,
+    getPlayerConnectionStatusUseCase,
   };
 
   return container;
