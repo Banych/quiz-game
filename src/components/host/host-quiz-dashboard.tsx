@@ -9,6 +9,7 @@ import { TimerCountdown } from './timer-countdown';
 import { QuestionTimeline } from './question-timeline';
 import { ScoringInfoBadge } from '@/components/player/scoring-info-badge';
 import { RoundSummaryDialog } from './round-summary-dialog';
+import { PlayerListWithStatus } from './player-list-with-status';
 
 interface HostQuizDashboardProps {
   quizId: string;
@@ -278,27 +279,7 @@ export function HostQuizDashboard({
           currentQuestionIndex={quiz.currentQuestionIndex}
         />
 
-        <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
-          <header className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Players</h2>
-            <p className="text-sm text-muted-foreground">
-              {quiz.players.length} connected
-            </p>
-          </header>
-          <div className="grid gap-3 md:grid-cols-2">
-            {quiz.players.map((player) => (
-              <div
-                key={player.id}
-                className="rounded-lg border border-border/80 px-3 py-2"
-              >
-                <p className="font-medium">{player.name}</p>
-                <p className="text-xs uppercase text-muted-foreground">
-                  {player.status}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
+        <PlayerListWithStatus quizId={quizId} pollInterval={5000} />
       </div>
 
       <RoundSummaryDialog summary={roundSummary} onClose={clearRoundSummary} />

@@ -1,5 +1,17 @@
 # Dev Progress Log
 
+## 2026-01-31 (R5 Phase 4.2 Connection Health ✅)
+- **Connection status monitoring complete**: Hosts can now see player connection health in real-time
+- Created `PresenceMonitor` service with connection thresholds (connected <30s, away 30-120s, disconnected >120s)
+- Built `GetPlayerConnectionStatusUseCase` orchestrating presence detection
+- Added `/api/quiz/[quizId]/players/status` endpoint for host polling
+- Created `useHostQuizPlayers` hook with 5s polling interval
+- Built `PlayerListWithStatus` component with color-coded badges (green/yellow/red) and "last seen" timestamps
+- Integrated into host dashboard - replaced old static player list
+- **Test Coverage**: 31 unit tests passing (PresenceMonitor, UseCase, Hook)
+- **E2E Tests**: 4 scenarios created (`e2e/player-connection-status.spec.ts`)
+- Session: [2026-01-27-to-2026-01-31-r5-phase4-connection-health.md](sessions/2026-01-27-to-2026-01-31-r5-phase4-connection-health.md)
+
 ## 2026-01-11 (R5 Phase 2 UI Enhancements ✅)
 - **Player scoring UX complete**: Live point preview, speed indicators, scoring info badges
 - Created `ScoringInfoBadge` component (Radix tooltip showing algorithm descriptions)
