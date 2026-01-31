@@ -17,6 +17,12 @@ import type {
 // Heartbeat interval for presence updates (30 seconds)
 const PRESENCE_HEARTBEAT_INTERVAL_MS = 30_000;
 
+// Maximum number of consecutive failures before calling onConnectionError
+const MAX_RETRY_ATTEMPTS = 5;
+
+// Exponential backoff delays: 1s, 2s, 4s, 8s, 8s (capped at 8s)
+const RETRY_DELAYS_MS = [1000, 2000, 4000, 8000, 8000];
+
 const PresenceTrackerContext = createContext<IPresenceTracker | null>(null);
 
 export type PresenceTrackerProviderProps = {
@@ -49,6 +55,10 @@ export type UsePresenceOptions = {
   onJoin?: (presences: PresenceState[]) => void;
   /** Called when a player leaves */
   onLeave?: (presences: PresenceState[]) => void;
+  /** Called after 5 consecutive heartbeat failures */
+  onConnectionError?: () => void;
+  /** Called when heartbeat succeeds after previous failures */
+  onReconnected?: () => void;
 };
 
 export type UsePresenceReturn = {
@@ -58,6 +68,10 @@ export type UsePresenceReturn = {
   presenceState: Record<string, PresenceState[]>;
   /** Manually send a presence heartbeat */
   sendHeartbeat: () => Promise<void>;
+  /** Number of consecutive heartbeat failures */
+  failureCount: number;
+  /** Timestamp of last successful heartbeat */
+  lastSuccessfulHeartbeat: string | null;
 };
 
 /**
@@ -73,14 +87,22 @@ export const usePresence = ({
   onSync,
   onJoin,
   onLeave,
+  onConnectionError,
+  onReconnected,
 }: UsePresenceOptions): UsePresenceReturn => {
   const tracker = usePresenceTracker();
   const [isConnected, setIsConnected] = useState(false);
   const [presenceState, setPresenceState] = useState<
     Record<string, PresenceState[]>
   >({});
+  const [failureCount, setFailureCount] = useState(0);
+  const [lastSuccessfulHeartbeat, setLastSuccessfulHeartbeat] = useState<
+    string | null
+  >(null);
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const joinedAtRef = useRef<string>(new Date().toISOString());
+  const hasCalledErrorCallbackRef = useRef(false);
 
   // Persist presence to database via API
   const persistPresence = useCallback(async () => {
@@ -109,9 +131,65 @@ export const usePresence = ({
       joinedAt: joinedAtRef.current,
     };
 
-    await tracker.track(quizId, state);
-    await persistPresence();
-  }, [tracker, quizId, playerId, playerName, persistPresence]);
+    try {
+      await tracker.track(quizId, state);
+      await persistPresence();
+
+      // Success: reset failure count and record timestamp
+      const hadFailures = failureCount > 0;
+      setFailureCount(0);
+      setLastSuccessfulHeartbeat(new Date().toISOString());
+      hasCalledErrorCallbackRef.current = false;
+
+      // Call reconnected callback if we recovered from failures
+      if (hadFailures && onReconnected) {
+        onReconnected();
+      }
+    } catch (error) {
+      // Failure: increment count and schedule retry
+      const newFailureCount = failureCount + 1;
+      setFailureCount(newFailureCount);
+
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(
+          `[usePresence] Heartbeat failed (attempt ${newFailureCount}/${MAX_RETRY_ATTEMPTS}):`,
+          error
+        );
+      }
+
+      // After max retries, call error callback once
+      if (
+        newFailureCount >= MAX_RETRY_ATTEMPTS &&
+        onConnectionError &&
+        !hasCalledErrorCallbackRef.current
+      ) {
+        hasCalledErrorCallbackRef.current = true;
+        onConnectionError();
+      }
+
+      // Schedule retry with exponential backoff
+      if (newFailureCount < MAX_RETRY_ATTEMPTS) {
+        const delayIndex = Math.min(
+          newFailureCount - 1,
+          RETRY_DELAYS_MS.length - 1
+        );
+        const retryDelay = RETRY_DELAYS_MS[delayIndex];
+
+        retryTimeoutRef.current = setTimeout(() => {
+          void sendHeartbeat();
+        }, retryDelay);
+      }
+    }
+  }, [
+    tracker,
+    quizId,
+    playerId,
+    playerName,
+    persistPresence,
+    failureCount,
+    onReconnected,
+    onConnectionError,
+  ]);
 
   // Subscribe to presence and start heartbeat on mount
   useEffect(() => {
@@ -148,6 +226,10 @@ export const usePresence = ({
         clearInterval(heartbeatIntervalRef.current);
         heartbeatIntervalRef.current = null;
       }
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
       void tracker.untrack(quizId);
       unsubscribe();
       setIsConnected(false);
@@ -158,5 +240,7 @@ export const usePresence = ({
     isConnected,
     presenceState,
     sendHeartbeat,
+    failureCount,
+    lastSuccessfulHeartbeat,
   };
 };
