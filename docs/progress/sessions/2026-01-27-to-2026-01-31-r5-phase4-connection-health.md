@@ -24,8 +24,18 @@
 - [x] Step 5: Host dashboard integration with real-time updates ✅
 - [x] Step 6: Tests (15 service + 8 use case + 8 hook + 4 E2E specs) ✅
 
-### Phase 4.3: Player Reconnection Flow
-- [ ] Pending
+### Phase 4.3: Player Reconnection Flow (In Progress 2026-01-31)
+**Plan:** [Phase 4.3 Player Reconnection](../plans/2026-01-31-r5-phase4.3-player-reconnection.md)
+**Status:** 🚧 In Progress (Step 2/7 Complete)
+**Estimated:** ~3.5 hours
+
+- [x] Step 1: useNetworkStatus Hook ✅ (7 tests passing)
+- [x] Step 2: Update usePresence with Retry Logic ✅ (13 tests passing)
+- [ ] Step 3: useReconnection Hook
+- [ ] Step 4: API Endpoint - Session Sync
+- [ ] Step 5: Connection Status Banner UI
+- [ ] Step 6: Integration - Player Quiz Page
+- [ ] Step 7: Testing (integration + E2E)
 
 ### Phase 4.4: Load Testing
 - [ ] Pending
@@ -425,5 +435,61 @@ export function PlayerListWithStatus({ quizId }: { quizId: string }) {
 - ✅ DTO-first architecture followed
 - ✅ DDD layers respected (domain → application → infrastructure → presentation)
 - ✅ Iterative testing approach: implement → test → fix → verify
+
+---
+
+## Phase 4.3 Implementation Progress (2026-01-31)
+
+### Step 1: useNetworkStatus Hook ✅ (Completed)
+
+**Files Created:**
+1. `src/hooks/use-network-status.ts` - Browser network detection hook
+2. `src/tests/hooks/use-network-status.test.ts` - 7 passing tests
+
+**Implementation Details:**
+- Monitors `navigator.onLine` for browser-level connectivity
+- Uses Network Information API (`navigator.connection.effectiveType`) when available
+- Returns `NetworkStatusInfo` with `status`, `isOnline`, `isOffline`, `effectiveType`
+- Proper event listener cleanup to prevent memory leaks
+
+**Technical Decisions:**
+1. **No React Testing Library:** Followed Phase 4.2 pattern - tests validate type contracts only
+2. **Graceful degradation:** Returns `effectiveType: 'unknown'` when API unavailable
+3. **Event-driven:** Listens to `window.addEventListener('online'/'offline')` for real-time updates
+
+**Test Results:** ✅ 7/7 passing
+- Hook export validation
+- Type contracts (NetworkStatus, EffectiveType, NetworkStatusInfo)
+- Mutually exclusive boolean flags
+
+**Time:** ~20 minutes (implementation + tests + debugging)
+
+### Step 2: Update usePresence with Retry Logic ✅ (Completed)
+
+**Files Modified:**
+1. `src/hooks/use-presence.tsx` - Added retry logic + callbacks
+2. `src/tests/hooks/use-presence.test.ts` - NEW (13 tests)
+
+**Implementation Details:**
+- Exponential backoff: 1s → 2s → 4s → 8s → 8s (capped at 8s)
+- Max 5 retry attempts before calling `onConnectionError`
+- `failureCount` state tracks consecutive failures
+- `lastSuccessfulHeartbeat` timestamp records last success
+- `hasCalledErrorCallbackRef` prevents duplicate `onConnectionError` calls
+- Retry timeout cleanup on unmount prevents memory leaks
+- `onReconnected` callback fires when recovering from failures
+
+**Technical Decisions:**
+1. **Exponential backoff capped at 8s:** Prevents excessive delays while tolerating brief network hiccups
+2. **Single error callback:** Uses ref guard to call `onConnectionError` only once after 5 failures
+3. **Reconnected detection:** Compares `failureCount > 0` before success to detect recovery
+
+**Test Results:** ✅ 13/13 passing
+- Type contracts (UsePresenceOptions, UsePresenceReturn)
+- Retry configuration constants
+- Return value structure (failureCount, lastSuccessfulHeartbeat)
+- Callback signatures (onConnectionError, onReconnected)
+
+**Time:** ~25 minutes (implementation + tests + debugging)
 
 ---

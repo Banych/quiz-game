@@ -123,6 +123,33 @@ For detailed patterns on **authentication**, **realtime state management**, **er
 
 This file is a condensed quick reference; the full guide has comprehensive examples and implementation guidance.
 
+## Planning Workflow
+
+**For non-trivial features (>5 steps or >2 hours), create a planning file BEFORE coding.**
+
+### When Required
+- Multi-phase features (R5 Phase 4.3, etc.)
+- Cross-layer changes (domain → application → infrastructure → presentation)
+- Features with complex technical decisions
+
+### Process
+1. **Create plan**: `docs/progress/plans/YYYY-MM-DD-feature-name.md`
+   - Use template from `docs/progress/plans/README.md`
+   - Include: steps with checkboxes, technical decisions, success criteria, time estimates
+   - Set status: 📋 Planning → 🚧 In Progress → ✅ Complete
+
+2. **Reference in session file**: Link to plan at top of daily session log
+   ```markdown
+   **Plan:** [Phase 4.3 Reconnection](../plans/2026-01-31-r5-phase4.3-player-reconnection.md)
+   **Status:** 🚧 In Progress (Step 3/7)
+   ```
+
+3. **Update in real-time**: Check off steps as completed, add notes/observations
+
+4. **Complete**: Check final checklist (tests passing, docs updated, etc.)
+
+See `.github/copilot-instructions.md` "Planning Workflow (Scrum Board Alternative)" for full details.
+
 ## Key Patterns
 
 ### API Routes

@@ -109,6 +109,119 @@ This codebase enforces an **iterative, incremental development style** via `.git
 
 **When adding features:** See the pattern in `docs/progress/sessions/*.md`—each session breaks goals into concrete steps, marks progress incrementally, and documents decisions. Follow this when implementing new quiz flows, player actions, or realtime features.
 
+## Planning Workflow (Scrum Board Alternative)
+
+**CRITICAL:** For any non-trivial feature or multi-step work, create a planning file BEFORE implementation.
+
+### When to Create Planning Files
+
+**Required for:**
+- Multi-phase features (R5 Phase 4.3, R6 Phase 1, etc.)
+- Features with >5 implementation steps
+- Work estimated at >2 hours
+- Cross-layer changes (domain → application → infrastructure → presentation)
+- Features with complex technical decisions or trade-offs
+
+**Optional for:**
+- Single-file bug fixes
+- Small refactorings
+- Documentation updates
+- Trivial UI tweaks
+
+### Planning File Structure
+
+**Location:** `docs/progress/plans/YYYY-MM-DD-feature-name.md`
+
+**Required Sections:**
+1. **Header** - Date, status (📋/🚧/✅/⏸️/❌), estimate, dependencies
+2. **Overview** - Current state, what's missing, context
+3. **Goals** - High-level objectives with checkboxes
+4. **Implementation Steps** - Detailed tasks (atomic, <1hr each) with checkboxes
+5. **Technical Decisions** - Architecture choices, trade-offs, rationale
+6. **Success Criteria** - Functional + non-functional requirements
+7. **Files Changed** - List of new/modified files
+8. **Time Estimates** - Breakdown by step
+9. **Notes & Observations** - Fill in during implementation
+10. **Completion Checklist** - Final quality gates
+
+**Example:**
+```markdown
+# Phase 4.3: Player Reconnection Flow
+
+**Date Created:** 2026-01-31
+**Status:** 🚧 In Progress
+**Estimated Time:** ~3.5 hours
+**Dependencies:** Phase 4.1 ✅, Phase 4.2 ✅
+
+## Implementation Steps
+
+### Step 1: useNetworkStatus Hook
+- [x] Create hook that monitors navigator.onLine
+- [x] Add event listeners for online/offline
+- [x] Write tests (8 tests)
+- [x] Success criteria: Detects offline within 1s
+
+### Step 2: Update usePresence
+- [ ] Add retry logic with exponential backoff
+- [ ] Track last successful heartbeat
+- [ ] Add onConnectionError callback
+...
+```
+
+### Workflow Integration
+
+**1. Before Starting Work:**
+```bash
+# Create planning file
+touch docs/progress/plans/2026-01-31-feature-name.md
+# Fill out all sections with checkboxes
+# Set status to 📋 Planning
+```
+
+**2. During Implementation:**
+- Update status to 🚧 In Progress
+- Check off steps as you complete them (real-time, not batched)
+- Add notes/observations in "Notes & Observations" section
+- Update estimates if scope changes
+
+**3. In Session Files:**
+- Reference the planning file at the top
+- Summarize daily progress with links to plan steps
+- Document actual vs. estimated time
+- Keep session files DRY (don't duplicate plan details)
+
+**Example session file:**
+```markdown
+# R5 Phase 4.3 Implementation Session
+
+**Date:** 2026-01-31
+**Plan:** [Phase 4.3 Player Reconnection](../plans/2026-01-31-r5-phase4.3-player-reconnection.md)
+**Status:** 🚧 In Progress (Step 3/7)
+
+## Today's Progress
+- [x] Step 1: useNetworkStatus hook ✅ (30 min, estimated 30 min)
+- [x] Step 2: Update usePresence ✅ (45 min, estimated 30 min)
+- [ ] Step 3: useReconnection hook (in progress)
+```
+
+**4. After Completion:**
+- Check all items in "Completion Checklist"
+- Update status to ✅ Complete
+- Document actual time vs. estimate in session file
+- Keep planning file for reference (don't delete)
+
+### Benefits
+
+- **Visibility:** Always know what's in progress and what's next
+- **Accountability:** Clear checkboxes prevent "forgot to test" situations
+- **Estimation:** Track actual vs. estimated time to improve planning
+- **Knowledge transfer:** New developers see full context for past decisions
+- **Prevents scope creep:** Forces upfront thinking about all requirements
+
+### Template
+
+See `docs/progress/plans/README.md` for full template and examples.
+
 ## MCP-Assisted Testing (Playwright MCP)
 **CRITICAL:** Always use **manual-first test development** when writing or debugging E2E tests:
 
