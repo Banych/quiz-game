@@ -5,9 +5,11 @@ import type { PlayerSessionDTO } from '@application/dtos/player-session.dto';
 import { usePlayerSession } from '@hooks/use-player-session';
 import { useCountdownTimer } from '@hooks/use-countdown-timer';
 import { useRoundSummaryListener } from '@hooks/use-round-summary-listener';
+import { useReconnection } from '@hooks/use-reconnection';
 import { Button } from '@/components/ui/button';
 import { ScoringInfoBadge } from './scoring-info-badge';
 import { AnswersLockedIndicator } from './answers-locked-indicator';
+import { ConnectionStatusBanner } from './connection-status-banner';
 import { calculatePoints, getSpeedIndicator } from '@/lib/scoring-client';
 
 interface PlayerSessionScreenProps {
@@ -57,6 +59,30 @@ export function PlayerSessionScreen({
   const [submissionMessage, setSubmissionMessage] = useState<string | null>(
     null
   );
+  const [reconnectedToast, setReconnectedToast] = useState<string | null>(null);
+
+  // Reconnection management with presence tracking
+  const { state: reconnectionState, reconnect } = useReconnection({
+    quizId,
+    playerId,
+    playerName: session.player.name,
+    persistToDatabase: true,
+    onDisconnected: () => {
+      setSubmissionMessage('Connection lost. Trying to reconnect...');
+      setReconnectedToast(null);
+    },
+    onReconnected: () => {
+      setReconnectedToast('✓ Reconnected! Your session has been restored.');
+      setSubmissionMessage(null);
+      // Clear toast after 5 seconds
+      setTimeout(() => setReconnectedToast(null), 5000);
+    },
+    onFailed: () => {
+      setSubmissionMessage(
+        'Unable to reconnect. Please check your internet connection.'
+      );
+    },
+  });
 
   // Client-side countdown for smooth timer updates
   const currentRemaining = useCountdownTimer({
@@ -172,9 +198,15 @@ export function PlayerSessionScreen({
     !activeQuestionId && session.quiz.status !== 'Completed';
   const canSubmit = Boolean(activeQuestionId) && Boolean(answerValue.trim());
   const answersLocked = roundSummary !== null;
+  const isDisconnected =
+    reconnectionState === 'disconnected' ||
+    reconnectionState === 'reconnecting';
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {/* Connection Status Banner */}
+      <ConnectionStatusBanner state={reconnectionState} onRetry={reconnect} />
+
       <div className="mx-auto flex max-w-md flex-col gap-6 p-6">
         <header className="text-center">
           <p className="text-sm uppercase tracking-wide text-muted-foreground">
@@ -201,6 +233,12 @@ export function PlayerSessionScreen({
             Score: <span className="font-mono text-base">{playerScore}</span>
           </p>
         </header>
+
+        {reconnectedToast && (
+          <div className="rounded-lg border border-primary/40 bg-primary/10 p-3 text-sm text-primary">
+            {reconnectedToast}
+          </div>
+        )}
 
         {error ? (
           <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
@@ -273,15 +311,18 @@ export function PlayerSessionScreen({
                 disabled={
                   isSubmittingAnswer ||
                   session.quiz.status !== 'Active' ||
-                  answersLocked
+                  answersLocked ||
+                  isDisconnected
                 }
                 onChange={(event) => setAnswerValue(event.target.value)}
                 placeholder={
-                  answersLocked
-                    ? 'Answers are locked'
-                    : waitingForQuestion
-                      ? 'Waiting for host…'
-                      : 'Type your answer'
+                  isDisconnected
+                    ? 'Reconnecting…'
+                    : answersLocked
+                      ? 'Answers are locked'
+                      : waitingForQuestion
+                        ? 'Waiting for host…'
+                        : 'Type your answer'
                 }
                 className="mt-1 w-full rounded-xl border border-border/70 bg-background/80 px-4 py-3 text-base focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60"
               />
@@ -293,14 +334,17 @@ export function PlayerSessionScreen({
                 isSubmittingAnswer ||
                 !canSubmit ||
                 session.quiz.status !== 'Active' ||
-                answersLocked
+                answersLocked ||
+                isDisconnected
               }
             >
-              {answersLocked
-                ? 'Answers Locked'
-                : isSubmittingAnswer
-                  ? 'Sending…'
-                  : 'Send answer'}
+              {isDisconnected
+                ? 'Reconnecting…'
+                : answersLocked
+                  ? 'Answers Locked'
+                  : isSubmittingAnswer
+                    ? 'Sending…'
+                    : 'Send answer'}
             </Button>
           </form>
           {submissionMessage ? (
