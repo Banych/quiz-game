@@ -10,6 +10,14 @@ export interface NetworkStatusInfo {
   effectiveType: EffectiveType;
 }
 
+interface NetworkInformation extends EventTarget {
+  effectiveType?: EffectiveType;
+}
+
+interface NavigatorWithConnection extends Navigator {
+  connection?: NetworkInformation;
+}
+
 /**
  * Hook that monitors browser network connectivity status.
  *
@@ -35,7 +43,7 @@ export function useNetworkStatus(): NetworkStatusInfo {
     // Update effective connection type if NetworkInformation API available
     const updateConnectionType = () => {
       if ('connection' in navigator) {
-        const connection = (navigator as any).connection;
+        const connection = (navigator as NavigatorWithConnection).connection;
         const type = connection?.effectiveType;
         if (type && ['4g', '3g', '2g', 'slow-2g'].includes(type)) {
           setEffectiveType(type);
@@ -63,7 +71,7 @@ export function useNetworkStatus(): NetworkStatusInfo {
 
     // Listen for connection changes (if supported)
     if ('connection' in navigator) {
-      const connection = (navigator as any).connection;
+      const connection = (navigator as NavigatorWithConnection).connection;
       connection?.addEventListener?.('change', updateConnectionType);
     }
 
@@ -72,7 +80,7 @@ export function useNetworkStatus(): NetworkStatusInfo {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       if ('connection' in navigator) {
-        const connection = (navigator as any).connection;
+        const connection = (navigator as NavigatorWithConnection).connection;
         connection?.removeEventListener?.('change', updateConnectionType);
       }
     };
