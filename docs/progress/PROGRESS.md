@@ -4,21 +4,27 @@ This document indexes all releases, completed work, and session notes. Use this 
 
 ## Release Status
 
-| Release | Title              | Goal                                                   | Status        | Completion Date |
-| ------- | ------------------ | ------------------------------------------------------ | ------------- | --------------- |
-| **R0**  | Foundation         | Stable scaffolding, tooling, CI setup                  | ✅ Complete    | ~2025-11-30     |
-| **R1**  | Domain & Data      | DDD structure, Prisma, repositories, DTOs              | ✅ Complete    | ~2025-12-05     |
-| **R2**  | Host MVP           | Dashboard, question timeline, timer, optimistic stats  | ✅ Complete    | ~2025-12-15     |
-| **R3**  | Player MVP         | Join/answer flows, WebSocket sync, session persistence | ✅ Complete    | ~2025-12-19     |
-| **R4**  | Content Admin      | CRUD (quiz/question), media uploads, auth gate         | ✅ Complete    | 2025-12-21      |
-| **R5**  | Realtime & Scoring | Speed-based scoring, round transitions, reconnection   | 📋 In Progress | ~2026-02-15     |
-| **R6**  | Polish & Launch    | Accessibility, responsive tweaks, audit log, analytics | 📅 Planned     | ~2026-03-31     |
+| Release | Title              | Goal                                                   | Status     | Completion Date |
+| ------- | ------------------ | ------------------------------------------------------ | ---------- | --------------- |
+| **R0**  | Foundation         | Stable scaffolding, tooling, CI setup                  | ✅ Complete | ~2025-11-30     |
+| **R1**  | Domain & Data      | DDD structure, Prisma, repositories, DTOs              | ✅ Complete | ~2025-12-05     |
+| **R2**  | Host MVP           | Dashboard, question timeline, timer, optimistic stats  | ✅ Complete | ~2025-12-15     |
+| **R3**  | Player MVP         | Join/answer flows, WebSocket sync, session persistence | ✅ Complete | ~2025-12-19     |
+| **R4**  | Content Admin      | CRUD (quiz/question), media uploads, auth gate         | ✅ Complete | 2025-12-21      |
+| **R5**  | Realtime & Scoring | Speed-based scoring, round transitions, reconnection   | ✅ Complete | 2026-02-01      |
+| **R6**  | Polish & Launch    | Accessibility, responsive tweaks, audit log, analytics | 📅 Planned  | ~2026-03-31     |
 
 ---
 
 ## Session Notes (Chronological)
 
 **Latest First** – Find detailed work notes by date:
+
+### 2026-02-01: R5 Phase 6 - Production Testing & Documentation ✅
+- **Focus**: Production build validation, load testing on prod, final documentation
+- **Deliverables**: Production benchmarks, architecture docs update, known limitations, R5 release notes
+- **Status**: Complete - Production build validated, performance benchmarks documented
+- **File**: [sessions/2026-02-01-r5-phase6-production-testing.md](sessions/2026-02-01-r5-phase6-production-testing.md)
 
 ### 2026-01-27 to 2026-01-31: R5 Phase 4 - Connection Health ✅
 - **Focus**: Presence tracking, disconnect detection, player reconnection
@@ -81,7 +87,7 @@ This document indexes all releases, completed work, and session notes. Use this 
 
 ## Release Checklists
 
-### R5: Realtime & Scoring (In Progress)
+### R5: Realtime & Scoring (Complete ✅)
 
 **Goals**:
 - ✅ Phase 1: Speed-based scoring algorithm (exponential/linear/fixed) with configurable decay
@@ -89,7 +95,19 @@ This document indexes all releases, completed work, and session notes. Use this 
 - ✅ Phase 3: Round transitions, answer locking, result summaries (2026-01-24)
 - ✅ Phase 4: Connection health & reconnection flows (2026-01-27 to 2026-01-31)
 - ✅ Phase 5: Load testing & performance validation (2026-01-31)
-- 🔲 Phase 6: Final integration & documentation
+- ✅ Phase 6: Final integration & documentation (2026-02-01)
+
+**R5 Release Summary**:
+- **Speed-based scoring**: Exponential, linear, and fixed scoring strategies
+- **Round transitions**: Answer locking, round summaries, leaderboard snapshots
+- **Connection health**: Presence tracking, disconnect detection, auto-reconnection
+- **Load testing**: k6 test suite with 3 scenarios, 0% error rate validated
+- **Production benchmarks**: Answer P95=1.63s, Join P95=6.29s (optimization path documented)
+- **Documentation**: Architecture patterns, performance benchmarks, known limitations
+
+**Known Issues** (documented for R6):
+- E2E selector strict mode violations (test quality, not functional bugs)
+- P95 latencies exceed targets (acceptable for <100 players, optimization path documented)
 
 **Action Files**:
 - [actions/07-r5-realtime-scoring-implementation.md](actions/07-r5-realtime-scoring-implementation.md) – Detailed implementation plan

@@ -4,7 +4,7 @@ export const config = {
   baseUrl: 'http://localhost:3000',
 
   // Quiz ID for testing (update with a valid quiz from your database)
-  quizId: 'cml3xqri90000v4u719b2ylns', // Trivia Night Demo
+  quizId: 'cml3yl1ql0000cwu7shf1los1', // Trivia Night Demo
 
   // Performance thresholds
   thresholds: {

@@ -1,12 +1,14 @@
 import { test, expect } from '@playwright/test';
+import { getQuizId, getJoinCode } from './fixtures';
 
 /**
  * E2E test for player join flow.
  * Based on actual MCP-tested behavior.
  */
 
-const QUIZ_ID = process.env.TEST_QUIZ_ID || 'cmjd39h6o0000g18o0s8eq6cp';
-const JOIN_CODE = process.env.TEST_JOIN_CODE || 'JOIN-KYTX';
+// Get quiz info dynamically from setup phase
+const QUIZ_ID = () => getQuizId();
+const JOIN_CODE = () => getJoinCode();
 
 test.describe('Player Join Flow', () => {
   test.beforeEach(async ({ page }) => {
@@ -18,25 +20,27 @@ test.describe('Player Join Flow', () => {
   test('should join quiz and navigate to play page', async ({ page }) => {
     // Generate unique player name to avoid database constraint
     const playerName = `E2E Player ${Date.now()}`;
+    const quizId = QUIZ_ID();
+    const joinCode = JOIN_CODE();
 
     // Navigate to join page
     await page.goto('/join');
     await expect(page).toHaveURL('/join');
 
     // Fill join form
-    await page.getByRole('textbox', { name: /join code/i }).fill(JOIN_CODE);
+    await page.getByRole('textbox', { name: /join code/i }).fill(joinCode);
     await page.getByRole('textbox', { name: /your name/i }).fill(playerName);
 
     // Submit form
     await page.getByRole('button', { name: /join quiz/i }).click();
 
     // Wait for navigation to play page (30s timeout for API + navigation)
-    await page.waitForURL(new RegExp(`/play/${QUIZ_ID}/[a-z0-9-]+`), {
+    await page.waitForURL(new RegExp(`/play/${quizId}/[a-z0-9-]+`), {
       timeout: 30000,
     });
 
     // Verify we're on play page
-    await expect(page).toHaveURL(new RegExp(`/play/${QUIZ_ID}/[a-z0-9-]+`));
+    await expect(page).toHaveURL(new RegExp(`/play/${quizId}/[a-z0-9-]+`));
 
     // Verify player info is displayed
     await expect(page.getByRole('heading', { name: playerName })).toBeVisible();
@@ -50,7 +54,7 @@ test.describe('Player Join Flow', () => {
     });
 
     expect(session).toBeTruthy();
-    expect(session.quizId).toBe(QUIZ_ID);
+    expect(session.quizId).toBe(quizId);
     expect(session.playerName).toBe(playerName);
     expect(session.playerId).toBeTruthy();
   });

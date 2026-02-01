@@ -1,21 +1,25 @@
 import { test, expect } from '@playwright/test';
+import { getQuizId, getJoinCode } from './fixtures';
 
 /**
  * E2E test for host dashboard.
  * Based on actual MCP-tested behavior.
  */
 
-const QUIZ_ID = process.env.TEST_QUIZ_ID || 'cmjd39h6o0000g18o0s8eq6cp';
-
 test.describe('Host Dashboard', () => {
   test('should display quiz information and controls', async ({ page }) => {
-    await page.goto(`/quiz/${QUIZ_ID}`);
+    const quizId = getQuizId();
+    const joinCode = getJoinCode();
+
+    await page.goto(`/quiz/${quizId}`);
 
     // Verify quiz info
     await expect(
       page.getByRole('heading', { name: /trivia night demo/i })
     ).toBeVisible();
-    await expect(page.getByText(/join code.*JOIN-KYTX/i)).toBeVisible();
+    await expect(
+      page.getByText(new RegExp(`join code.*${joinCode}`, 'i'))
+    ).toBeVisible();
 
     // Check quiz status badge (scoped to banner to avoid matching player statuses)
     await expect(
@@ -47,7 +51,9 @@ test.describe('Host Dashboard', () => {
   });
 
   test('should start quiz and update status', async ({ page }) => {
-    await page.goto(`/quiz/${QUIZ_ID}`);
+    const quizId = getQuizId();
+
+    await page.goto(`/quiz/${quizId}`);
 
     // Check initial status (scoped to banner to avoid player status matches)
     const initialStatus = await page

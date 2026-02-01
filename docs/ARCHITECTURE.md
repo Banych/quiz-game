@@ -482,6 +482,93 @@ realtime.subscribe('quiz:state', (data: QuizDTO) => {
 
 ## Common Patterns
 
+### R5 Realtime & Scoring Patterns
+
+This section documents the production-ready realtime features implemented in R5.
+
+#### Speed-Based Scoring System
+
+**Scoring Strategies** (`src/domain/value-objects/scoring-strategy.ts`):
+- **ExponentialDecay**: Points decrease rapidly at first, then level off. `score = basePoints * e^(-decayRate * responseTime)`
+- **LinearDecay**: Points decrease linearly with time. `score = basePoints * (1 - responseTime / maxTime)`
+- **FixedPoints**: All correct answers get same points regardless of speed
+
+**Configuration** (per quiz):
+- `scoringStrategy`: 'exponential' | 'linear' | 'fixed'
+- `basePoints`: Maximum points for instant answer (default: 1000)
+- `decayRate`: For exponential, controls decay speed (default: 0.1)
+- `timeLimitSeconds`: Question time limit (default: 30s)
+
+**Example Calculation**:
+```typescript
+// Exponential decay: 1000 * e^(-0.1 * 5) = 607 points for 5-second response
+const score = calculateScore(quiz.scoringStrategy, 5, quiz.timeLimitSeconds, quiz.basePoints);
+```
+
+#### Presence & Connection Health
+
+**PresenceMonitor** (`src/domain/aggregates/presence-monitor.ts`):
+- Tracks heartbeat timestamps per player
+- Configurable `heartbeatIntervalMs` (default: 5000ms) and `timeoutMs` (default: 15000ms)
+- Emits `presence:connected` / `presence:disconnected` events
+
+**Connection Status Flow**:
+```
+Player joins → PresenceMonitor.markConnected(playerId)
+               ↓
+Every 5s → Player sends heartbeat → PresenceMonitor.recordHeartbeat(playerId)
+               ↓
+No heartbeat for 15s → PresenceMonitor marks disconnected → UI shows "Disconnected"
+               ↓
+Player returns → PresenceMonitor.markConnected(playerId) → UI shows "Connected"
+```
+
+**Hooks**:
+- `usePresence()`: Sends periodic heartbeats, monitors online status
+- `useNetworkStatus()`: Detects browser online/offline events
+- `useReconnection()`: Orchestrates reconnection flow with exponential backoff
+
+#### Round Transitions & Answer Locking
+
+**Question Lifecycle**:
+1. **QuestionRevealedEvent**: Host advances to question, timer starts
+2. **PlayerAnsweredEvent**: Player submits answer, score calculated
+3. **QuestionLockedEvent**: Timer expires OR host locks manually, no more answers accepted
+4. **RoundSummaryDTO**: Contains correct answer, player scores, leaderboard delta
+
+**Locking Mechanism**:
+```typescript
+// API: POST /api/quiz/{quizId}/questions/{questionId}/lock
+// Service: lockQuestion() sets question.lockedAt, emits QuestionLockedEvent
+// Clients: useRoundSummaryListener() receives event, shows summary overlay
+```
+
+**Leaderboard Snapshots**:
+- Stored per question for historical analysis
+- Contains: rank, playerId, playerName, currentScore, deltaFromPrevious
+
+#### Reconnection Flow
+
+**Auto-Recovery Sequence**:
+```
+Network disconnect detected (useNetworkStatus)
+   ↓
+UI shows "Connection lost" indicator
+   ↓
+Browser online event fires
+   ↓
+useReconnection initiates recovery:
+  1. Re-authenticate session (verify player still in quiz)
+  2. Fetch current quiz state (GET /api/quiz/{quizId}/state)
+  3. Fetch player session (GET /api/player/{playerId}/session)
+  4. Hydrate TanStack Query caches
+  5. Resume realtime subscriptions
+   ↓
+UI shows current question/timer (seamless continuation)
+```
+
+**Exponential Backoff**: Retry delays: 1s → 2s → 4s → 8s → 16s (max 5 retries)
+
 ### Adding a New Feature (Quiz Operation)
 
 Example: Add ability to mark quiz complete.

@@ -10,6 +10,7 @@ import type {
 
 export type SeedQuizOptions = {
   title?: string;
+  joinCode?: string;
   questionCount?: number;
   playerNames?: string[];
   publishQuestions?: boolean;
@@ -78,13 +79,17 @@ export const resetDatabase = async () => {
 export const seedSampleQuiz = async (
   options: SeedQuizOptions = {}
 ): Promise<SeedQuizResult> => {
+  // Use fixed join code for E2E test compatibility (can be overridden via options)
+  const joinCode =
+    options.joinCode ?? process.env.TEST_JOIN_CODE ?? 'JOIN-KYTX';
+
   const quiz = await prisma.quiz.create({
     data: {
       title: options.title ?? 'Trivia Night Demo',
       status: 'Pending',
       timePerQuestion: 30,
       allowSkipping: true,
-      joinCode: `JOIN-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
+      joinCode,
     },
   });
 
