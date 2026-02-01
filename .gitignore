@@ -16,6 +16,7 @@
 /playwright-report/
 /.playwright-mcp/
 /playwright/.auth/
+/playwright/.quiz-info.json
 
 # next.js
 /.next/

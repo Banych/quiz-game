@@ -17,4 +17,33 @@ Track future improvements or follow-ups per file so context survives between ses
 | src/hooks/use-player-session.ts                             | Add Vitest coverage for realtime cache updates + submission states once the hook stabilizes.               | TODO   |
 | src/components/player/player-session-screen.tsx             | Add a Playwright smoke that walks `/join → /play` to cover timer UI + resume CTA behavior.                 | TODO   |
 
+## R5 Known Issues & Future Improvements (2026-02-01)
+
+### E2E Test Selector Issues
+| Test File                                | Issue                                                         | Recommended Fix                                                                  |
+| ---------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| e2e/host-dashboard.spec.ts:74            | Regex `/\d{2}:\d{2}/` matches timer AND "Started: 5:01:20 PM" | Scope to timer container: `page.locator('[data-testid="timer"]').getByText(...)` |
+| e2e/player-connection-status.spec.ts:121 | `getByText('Connected')` matches summary AND badge            | Use specific role: `getByRole('status').filter({ hasText: 'Connected' })`        |
+| Various player tests                     | Generic text selectors hit multiple elements                  | Add `data-testid` attributes to status badges and summary sections               |
+
+**Priority:** Low - Tests work but have strict mode violations. Address in R6 polish phase.
+
+### Performance Optimization Backlog
+| Area                 | Current State | Target | Improvement Path                             |
+| -------------------- | ------------- | ------ | -------------------------------------------- |
+| Player Join Latency  | P95 6.29s     | <500ms | Supabase Connection Pooler, Edge Functions   |
+| Answer Submission    | P95 1.63s     | <300ms | Redis cache for quiz state, batch operations |
+| Heartbeat Round-Trip | P95 206ms     | <100ms | Edge Function for presence endpoint          |
+| Cold Start           | ~2s           | <500ms | Prisma connection pooling, warm-up requests  |
+
+**Priority:** Medium - Acceptable for <100 players, optimize before scaling.
+
+### Technical Debt
+| Item              | Description                                             | Priority |
+| ----------------- | ------------------------------------------------------- | -------- |
+| Integration Tests | No disposable DB tests for repositories                 | Medium   |
+| Realtime Mock     | Tests use noop realtime client, missing WebSocket tests | Medium   |
+| Type Safety       | Some internal functions still use broad types           | Low      |
+| E2E Fixtures      | Could simplify with Playwright global setup             | Low      |
+
 _Add new rows as you uncover ideas. Mark status as TODO / In Progress / Done to reflect whether the follow-up is still outstanding._

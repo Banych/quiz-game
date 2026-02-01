@@ -1,15 +1,15 @@
 import { test, expect } from '@playwright/test';
+import { getQuizId } from './fixtures';
 
 /**
  * E2E test for round transitions (answer locking).
  * Tests the Lock Question flow from host perspective.
  */
 
-const QUIZ_ID = process.env.TEST_QUIZ_ID || 'cmjd39h6o0000g18o0s8eq6cp';
-
 test.describe('Round Transitions', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`/quiz/${QUIZ_ID}`);
+    const quizId = getQuizId();
+    await page.goto(`/quiz/${quizId}`);
   });
 
   test('should show Lock Question button when quiz is active', async ({

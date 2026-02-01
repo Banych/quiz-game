@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { getQuizId, getJoinCode } from './fixtures';
 
 /**
  * Phase 4.3: Player Reconnection Flow
@@ -15,9 +16,6 @@ import { test, expect } from '@playwright/test';
  * - Toast notification appears briefly ("✓ Reconnected! Your session has been restored.")
  */
 
-const QUIZ_ID = process.env.TEST_QUIZ_ID || 'cmjd39h6o0000g18o0s8eq6cp';
-const JOIN_CODE = process.env.TEST_JOIN_CODE || 'JOIN-KYTX';
-
 test.describe('Player Reconnection Flow', () => {
   test.beforeEach(async ({ page }) => {
     // Clear localStorage to start fresh
@@ -28,15 +26,18 @@ test.describe('Player Reconnection Flow', () => {
   test('should show offline banner when player disconnects', async ({
     page,
   }) => {
+    const quizId = getQuizId();
+    const joinCode = getJoinCode();
+
     // Setup: Join as player
     const playerName = `E2E Reconnect ${Date.now()}`;
     await page.goto('/join');
-    await page.getByRole('textbox', { name: /join code/i }).fill(JOIN_CODE);
+    await page.getByRole('textbox', { name: /join code/i }).fill(joinCode);
     await page.getByRole('textbox', { name: /your name/i }).fill(playerName);
     await page.getByRole('button', { name: /join quiz/i }).click();
 
     // Wait for play page to load
-    await page.waitForURL(new RegExp(`/play/${QUIZ_ID}/[a-z0-9-]+`), {
+    await page.waitForURL(new RegExp(`/play/${quizId}/[a-z0-9-]+`), {
       timeout: 30000,
     });
 
@@ -74,13 +75,16 @@ test.describe('Player Reconnection Flow', () => {
   });
 
   test('should auto-reconnect when network returns', async ({ page }) => {
+    const quizId = getQuizId();
+    const joinCode = getJoinCode();
+
     // Setup: Join as player and trigger disconnection
     const playerName = `E2E Reconnect ${Date.now()}`;
     await page.goto('/join');
-    await page.getByRole('textbox', { name: /join code/i }).fill(JOIN_CODE);
+    await page.getByRole('textbox', { name: /join code/i }).fill(joinCode);
     await page.getByRole('textbox', { name: /your name/i }).fill(playerName);
     await page.getByRole('button', { name: /join quiz/i }).click();
-    await page.waitForURL(new RegExp(`/play/${QUIZ_ID}/[a-z0-9-]+`), {
+    await page.waitForURL(new RegExp(`/play/${quizId}/[a-z0-9-]+`), {
       timeout: 30000,
     });
 
@@ -124,13 +128,16 @@ test.describe('Player Reconnection Flow', () => {
   });
 
   test('should disable answer submission while offline', async ({ page }) => {
+    const quizId = getQuizId();
+    const joinCode = getJoinCode();
+
     // Setup: Join as player
     const playerName = `E2E Reconnect ${Date.now()}`;
     await page.goto('/join');
-    await page.getByRole('textbox', { name: /join code/i }).fill(JOIN_CODE);
+    await page.getByRole('textbox', { name: /join code/i }).fill(joinCode);
     await page.getByRole('textbox', { name: /your name/i }).fill(playerName);
     await page.getByRole('button', { name: /join quiz/i }).click();
-    await page.waitForURL(new RegExp(`/play/${QUIZ_ID}/[a-z0-9-]+`), {
+    await page.waitForURL(new RegExp(`/play/${quizId}/[a-z0-9-]+`), {
       timeout: 30000,
     });
 
@@ -163,13 +170,16 @@ test.describe('Player Reconnection Flow', () => {
   });
 
   test('should show reconnecting state during sync', async ({ page }) => {
+    const quizId = getQuizId();
+    const joinCode = getJoinCode();
+
     // Setup: Join as player
     const playerName = `E2E Reconnect ${Date.now()}`;
     await page.goto('/join');
-    await page.getByRole('textbox', { name: /join code/i }).fill(JOIN_CODE);
+    await page.getByRole('textbox', { name: /join code/i }).fill(joinCode);
     await page.getByRole('textbox', { name: /your name/i }).fill(playerName);
     await page.getByRole('button', { name: /join quiz/i }).click();
-    await page.waitForURL(new RegExp(`/play/${QUIZ_ID}/[a-z0-9-]+`), {
+    await page.waitForURL(new RegExp(`/play/${quizId}/[a-z0-9-]+`), {
       timeout: 30000,
     });
 
@@ -209,13 +219,16 @@ test.describe('Player Reconnection Flow', () => {
   });
 
   test('should detect offline state immediately on load', async ({ page }) => {
+    const quizId = getQuizId();
+    const joinCode = getJoinCode();
+
     // Setup: Join as player while online
     const playerName = `E2E Reconnect ${Date.now()}`;
     await page.goto('/join');
-    await page.getByRole('textbox', { name: /join code/i }).fill(JOIN_CODE);
+    await page.getByRole('textbox', { name: /join code/i }).fill(joinCode);
     await page.getByRole('textbox', { name: /your name/i }).fill(playerName);
     await page.getByRole('button', { name: /join quiz/i }).click();
-    await page.waitForURL(new RegExp(`/play/${QUIZ_ID}/[a-z0-9-]+`), {
+    await page.waitForURL(new RegExp(`/play/${quizId}/[a-z0-9-]+`), {
       timeout: 30000,
     });
 

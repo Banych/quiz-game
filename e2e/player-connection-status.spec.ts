@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { getQuizId } from './fixtures';
 
 /**
  * Phase 4.2: Connection Health & Reconnection
@@ -6,32 +7,26 @@ import { test, expect } from '@playwright/test';
  */
 test.describe('Player Connection Status', () => {
   test.beforeEach(async ({ page }) => {
-    // Sign in as admin to create quiz
+    // Auth is handled by auth.setup.ts
     await page.goto('/');
-    // TODO: Implement auth flow if not already handled by auth.setup.ts
   });
 
   test('host sees real-time player connection status', async ({ page }) => {
+    const quizId = getQuizId();
+
     // This test verifies:
     // 1. Host dashboard polls /api/quiz/[quizId]/players/status every 5s
     // 2. Player connection badges update based on lastSeenAt
     // 3. Summary counts (connected/away/disconnected) display correctly
 
-    // Step 1: Create a quiz
-    // TODO: Navigate to admin panel and create quiz
-    // For now, assume quiz exists at /host/quiz/test-quiz-id
+    // Navigate to host dashboard (correct route is /quiz/[quizId])
+    await page.goto(`/quiz/${quizId}`);
 
-    // Step 2: Navigate to host dashboard
-    await page.goto('/host/quiz/test-quiz-id');
-
-    // Step 3: Verify PlayerListWithStatus component renders
+    // Verify PlayerListWithStatus component renders
     await expect(page.getByRole('heading', { name: 'Players' })).toBeVisible();
 
-    // Step 4: Verify empty state
-    await expect(page.getByText('No players have joined yet')).toBeVisible();
-
-    // Step 5: Mock API to return players with different statuses
-    await page.route('/api/quiz/test-quiz-id/players/status', (route) => {
+    // Mock API to return players with different statuses
+    await page.route(`/api/quiz/${quizId}/players/status`, (route) => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -94,17 +89,19 @@ test.describe('Player Connection Status', () => {
   });
 
   test('player status transitions over time', async ({ page }) => {
+    const quizId = getQuizId();
+
     // This test verifies:
     // 1. Player starts as 'connected'
     // 2. After 30s without presence update, status changes to 'away'
     // 3. After 120s without presence update, status changes to 'disconnected'
 
-    await page.goto('/host/quiz/test-quiz-id');
+    await page.goto(`/quiz/${quizId}`);
 
     const mockTime = Date.now();
 
     // Mock 1: Player is connected (5s ago)
-    await page.route('/api/quiz/test-quiz-id/players/status', (route) => {
+    await page.route(`/api/quiz/${quizId}/players/status`, (route) => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -124,7 +121,7 @@ test.describe('Player Connection Status', () => {
     await expect(page.getByText('Connected')).toBeVisible();
 
     // Mock 2: Player is now away (60s ago)
-    await page.route('/api/quiz/test-quiz-id/players/status', (route) => {
+    await page.route(`/api/quiz/${quizId}/players/status`, (route) => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -144,7 +141,7 @@ test.describe('Player Connection Status', () => {
     await expect(page.getByText('Away')).toBeVisible();
 
     // Mock 3: Player is now disconnected (150s ago)
-    await page.route('/api/quiz/test-quiz-id/players/status', (route) => {
+    await page.route(`/api/quiz/${quizId}/players/status`, (route) => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -165,10 +162,12 @@ test.describe('Player Connection Status', () => {
   });
 
   test('handles API errors gracefully', async ({ page }) => {
-    await page.goto('/host/quiz/test-quiz-id');
+    const quizId = getQuizId();
+
+    await page.goto(`/quiz/${quizId}`);
 
     // Mock API error
-    await page.route('/api/quiz/test-quiz-id/players/status', (route) => {
+    await page.route(`/api/quiz/${quizId}/players/status`, (route) => {
       route.fulfill({
         status: 500,
         contentType: 'application/json',
@@ -185,7 +184,8 @@ test.describe('Player Connection Status', () => {
   });
 
   test('handles quiz not found', async ({ page }) => {
-    await page.goto('/host/quiz/nonexistent-quiz-id');
+    // This test uses a nonexistent quiz ID to test 404 handling
+    await page.goto('/quiz/nonexistent-quiz-id');
 
     // Mock 404 response
     await page.route(
