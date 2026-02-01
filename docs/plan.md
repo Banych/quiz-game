@@ -120,3 +120,160 @@ Some Playwright tests have strict mode violations where selectors match multiple
 - Tested on Chrome, Firefox, Safari (latest versions)
 - Mobile Safari may have WebSocket reconnection delays
 - Progressive enhancement recommended for older browsers
+
+---
+
+## R6 Polish & Launch – Detailed Scope
+
+This section expands on the R6 release with specific tasks discovered during R5 completion and codebase review.
+
+### Phase 1: Landing & Navigation Polish
+
+**Home Page (`src/app/page.tsx`):**
+- [ ] Replace boilerplate "Initial page of Quiz Game" with proper landing page
+- [ ] Add hero section explaining the quiz game concept
+- [ ] Include quick-start CTAs: "Join a Game" (→ /join), "Host a Game" (→ /admin/login or /host)
+- [ ] Show featured quizzes or recent activity (optional)
+- [ ] Mobile-responsive design matching mockup style
+
+**Navigation & Routing:**
+- [ ] Add global `not-found.tsx` page at `src/app/not-found.tsx` for 404 errors
+- [ ] Add global `error.tsx` page at `src/app/error.tsx` for error boundaries
+- [ ] Add `loading.tsx` skeletons for slow route transitions (admin, host, player sections)
+- [ ] Ensure consistent header/footer across public pages
+
+**Admin Dashboard Polish:**
+- [ ] Update "Coming Soon" buttons for Questions and Media sections
+  - Questions: Link to existing question management (via quiz detail page) or create standalone page
+  - Media: Either implement media library or remove card entirely
+- [ ] Update Quick Start copy to reflect completed features
+
+### Phase 2: UI/UX Improvements
+
+**Accessibility Audit:**
+- [ ] Run axe-core or Lighthouse accessibility audit on all pages
+- [ ] Fix color contrast issues (ensure WCAG AA compliance)
+- [ ] Add proper ARIA labels to interactive elements
+- [ ] Ensure keyboard navigation works for all actions
+- [ ] Add skip links for screen reader users
+- [ ] Test with VoiceOver/NVDA
+
+**Responsive Design:**
+- [ ] Test all pages on mobile viewports (320px, 375px, 414px)
+- [ ] Test tablet viewports (768px, 1024px)
+- [ ] Fix any overflow or layout issues
+- [ ] Ensure touch targets are ≥44px for mobile
+- [ ] Test player answer pad on small screens
+
+**Visual Consistency:**
+- [ ] Audit all pages for consistent spacing/padding
+- [ ] Ensure loading states are consistent across all data-fetching components
+- [ ] Add consistent empty states for lists (quizzes, questions, players)
+- [ ] Polish error messages and validation feedback
+
+### Phase 3: Missing Features
+
+**Admin Content Management:**
+- [ ] Implement standalone Questions management page (`/admin/questions`)
+  - Browse all questions across quizzes
+  - Filter by quiz, type, status
+  - Bulk operations (delete, move to quiz)
+- [ ] Implement Media library page (`/admin/media`)
+  - Browse uploaded images
+  - View usage (which questions reference each image)
+  - Delete orphaned media
+
+**Audit Log Feature (Deferred from R4):**
+- [ ] Create `AuditLog` Prisma model (userId, action, entityType, entityId, metadata, timestamp)
+- [ ] Log all CRUD operations in admin routes
+- [ ] Build `/admin/audit` page to view recent activity
+- [ ] Add filtering by action type, user, date range
+
+**Host Enhancements:**
+- [ ] Add quiz selection page for hosts (`/host` landing)
+  - List available quizzes with status
+  - Quick-start buttons for each quiz
+- [ ] Add host session controls (pause quiz, end early)
+- [ ] Add "Share Join Code" with QR code generation
+
+### Phase 4: Analytics & Observability
+
+**PostHog Integration:**
+- [ ] Install `posthog-js` and configure in `providers.tsx`
+- [ ] Track key events: quiz_started, player_joined, answer_submitted, quiz_completed
+- [ ] Add user identification for admin users
+- [ ] Create PostHog dashboards for key metrics
+
+**Structured Logging:**
+- [ ] Add structured logger wrapper (`src/lib/logger.ts`)
+- [ ] Replace `console.log` with structured logging in API routes
+- [ ] Include request ID, user ID, operation name in all logs
+- [ ] Configure log levels per environment (dev: debug, prod: info)
+
+**Error Tracking:**
+- [ ] Integrate Sentry or similar for error tracking
+- [ ] Add source maps for production debugging
+- [ ] Set up alerts for error rate spikes
+
+### Phase 5: Production Hardening
+
+**Performance Optimization:**
+- [ ] Configure Supabase Connection Pooler (PgBouncer)
+- [ ] Add Redis caching layer for hot paths (quiz state, leaderboard)
+- [ ] Move heartbeat endpoint to Supabase Edge Function
+- [ ] Add database indexes for slow queries identified in load testing
+
+**Security Audit:**
+- [ ] Review all RLS policies in Supabase
+- [ ] Ensure no sensitive data leaks in API responses
+- [ ] Add rate limiting to public endpoints (join, answer submission)
+- [ ] Review CORS configuration
+
+**Deployment Documentation:**
+- [ ] Write production deployment runbook
+- [ ] Document environment variables and secrets management
+- [ ] Create incident response playbook
+- [ ] Document rollback procedures
+
+### Phase 6: Marketing & Launch
+
+**Marketing Landing Page:**
+- [ ] Design hero section with product screenshots
+- [ ] Add feature highlights with icons
+- [ ] Include testimonials/social proof section (placeholder)
+- [ ] Add pricing section (if applicable) or "Free to use"
+- [ ] SEO optimization (meta tags, OG images, sitemap)
+
+**Launch Preparation:**
+- [ ] Create demo quiz with sample questions
+- [ ] Record product demo video (optional)
+- [ ] Prepare launch announcement content
+- [ ] Set up custom domain if not already configured
+- [ ] Configure Vercel production environment
+
+### Acceptance Criteria for R6
+
+**Landing Page:**
+- [ ] Home page clearly explains product value proposition
+- [ ] CTAs lead to appropriate flows (join vs host vs admin)
+- [ ] Mobile-responsive and accessible
+
+**Error Handling:**
+- [ ] Custom 404 page with helpful navigation
+- [ ] Error boundary catches and displays friendly errors
+- [ ] Loading states prevent layout shifts
+
+**Admin Dashboard:**
+- [ ] No "Coming Soon" buttons for shipped features
+- [ ] Quick Start guide reflects actual capabilities
+- [ ] Audit log available for admin activity
+
+**Performance:**
+- [ ] P95 latency <500ms for answer submission (improved from R5 baseline)
+- [ ] P95 latency <1s for player joins (improved from R5 baseline)
+- [ ] Zero errors under 100 concurrent player load
+
+**Launch Ready:**
+- [ ] All pages pass Lighthouse accessibility audit (score ≥90)
+- [ ] Production deployment documented and tested
+- [ ] Monitoring and alerting configured

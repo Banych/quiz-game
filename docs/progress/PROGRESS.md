@@ -183,18 +183,47 @@ See [dev-notes.md](dev-notes.md) for the full execution log with timestamps.
 
 ## Outstanding Items
 
-### R5 (Remaining)
-- [ ] Phase 3: Host leaderboard snapshots, animated transitions
-- [ ] Phase 4: Reconnection UI, latency instrumentation, stress testing
-- [ ] Config UI for per-quiz scoring algorithm/decay rate
+### R5 (Completed ✅)
+All R5 phases complete as of 2026-02-01. See [plan.md](../plan.md) for performance benchmarks.
 
-### R6 (Planned)
-- [ ] Accessibility audit + fixes
-- [ ] Responsive design tweaks (tablet, landscape)
-- [ ] Audit log feature + API
+### R6 (Planned) – Expanded Scope
+
+**Phase 1: Landing & Navigation Polish**
+- [ ] Replace boilerplate home page with proper landing (hero, CTAs, responsive)
+- [ ] Add global `not-found.tsx` and `error.tsx` pages
+- [ ] Add `loading.tsx` skeletons for route transitions
+- [ ] Update Admin Dashboard "Coming Soon" sections
+
+**Phase 2: UI/UX Improvements**
+- [ ] Accessibility audit (axe-core, Lighthouse) + fixes
+- [ ] Responsive design audit (mobile 320px→414px, tablet 768px→1024px)
+- [ ] Visual consistency pass (spacing, loading states, empty states)
+
+**Phase 3: Missing Features**
+- [ ] Standalone Questions management page (`/admin/questions`)
+- [ ] Media library page (`/admin/media`)
+- [ ] Audit log feature + API (deferred from R4)
+- [ ] Host quiz selection page (`/host` landing)
+- [ ] QR code generation for join codes
+
+**Phase 4: Analytics & Observability**
 - [ ] PostHog analytics instrumentation
-- [ ] Marketing landing page
-- [ ] Incident runbooks
+- [ ] Structured logging with request IDs
+- [ ] Sentry error tracking integration
+
+**Phase 5: Production Hardening**
+- [ ] Supabase Connection Pooler configuration
+- [ ] Redis caching for hot paths
+- [ ] Security audit (RLS, rate limiting, CORS)
+- [ ] Deployment documentation + runbooks
+
+**Phase 6: Marketing & Launch**
+- [ ] Marketing landing page with product screenshots
+- [ ] SEO optimization (meta tags, OG images, sitemap)
+- [ ] Demo quiz with sample questions
+- [ ] Custom domain configuration
+
+See [plan.md](../plan.md#r6-polish--launch--detailed-scope) for full checklist.
 
 ### Post-Launch
 - [ ] Multi-tenancy / org support
@@ -209,9 +238,10 @@ See [dev-notes.md](dev-notes.md) for the full execution log with timestamps.
 See [file-ideas.md](file-ideas.md) for tracked follow-ups per file.
 
 ### Current Phase
-- **Testing**: Need integration tests for player reconnection flow
-- **Performance**: Load test target 100 concurrent players (TBD)
-- **Documentation**: Updated structure docs in R4/R5; all up-to-date
+- **UI Polish**: Home page is boilerplate; error/loading pages missing
+- **Admin**: "Coming Soon" buttons for Questions/Media need resolution
+- **Performance**: P95 latencies exceed targets; optimization path documented
+- **Testing**: E2E selector strict mode violations in some tests
 
 ---
 
