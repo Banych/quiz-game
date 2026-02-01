@@ -20,6 +20,24 @@ This document indexes all releases, completed work, and session notes. Use this 
 
 **Latest First** – Find detailed work notes by date:
 
+### 2026-01-27 to 2026-01-31: R5 Phase 4 - Connection Health ✅
+- **Focus**: Presence tracking, disconnect detection, player reconnection
+- **Deliverables**: PresenceMonitor, connection status badges, useReconnection hook, auto-recovery
+- **Status**: Complete (Phases 4.1, 4.2, 4.3)
+- **File**: [sessions/2026-01-27-to-2026-01-31-r5-phase4-connection-health.md](sessions/2026-01-27-to-2026-01-31-r5-phase4-connection-health.md)
+
+### 2026-01-31: R5 Phase 5 - Load Testing & Performance ✅
+- **Focus**: k6 load testing, performance validation, dev server benchmarks
+- **Deliverables**: 3 load test scenarios (joins, answers, heartbeats), infrastructure, findings
+- **Status**: Complete - 0% error rate on all tests, dev server limitations documented
+- **File**: [sessions/2026-01-31-r5-phase5-load-testing.md](sessions/2026-01-31-r5-phase5-load-testing.md)
+
+### 2026-01-24: R5 Phase 3 - Round Transitions ✅
+- **Focus**: Answer locking, round summaries, leaderboard snapshots
+- **Deliverables**: LockQuestionUseCase, RoundSummaryDTO, question:locked event, E2E tests
+- **Status**: Complete (All 11 steps, 214 tests passing)
+- **File**: [sessions/2026-01-24-r5-phase3-round-transitions.md](sessions/2026-01-24-r5-phase3-round-transitions.md)
+
 ### 2026-01-11: R5 Phase 2 - UI Enhancements ✅
 - **Focus**: Player scoring UX, speed indicators, leaderboard styling
 - **Deliverables**: ScoringInfoBadge, scoring-client.ts formulas, host dashboard settings
@@ -68,8 +86,10 @@ This document indexes all releases, completed work, and session notes. Use this 
 **Goals**:
 - ✅ Phase 1: Speed-based scoring algorithm (exponential/linear/fixed) with configurable decay
 - ✅ Phase 2: Player scoring UX (live preview, speed indicators, scoring info badge)
-- 🟡 Phase 3: Host leaderboard updates, round transitions, result summaries
-- 🔲 Phase 4: Reconnection flows, latency instrumentation, load testing
+- ✅ Phase 3: Round transitions, answer locking, result summaries (2026-01-24)
+- ✅ Phase 4: Connection health & reconnection flows (2026-01-27 to 2026-01-31)
+- ✅ Phase 5: Load testing & performance validation (2026-01-31)
+- 🔲 Phase 6: Final integration & documentation
 
 **Action Files**:
 - [actions/07-r5-realtime-scoring-implementation.md](actions/07-r5-realtime-scoring-implementation.md) – Detailed implementation plan
