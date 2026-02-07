@@ -127,26 +127,52 @@ Some Playwright tests have strict mode violations where selectors match multiple
 
 This section expands on the R6 release with specific tasks discovered during R5 completion and codebase review.
 
-### Phase 1: Landing & Navigation Polish
+### Phase 1: Landing & Navigation Polish ✅ (2026-02-07)
 
 **Home Page (`src/app/page.tsx`):**
-- [ ] Replace boilerplate "Initial page of Quiz Game" with proper landing page
-- [ ] Add hero section explaining the quiz game concept
-- [ ] Include quick-start CTAs: "Join a Game" (→ /join), "Host a Game" (→ /admin/login or /host)
-- [ ] Show featured quizzes or recent activity (optional)
-- [ ] Mobile-responsive design matching mockup style
+- [x] Replace boilerplate "Initial page of Quiz Game" with proper landing page
+- [x] Add hero section explaining the quiz game concept
+- [x] Include quick-start CTAs: "Join a Game" (→ /join), "Host a Game" (→ /host), "Admin" (→ /admin)
+- [ ] Show featured quizzes or recent activity (optional) — deferred to Phase 6
+- [x] Mobile-responsive design matching mockup style
 
 **Navigation & Routing:**
-- [ ] Add global `not-found.tsx` page at `src/app/not-found.tsx` for 404 errors
-- [ ] Add global `error.tsx` page at `src/app/error.tsx` for error boundaries
-- [ ] Add `loading.tsx` skeletons for slow route transitions (admin, host, player sections)
-- [ ] Ensure consistent header/footer across public pages
+- [x] Add global `not-found.tsx` page at `src/app/not-found.tsx` for 404 errors
+- [x] Add global `error.tsx` page at `src/app/error.tsx` for error boundaries
+- [x] Add `loading.tsx` skeletons for slow route transitions (admin, host, player sections)
+- [x] Basic footer added to home page (full footer deferred to Phase 6)
 
 **Admin Dashboard Polish:**
-- [ ] Update "Coming Soon" buttons for Questions and Media sections
-  - Questions: Link to existing question management (via quiz detail page) or create standalone page
-  - Media: Either implement media library or remove card entirely
-- [ ] Update Quick Start copy to reflect completed features
+- [x] Questions/Media cards kept as "Coming Soon" (accurate status, Phase 3 scope)
+- [x] Updated Quick Start copy to reflect completed features (quiz CRUD is available)
+- [x] Wired up Start Quiz button to call `/api/quiz/start` and redirect to host dashboard
+
+### Phase 1.5: End-to-End Flow Audit (Manual Testing with Playwright MCP)
+
+**Goal:** Walk through the complete user journey using Playwright MCP to identify UX gaps, broken flows, and missing features.
+
+**Quiz Creation → Start → Player Join Flow:**
+- [ ] Admin creates a new quiz with questions
+- [ ] Admin views quiz detail and verifies questions saved correctly
+- [ ] Admin starts quiz from quiz list (Start button)
+- [ ] Host dashboard loads with correct quiz state
+- [ ] Join code is displayed prominently for host to share
+- [ ] Player navigates to `/join` and enters join code
+- [ ] Player enters name and joins successfully
+- [ ] Player appears in host dashboard player list
+- [ ] Host can advance through questions
+- [ ] Player can submit answers
+- [ ] End-of-round summaries display correctly
+- [ ] Quiz completion flow works
+
+**Known Gaps to Investigate:**
+- [ ] Is join code visible/copyable on host dashboard?
+- [ ] Does `/host` landing page exist or is it 404?
+- [ ] Can host see player count updating in real-time?
+- [ ] Are error states handled (e.g., invalid join code)?
+- [ ] Is there feedback when quiz starts successfully?
+
+**Document findings** in `docs/progress/sessions/` after completing audit.
 
 ### Phase 2: UI/UX Improvements
 

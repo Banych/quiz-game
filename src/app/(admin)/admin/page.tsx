@@ -60,10 +60,9 @@ export default function AdminDashboardPage() {
         <h2 className="mb-2 text-xl font-semibold">Quick Start</h2>
         <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
           <li>Click &quot;Manage Quizzes&quot; to view all quiz sessions</li>
-          <li>Create new quizzes or edit existing ones</li>
-          <li>
-            Quiz management features will be available in the next session
-          </li>
+          <li>Create new quizzes with questions and custom settings</li>
+          <li>Edit existing quizzes, reorder questions, and add images</li>
+          <li>Start a quiz session to host a live game</li>
         </ul>
       </div>
     </div>

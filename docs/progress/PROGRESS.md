@@ -20,6 +20,16 @@ This document indexes all releases, completed work, and session notes. Use this 
 
 **Latest First** – Find detailed work notes by date:
 
+### 2026-02-07: R6 Phase 1 - Landing & Navigation Polish ✅
+- **Focus**: Replace placeholder home page, add error/loading states, fix admin dashboard
+- **Deliverables**:
+  - Global `not-found.tsx` (404 page with Card/Button UI)
+  - Global `error.tsx` (error boundary with reset/home CTAs)
+  - Loading skeletons for root, admin, host, player route groups
+  - Redesigned home page with hero, 3 CTAs (Join/Host/Admin), feature cards, footer
+  - Updated Admin Dashboard Quick Start text
+- **Status**: Complete - all Phase 1 tasks done, build verified
+
 ### 2026-02-01: R5 Phase 6 - Production Testing & Documentation ✅
 - **Focus**: Production build validation, load testing on prod, final documentation
 - **Deliverables**: Production benchmarks, architecture docs update, known limitations, R5 release notes
