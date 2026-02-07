@@ -140,17 +140,16 @@ export function PlayerJoinForm() {
           </p>
           <h1 className="mt-3 text-4xl font-semibold">Join the action</h1>
           <p className="mt-2 text-base text-slate-200/80">
-            Enter the code from the host screen and pick a display name. We’ll
-            ke{' '}
-            {quizInfo?.settings?.scoringAlgorithm && (
-              <div className="mt-4 flex justify-center">
-                <ScoringInfoBadge
-                  algorithm={quizInfo.settings.scoringAlgorithm}
-                  decayRate={quizInfo.settings.scoringDecayRate}
-                />
-              </div>
-            )}{' '}
+            Enter the code from the host screen and pick a display name.
           </p>
+          {quizInfo?.settings?.scoringAlgorithm && (
+            <div className="mt-4 flex justify-center">
+              <ScoringInfoBadge
+                algorithm={quizInfo.settings.scoringAlgorithm}
+                decayRate={quizInfo.settings.scoringDecayRate}
+              />
+            </div>
+          )}
         </header>
 
         <form

@@ -60,7 +60,12 @@ class SupabaseRealtimeClient implements RealtimeClient {
     });
 
     channel.subscribe((status) => {
-      if (status !== 'SUBSCRIBED') {
+      // Only log actual errors, not intermediate states like 'SUBSCRIBING'
+      if (
+        status === 'CHANNEL_ERROR' ||
+        status === 'TIMED_OUT' ||
+        status === 'CLOSED'
+      ) {
         logChannelIssue('error', 'Supabase subscription error', {
           channelName,
           event,
@@ -101,7 +106,12 @@ class SupabaseRealtimeClient implements RealtimeClient {
               action: 'emit',
             });
           }
-        } else {
+        } else if (
+          status === 'CHANNEL_ERROR' ||
+          status === 'TIMED_OUT' ||
+          status === 'CLOSED'
+        ) {
+          // Only reject on actual error states, not intermediate states like 'SUBSCRIBING'
           await safeUnsubscribe(channel, {
             channelName,
             event,
@@ -113,6 +123,7 @@ class SupabaseRealtimeClient implements RealtimeClient {
             )
           );
         }
+        // Ignore intermediate states like 'SUBSCRIBING' - wait for final state
       });
     });
   }

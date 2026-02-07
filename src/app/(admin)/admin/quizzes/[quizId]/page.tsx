@@ -14,13 +14,13 @@ import {
 } from '@ui/card';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import type { QuizListItemDTO } from '@application/dtos/quiz-admin.dto';
+import type { QuizDTO } from '@application/dtos/quiz.dto';
 
 export default function QuizDetailPage() {
   const params = useParams();
   const quizId = params.quizId as string;
 
-  const { data: quiz, isLoading } = useQuery<QuizListItemDTO>({
+  const { data: quiz, isLoading } = useQuery<QuizDTO>({
     queryKey: ['quiz', quizId],
     queryFn: async () => {
       const response = await fetch(`/api/admin/quizzes/${quizId}`);
@@ -72,7 +72,7 @@ export default function QuizDetailPage() {
             <CardTitle className="text-sm font-medium">Questions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{quiz.questionCount}</div>
+            <div className="text-2xl font-bold">{quiz.questions.length}</div>
           </CardContent>
         </Card>
         <Card>
@@ -80,7 +80,9 @@ export default function QuizDetailPage() {
             <CardTitle className="text-sm font-medium">Timer</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{quiz.timePerQuestion}s</div>
+            <div className="text-2xl font-bold">
+              {quiz.settings.timePerQuestion}s
+            </div>
             <CardDescription>per question</CardDescription>
           </CardContent>
         </Card>
