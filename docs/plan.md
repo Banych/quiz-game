@@ -147,32 +147,84 @@ This section expands on the R6 release with specific tasks discovered during R5 
 - [x] Updated Quick Start copy to reflect completed features (quiz CRUD is available)
 - [x] Wired up Start Quiz button to call `/api/quiz/start` and redirect to host dashboard
 
-### Phase 1.5: End-to-End Flow Audit (Manual Testing with Playwright MCP)
+### Phase 1.5: End-to-End Flow Audit ✅ (2026-02-07)
 
 **Goal:** Walk through the complete user journey using Playwright MCP to identify UX gaps, broken flows, and missing features.
 
 **Quiz Creation → Start → Player Join Flow:**
-- [ ] Admin creates a new quiz with questions
-- [ ] Admin views quiz detail and verifies questions saved correctly
-- [ ] Admin starts quiz from quiz list (Start button)
-- [ ] Host dashboard loads with correct quiz state
-- [ ] Join code is displayed prominently for host to share
-- [ ] Player navigates to `/join` and enters join code
-- [ ] Player enters name and joins successfully
-- [ ] Player appears in host dashboard player list
-- [ ] Host can advance through questions
-- [ ] Player can submit answers
-- [ ] End-of-round summaries display correctly
-- [ ] Quiz completion flow works
+- [x] Admin creates a new quiz with questions
+- [x] Admin views quiz detail and verifies questions saved correctly
+- [x] Admin starts quiz from quiz list (Start button)
+- [x] Host dashboard loads with correct quiz state
+- [x] Join code is displayed prominently for host to share (works for seeded quizzes)
+- [x] Player navigates to `/join` and enters join code
+- [x] Player enters name and joins successfully
+- [x] Player appears in host dashboard player list
+- [x] Host can advance through questions
+- [x] Player can submit answers
+- [x] End-of-round summaries display correctly
+- [x] Quiz completion flow works (verified through 2 rounds)
 
-**Known Gaps to Investigate:**
-- [ ] Is join code visible/copyable on host dashboard?
-- [ ] Does `/host` landing page exist or is it 404?
-- [ ] Can host see player count updating in real-time?
-- [ ] Are error states handled (e.g., invalid join code)?
-- [ ] Is there feedback when quiz starts successfully?
+**Known Gaps Investigated:**
+- [x] Is join code visible/copyable on host dashboard? → **Yes, visible but no copy button (Phase 2)**
+- [x] Does `/host` landing page exist or is it 404? → **404 confirmed (Phase 3 fix)**
+- [x] Can host see player count updating in real-time? → **Yes, with Connected/Disconnected/Away states**
+- [x] Are error states handled (e.g., invalid join code)? → **Not tested, deferred**
+- [x] Is there feedback when quiz starts successfully? → **Yes, redirects to host dashboard**
 
-**Document findings** in `docs/progress/sessions/` after completing audit.
+**Bugs Found:**
+- **P0:** Newly created quizzes don't get join codes (only seeded quizzes have codes)
+- **P1:** Supabase subscription errors flooding console
+- **P2:** Timer value missing on quiz detail page
+- **P2:** `/host` landing page 404 (known, Phase 3 scope)
+
+**Session file:** [`docs/progress/sessions/2026-02-07-r6-phase1.5-e2e-audit.md`](progress/sessions/2026-02-07-r6-phase1.5-e2e-audit.md)
+
+### Phase 1.5.1: Critical Bug Fixes (Blockers from Phase 1.5)
+
+**Goal:** Fix P0/P1 bugs discovered during the E2E audit that block core functionality.
+
+**P0 — Join Code Generation:**
+- [ ] Investigate why newly created quizzes don't receive join codes
+- [ ] Review `startQuiz` use case and `Quiz.start()` domain method
+- [ ] Ensure join code is generated or assigned when quiz transitions to Active
+- [ ] Verify join code appears immediately in host dashboard after start
+- [ ] Add test coverage for join code generation flow
+
+**P1 — Supabase Realtime Stability:**
+- [ ] Identify root cause of "Supabase subscription error" console spam
+- [ ] Review channel subscription setup in `useQuizRealtime` / presence hooks
+- [ ] Add error handling and retry logic for failed subscriptions
+- [ ] Consider connection state indicator for users (connected/reconnecting)
+- [ ] Reduce subscription frequency or batch updates if needed
+
+**P2 — Timer Display Bug:**
+- [ ] Fix missing timer value on admin quiz detail page
+- [ ] Ensure `timePerQuestionSeconds` is passed correctly from API to component
+- [ ] Verify timer displays correctly after fix
+
+**Estimated Time:** 2-3 hours
+**Dependencies:** None
+**Blocked By:** None
+**Blocks:** Phase 1.6 (tests may fail due to these bugs)
+
+### Phase 1.6: E2E Test Stabilization (Planned)
+
+**Goal:** Fix failing E2E tests and address P0/P1 bugs from Phase 1.5 audit.
+
+**P0 Fixes:**
+- [ ] Fix join code generation for newly started quizzes
+- [ ] Verify join code appears in host dashboard immediately after start
+
+**P1 Fixes:**
+- [ ] Investigate and fix Supabase subscription errors
+- [ ] Add error boundaries or retry logic for realtime connections
+
+**E2E Test Fixes (4 failing specs):**
+- [ ] `host-dashboard.spec.ts`: "should start quiz and update status"
+- [ ] `player-connection-status.spec.ts`: Multiple failures (selector issues)
+- [ ] `round-transitions.spec.ts`: "should disable Lock Question after locking"
+- [ ] Review and update selectors to avoid strict mode violations
 
 ### Phase 2: UI/UX Improvements
 
