@@ -27,22 +27,15 @@ const logChannelIssue = (
   }
 };
 
-const safeUnsubscribe = async (
-  channel: RealtimeChannel,
-  context: Record<string, unknown>
-) => {
-  try {
-    await channel.unsubscribe();
-  } catch (error) {
-    logChannelIssue('warn', 'Failed to unsubscribe from Supabase channel', {
-      ...context,
-      error,
-    });
-  }
+type TrackedChannel = {
+  channel: RealtimeChannel;
+  listenerCount: number;
 };
 
 class SupabaseRealtimeClient implements RealtimeClient {
   private readonly client: SupabaseClient;
+  private readonly channels = new Map<string, TrackedChannel>();
+  private readonly closingChannels = new Set<string>();
 
   constructor(client: SupabaseClient) {
     this.client = client;
@@ -53,19 +46,41 @@ class SupabaseRealtimeClient implements RealtimeClient {
     event: string,
     handler: RealtimeEventHandler<TPayload>
   ): RealtimeUnsubscribe {
+    const existing = this.channels.get(channelName);
+
+    if (existing) {
+      // Reuse existing channel — just add the event listener
+      existing.channel.on('broadcast', { event }, (payload) => {
+        handler(payload.payload as TPayload);
+      });
+      existing.listenerCount++;
+
+      return () => {
+        this.removeListener(channelName);
+      };
+    }
+
+    // Create new channel
     const channel = this.client.channel(channelName, DEFAULT_CHANNEL_CONFIG);
 
     channel.on('broadcast', { event }, (payload) => {
       handler(payload.payload as TPayload);
     });
 
+    this.channels.set(channelName, { channel, listenerCount: 1 });
+
     channel.subscribe((status) => {
-      // Only log actual errors, not intermediate states like 'SUBSCRIBING'
-      if (
-        status === 'CHANNEL_ERROR' ||
-        status === 'TIMED_OUT' ||
-        status === 'CLOSED'
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        logChannelIssue('error', 'Supabase subscription error', {
+          channelName,
+          event,
+          status,
+        });
+      } else if (
+        status === 'CLOSED' &&
+        !this.closingChannels.has(channelName)
       ) {
+        // Only log CLOSED as error when it's unexpected (not intentional unsubscribe)
         logChannelIssue('error', 'Supabase subscription error', {
           channelName,
           event,
@@ -75,8 +90,36 @@ class SupabaseRealtimeClient implements RealtimeClient {
     });
 
     return () => {
-      void safeUnsubscribe(channel, { channelName, event, action: 'client' });
+      this.removeListener(channelName);
     };
+  }
+
+  private removeListener(channelName: string): void {
+    const tracked = this.channels.get(channelName);
+    if (!tracked) return;
+
+    tracked.listenerCount--;
+
+    if (tracked.listenerCount <= 0) {
+      this.closingChannels.add(channelName);
+      this.channels.delete(channelName);
+
+      void tracked.channel
+        .unsubscribe()
+        .catch((error: unknown) => {
+          logChannelIssue(
+            'warn',
+            'Failed to unsubscribe from Supabase channel',
+            {
+              channelName,
+              error,
+            }
+          );
+        })
+        .finally(() => {
+          this.closingChannels.delete(channelName);
+        });
+    }
   }
 
   async emit<TPayload = unknown>(
@@ -100,36 +143,44 @@ class SupabaseRealtimeClient implements RealtimeClient {
           } catch (sendError) {
             reject(sendError);
           } finally {
-            await safeUnsubscribe(channel, {
-              channelName,
-              event,
-              action: 'emit',
-            });
+            try {
+              await channel.unsubscribe();
+            } catch (error) {
+              logChannelIssue(
+                'warn',
+                'Failed to unsubscribe from Supabase channel',
+                { channelName, event, action: 'emit', error }
+              );
+            }
           }
         } else if (
           status === 'CHANNEL_ERROR' ||
           status === 'TIMED_OUT' ||
           status === 'CLOSED'
         ) {
-          // Only reject on actual error states, not intermediate states like 'SUBSCRIBING'
-          await safeUnsubscribe(channel, {
-            channelName,
-            event,
-            action: 'emit-error',
-          });
+          try {
+            await channel.unsubscribe();
+          } catch (error) {
+            logChannelIssue(
+              'warn',
+              'Failed to unsubscribe from Supabase channel',
+              { channelName, event, action: 'emit-error', error }
+            );
+          }
           reject(
             new Error(
               `Supabase channel ${channelName} failed with status ${status}`
             )
           );
         }
-        // Ignore intermediate states like 'SUBSCRIBING' - wait for final state
       });
     });
   }
 
   disconnect(): void {
     this.client.removeAllChannels();
+    this.channels.clear();
+    this.closingChannels.clear();
   }
 }
 

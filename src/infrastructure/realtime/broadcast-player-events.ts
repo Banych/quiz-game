@@ -1,11 +1,6 @@
 import type { PlayerSessionDTO } from '@application/dtos/player-session.dto';
+import { broadcastPool } from './broadcast-channel-pool';
 import { getSupabaseServerClient } from './supabase-server-client';
-
-const DEFAULT_CHANNEL_CONFIG = {
-  config: {
-    broadcast: { ack: true },
-  },
-} as const;
 
 /**
  * Broadcasts player-specific event to a player's private channel.
@@ -23,19 +18,12 @@ export const broadcastPlayerEvent = async <TPayload = unknown>(
     return;
   }
 
-  const channelName = `player:${quizId}:${playerId}`;
-  const channel = client.channel(channelName, DEFAULT_CHANNEL_CONFIG);
-
-  try {
-    await channel.subscribe();
-    await channel.send({
-      type: 'broadcast',
-      event,
-      payload,
-    });
-  } finally {
-    await channel.unsubscribe();
-  }
+  await broadcastPool.send(
+    client,
+    `player:${quizId}:${playerId}`,
+    event,
+    payload
+  );
 };
 
 /**
