@@ -12,6 +12,15 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  {
+    ignores: [
+      'node_modules/**/*',
+      '.next/**/*',
+      'out/**/*',
+      'src/infrastructure/database/prisma/generated/**/*',
+      'playwright-report/**/*',
+    ],
+  },
   ...compat.extends(
     'next/core-web-vitals',
     'next/typescript',
@@ -23,9 +32,9 @@ const eslintConfig = [
   eslintCssPlugin.configs['flat/standard'],
   eslintConfigPrettier,
   {
-    ignores: ['node_modules/**/*', '.next/**/*', 'out/**/*'],
     rules: {
       'react/react-in-jsx-scope': 'off',
+      'linebreak-style': ['error', 'unix'],
     },
   },
 ];

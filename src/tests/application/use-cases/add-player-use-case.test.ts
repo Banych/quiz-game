@@ -14,14 +14,22 @@ describe('AddPlayerUseCase', () => {
   beforeEach(() => {
     quizRepository = {
       findById: vi.fn(),
+      findByJoinCode: vi.fn(),
+      listByStatus: vi.fn(),
       save: vi.fn(),
+      updateCurrentQuestion: vi.fn(),
+      updateLeaderboard: vi.fn(),
       delete: vi.fn(),
-    };
+    } as unknown as Mocked<IQuizRepository>;
     playerRepository = {
       findById: vi.fn(),
+      listByQuizId: vi.fn(),
+      findByQuizIdAndName: vi.fn(),
       save: vi.fn(),
+      updateStatus: vi.fn(),
+      updateScore: vi.fn(),
       delete: vi.fn(),
-    };
+    } as unknown as Mocked<IPlayerRepository>;
     addPlayerUseCase = new AddPlayerUseCase(quizRepository, playerRepository);
   });
 
@@ -35,11 +43,16 @@ describe('AddPlayerUseCase', () => {
     );
     quizRepository.findById.mockResolvedValue(quiz);
     playerRepository.findById.mockResolvedValue(null);
+    playerRepository.findByQuizIdAndName.mockResolvedValue(null);
 
     await addPlayerUseCase.execute('quiz1', 'p1', 'Player 1');
 
     expect(quizRepository.findById).toHaveBeenCalledWith('quiz1');
     expect(playerRepository.findById).toHaveBeenCalledWith('p1');
+    expect(playerRepository.findByQuizIdAndName).toHaveBeenCalledWith(
+      'quiz1',
+      'Player 1'
+    );
     expect(quiz.hasPlayer('p1')).toBe(true);
     expect(playerRepository.save).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'p1', name: 'Player 1' })
@@ -56,11 +69,34 @@ describe('AddPlayerUseCase', () => {
       30
     );
     quizRepository.findById.mockResolvedValue(quiz);
-    playerRepository.findById.mockResolvedValue(new Player('p1', 'Player 1'));
+    playerRepository.findById.mockResolvedValue(
+      new Player('p1', 'Player 1', 'quiz1')
+    );
 
     await expect(
       addPlayerUseCase.execute('quiz1', 'p1', 'Player 1')
     ).rejects.toThrow('Player already exists.');
+    expect(playerRepository.save).not.toHaveBeenCalled();
+    expect(quizRepository.save).not.toHaveBeenCalled();
+  });
+
+  it('should throw an error if the player name is taken within the quiz', async () => {
+    const quiz = new QuizSessionAggregate(
+      new Quiz('quiz1', 'Sample Quiz', [], {
+        timePerQuestion: 30,
+        allowSkipping: true,
+      }),
+      30
+    );
+    quizRepository.findById.mockResolvedValue(quiz);
+    playerRepository.findById.mockResolvedValue(null);
+    playerRepository.findByQuizIdAndName.mockResolvedValue(
+      new Player('existing', 'Player 1', 'quiz1')
+    );
+
+    await expect(
+      addPlayerUseCase.execute('quiz1', 'p2', 'Player 1')
+    ).rejects.toThrow('Player name already taken for this quiz.');
     expect(playerRepository.save).not.toHaveBeenCalled();
     expect(quizRepository.save).not.toHaveBeenCalled();
   });

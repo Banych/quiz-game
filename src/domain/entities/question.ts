@@ -7,6 +7,12 @@ export class Question {
   correctAnswers: string[];
   type: 'multiple-choice' | 'text' | 'true/false';
   points: number;
+  quizId?: string;
+  orderIndex?: number;
+  isPublished?: boolean;
+  answersLockedAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 
   constructor(
     id: string,

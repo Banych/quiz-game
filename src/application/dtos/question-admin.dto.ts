@@ -1,0 +1,85 @@
+import { z } from 'zod';
+
+/**
+ * DTO for creating a new question (admin)
+ */
+export const CreateQuestionDTO = z.object({
+  quizId: z.string().min(1, 'Quiz ID is required'),
+  text: z.string().min(1, 'Question text is required').max(1000),
+  type: z.enum(['multiple-choice', 'text', 'true/false']),
+  options: z.array(z.string()).default([]),
+  correctAnswers: z
+    .array(z.string().min(1))
+    .min(1, 'At least one correct answer is required'),
+  points: z.number().int().positive().default(10),
+  mediaUrl: z.string().url().nullable().optional(),
+  mediaType: z.enum(['image', 'video', 'audio']).nullable().optional(),
+});
+
+export type CreateQuestionDTO = z.infer<typeof CreateQuestionDTO>;
+
+/**
+ * DTO for updating an existing question (admin)
+ */
+export const UpdateQuestionDTO = z.object({
+  text: z.string().min(1).max(1000).optional(),
+  type: z.enum(['multiple-choice', 'text', 'true/false']).optional(),
+  options: z.array(z.string()).optional(),
+  correctAnswers: z.array(z.string().min(1)).min(1).optional(),
+  points: z.number().int().positive().optional(),
+  mediaUrl: z.string().url().nullable().optional(),
+  mediaType: z.enum(['image', 'video', 'audio']).nullable().optional(),
+});
+
+export type UpdateQuestionDTO = z.infer<typeof UpdateQuestionDTO>;
+
+/**
+ * DTO for question detail (admin) - includes correctAnswers
+ * ⚠️ Admin-only: Never expose to players (use QuestionDTO for player-facing)
+ */
+export const QuestionAdminDTO = z.object({
+  id: z.string(),
+  quizId: z.string(),
+  text: z.string(),
+  type: z.enum(['multiple-choice', 'text', 'true/false']),
+  options: z.array(z.string()),
+  correctAnswers: z.array(z.string()), // ⚠️ Admin-only field
+  points: z.number().int().nonnegative(),
+  orderIndex: z.number().int().nonnegative(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  mediaUrl: z.string().url().nullable().optional(),
+  mediaType: z.enum(['image', 'video', 'audio']).nullable().optional(),
+});
+
+export type QuestionAdminDTO = z.infer<typeof QuestionAdminDTO>;
+
+/**
+ * DTO for question list item (admin dashboard)
+ * Lightweight version for table views
+ */
+export const QuestionListItemDTO = z.object({
+  id: z.string(),
+  text: z.string(),
+  type: z.enum(['multiple-choice', 'text', 'true/false']),
+  points: z.number().int().nonnegative(),
+  orderIndex: z.number().int().nonnegative(),
+  hasCorrectAnswers: z.boolean(), // Validation indicator
+  mediaUrl: z.string().url().nullable().optional(),
+});
+
+export type QuestionListItemDTO = z.infer<typeof QuestionListItemDTO>;
+
+/**
+ * DTO for reordering questions (drag-drop)
+ */
+export const ReorderQuestionsDTO = z.object({
+  questions: z.array(
+    z.object({
+      id: z.string(),
+      orderIndex: z.number().int().nonnegative(),
+    })
+  ),
+});
+
+export type ReorderQuestionsDTO = z.infer<typeof ReorderQuestionsDTO>;

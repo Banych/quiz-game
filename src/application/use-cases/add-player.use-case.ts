@@ -23,7 +23,15 @@ export class AddPlayerUseCase {
       throw new Error('Player already exists.');
     }
 
-    const newPlayer = new Player(playerId, playerName);
+    const duplicateName = await this.playerRepository.findByQuizIdAndName(
+      quizId,
+      playerName
+    );
+    if (duplicateName) {
+      throw new Error('Player name already taken for this quiz.');
+    }
+
+    const newPlayer = new Player(playerId, playerName, quizId);
     quizSession.addPlayer(newPlayer.id);
 
     await this.playerRepository.save(newPlayer);

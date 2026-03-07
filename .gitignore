@@ -12,6 +12,11 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/.playwright-mcp/
+/playwright/.auth/
+/playwright/.quiz-info.json
 
 # next.js
 /.next/
@@ -23,6 +28,7 @@
 # misc
 .DS_Store
 *.pem
+src/infrastructure/database/prisma/generated/
 
 # debug
 npm-debug.log*
@@ -31,7 +37,7 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-.env*
+.env
 
 # vercel
 .vercel

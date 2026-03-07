@@ -11,6 +11,6 @@ export class UpdatePlayerStatusUseCase {
     }
 
     player.updateStatus(status);
-    await this.playerRepository.save(player);
+    await this.playerRepository.updateStatus(playerId, status);
   }
 }

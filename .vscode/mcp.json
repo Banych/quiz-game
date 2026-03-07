@@ -1,0 +1,48 @@
+{
+  "servers": {
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=iwnxzdhhrreogxauxehm&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage"
+    },
+    "microsoft/playwright-mcp": {
+      "command": "node",
+      "args": [
+        "servers/shared/mcp-runner.mjs",
+        "npx @playwright/mcp@latest"
+      ],
+      "type": "stdio"
+    },
+    "com.postman/postman-mcp-server": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "servers/shared/mcp-runner.mjs",
+        "npx @postman/postman-mcp-server@2.5.1"
+      ],
+      "env": {
+        "POSTMAN_API_KEY": "${input:POSTMAN_API_KEY}"
+      }
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "${input:CONTEXT7_API_KEY}"
+      }
+    }
+  },
+  "inputs": [
+    {
+      "id": "CONTEXT7_API_KEY",
+      "type": "promptString",
+      "description": "API key for authentication",
+      "password": true
+    },
+    {
+      "id": "POSTMAN_API_KEY",
+      "type": "promptString",
+      "description": "A valid Postman API key.",
+      "password": true
+    }
+  ]
+}

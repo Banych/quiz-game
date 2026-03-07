@@ -1,5 +1,10 @@
 import { Question } from '@domain/entities/question';
 import { Answer } from '@domain/entities/answer';
+import {
+  createScoringStrategy,
+  type ScoringStrategy,
+  type ScoringAlgorithmType,
+} from '@domain/value-objects/scoring-strategy';
 
 export enum QuizStatus {
   Active = 'Active',
@@ -18,13 +23,20 @@ export class Quiz {
   endTime?: Date;
   settings: QuizSettings;
   answers: Map<string, Answer[]>;
+  joinCode?: string;
 
   constructor(
     id: string,
     title: string,
     questions: Question[],
-    settings: QuizSettings
+    settings: QuizSettings,
+    options?: {
+      joinCode?: string;
+    }
   ) {
+    // Validate scoring settings
+    this.validateScoringSettings(settings);
+
     this.id = id;
     this.title = title;
     this.questions = questions;
@@ -33,6 +45,44 @@ export class Quiz {
     this.currentQuestionIndex = 0;
     this.settings = settings;
     this.answers = new Map();
+    this.joinCode = options?.joinCode;
+  }
+
+  private validateScoringSettings(settings: QuizSettings): void {
+    const { scoringAlgorithm, scoringDecayRate } = settings;
+
+    // Validate that decay rate is only provided for algorithms that use it
+    if (scoringAlgorithm === 'FIXED' && scoringDecayRate !== undefined) {
+      throw new Error(
+        'Decay rate should not be provided for FIXED scoring algorithm'
+      );
+    }
+
+    // Validate that decay rate is provided for algorithms that require it
+    if (
+      (scoringAlgorithm === 'EXPONENTIAL_DECAY' ||
+        scoringAlgorithm === 'LINEAR') &&
+      (scoringDecayRate === undefined || scoringDecayRate === null)
+    ) {
+      throw new Error(
+        `Decay rate is required for ${scoringAlgorithm} scoring algorithm`
+      );
+    }
+
+    // Validate decay rate bounds
+    if (scoringDecayRate !== undefined && scoringDecayRate !== null) {
+      if (scoringDecayRate < 0.1 || scoringDecayRate > 5.0) {
+        throw new Error('Decay rate must be between 0.1 and 5.0');
+      }
+    }
+  }
+
+  getScoringStrategy(): ScoringStrategy {
+    const { scoringAlgorithm, scoringDecayRate } = this.settings;
+    return createScoringStrategy(
+      scoringAlgorithm || 'EXPONENTIAL_DECAY',
+      scoringDecayRate
+    );
   }
 
   startQuiz(): void {
@@ -97,4 +147,6 @@ export class Quiz {
 export interface QuizSettings {
   timePerQuestion: number;
   allowSkipping: boolean;
+  scoringAlgorithm?: ScoringAlgorithmType;
+  scoringDecayRate?: number;
 }
