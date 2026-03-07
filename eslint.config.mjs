@@ -18,6 +18,7 @@ const eslintConfig = [
       '.next/**/*',
       'out/**/*',
       'src/infrastructure/database/prisma/generated/**/*',
+      'playwright-report/**/*',
     ],
   },
   ...compat.extends(

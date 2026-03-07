@@ -31,7 +31,7 @@ export default function HomePage() {
             variant="secondary"
             className="min-w-[140px]"
           >
-            <Link href="/host">Host Game</Link>
+            <Link href="/admin/quizzes">Host Game</Link>
           </Button>
           <Button asChild size="lg" variant="outline" className="min-w-[140px]">
             <Link href="/admin">Admin</Link>
