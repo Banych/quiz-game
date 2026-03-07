@@ -3,11 +3,106 @@ generator client {
   output   = "./generated/client"
 }
 
-// Supabase Postgres connection string will be supplied via prisma.config.ts
-// using DATABASE_URL from the environment (see docs/01-setup-project.md).
-// DIRECT_URL is used for migrations to bypass connection pooling.
 datasource db {
   provider = "postgresql"
+}
+
+model Quiz {
+  id                   String                @id @default(cuid())
+  title                String
+  status               QuizStatus            @default(Pending)
+  currentQuestionIndex Int                   @default(0)
+  activeQuestionId     String?
+  timePerQuestion      Int                   @default(30)
+  allowSkipping        Boolean               @default(false)
+  joinCode             String?               @unique
+  startTime            DateTime?
+  endTime              DateTime?
+  timerStartedAt       DateTime?
+  timerExpiresAt       DateTime?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  scoringAlgorithm     ScoringAlgorithm      @default(EXPONENTIAL_DECAY)
+  scoringDecayRate     Float                 @default(2.0)
+  answers              Answer[]
+  players              Player[]
+  questions            Question[]
+  leaderboardSnapshots LeaderboardSnapshot[]
+}
+
+model Question {
+  id              String             @id @default(cuid())
+  quizId          String?
+  text            String
+  mediaUrl        String?
+  mediaType       QuestionMediaType?
+  options         String[]           @default([])
+  correctAnswers  String[]           @default([])
+  type            QuestionType
+  points          Int                @default(0)
+  orderIndex      Int                @default(0)
+  isPublished     Boolean            @default(false)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  answersLockedAt DateTime?
+  answers         Answer[]
+  quiz            Quiz?              @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+}
+
+model Player {
+  id                   String                @id @default(cuid())
+  quizId               String
+  name                 String
+  status               PlayerStatus          @default(Active)
+  score                Int                   @default(0)
+  rank                 Int?
+  connectedAt          DateTime              @default(now())
+  disconnectedAt       DateTime?
+  updatedAt            DateTime              @updatedAt
+  lastSeenAt           DateTime              @default(now())
+  answers              Answer[]
+  quiz                 Quiz                  @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  leaderboardSnapshots LeaderboardSnapshot[]
+
+  @@index([quizId])
+  @@index([quizId, status])
+}
+
+model Answer {
+  id          String   @id @default(cuid())
+  quizId      String
+  playerId    String
+  questionId  String
+  value       String
+  submittedAt DateTime @default(now())
+  isCorrect   Boolean?
+  points      Int?
+  timeTakenMs Int?
+  player      Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+  @@index([questionId])
+  @@index([playerId])
+}
+
+model LeaderboardSnapshot {
+  id            String   @id @default(cuid())
+  quizId        String
+  questionIndex Int
+  playerId      String
+  score         Int
+  rank          Int
+  capturedAt    DateTime @default(now())
+  player        Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  quiz          Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId, questionIndex])
+  @@index([playerId])
+  @@map("leaderboard_snapshots")
 }
 
 enum QuizStatus {
@@ -38,107 +133,4 @@ enum ScoringAlgorithm {
   EXPONENTIAL_DECAY
   LINEAR
   FIXED
-}
-
-model Quiz {
-  id                   String           @id @default(cuid())
-  title                String
-  status               QuizStatus       @default(Pending)
-  currentQuestionIndex Int              @default(0)
-  activeQuestionId     String?
-  timePerQuestion      Int              @default(30)
-  allowSkipping        Boolean          @default(false)
-  scoringAlgorithm     ScoringAlgorithm @default(EXPONENTIAL_DECAY)
-  scoringDecayRate     Float            @default(2.0)
-  joinCode             String?          @unique
-  startTime            DateTime?
-  endTime              DateTime?
-  timerStartedAt       DateTime?
-  timerExpiresAt       DateTime?
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
-
-  questions            Question[]
-  players              Player[]
-  answers              Answer[]
-  leaderboardSnapshots LeaderboardSnapshot[]
-}
-
-model Question {
-  id              String             @id @default(cuid())
-  quizId          String?
-  text            String
-  mediaUrl        String?
-  mediaType       QuestionMediaType?
-  options         String[]           @default([])
-  correctAnswers  String[]           @default([])
-  type            QuestionType
-  points          Int                @default(0)
-  orderIndex      Int                @default(0)
-  isPublished     Boolean            @default(false)
-  answersLockedAt DateTime?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-
-  quiz    Quiz?    @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  answers Answer[]
-
-  @@index([quizId])
-}
-
-model Player {
-  id             String       @id @default(cuid())
-  quizId         String
-  name           String
-  status         PlayerStatus @default(Active)
-  score          Int          @default(0)
-  rank           Int?
-  connectedAt    DateTime     @default(now())
-  disconnectedAt DateTime?
-  lastSeenAt     DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-
-  quiz                 Quiz                  @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  answers              Answer[]
-  leaderboardSnapshots LeaderboardSnapshot[]
-
-  @@index([quizId])
-  @@index([quizId, status])
-}
-
-model Answer {
-  id          String   @id @default(cuid())
-  quizId      String
-  playerId    String
-  questionId  String
-  value       String
-  submittedAt DateTime @default(now())
-  isCorrect   Boolean?
-  points      Int?
-  timeTakenMs Int?
-
-  quiz     Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  player   Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-
-  @@index([quizId])
-  @@index([questionId])
-  @@index([playerId])
-}
-
-model LeaderboardSnapshot {
-  id            String   @id @default(cuid())
-  quizId        String
-  questionIndex Int
-  playerId      String
-  score         Int
-  rank          Int
-  capturedAt    DateTime @default(now())
-
-  quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
-
-  @@index([quizId, questionIndex])
-  @@index([playerId])
-  @@map("leaderboard_snapshots")
 }

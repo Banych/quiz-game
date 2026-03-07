@@ -286,7 +286,9 @@ export function PlayerSessionScreen({
           )}
           {waitingForQuestion ? (
             <p className="mt-3 text-sm text-muted-foreground">
-              Waiting for the host to launch the next question.
+              {session.quiz.status === 'Pending'
+                ? 'Waiting for the host to start the quiz...'
+                : 'Waiting for the host to launch the next question.'}
             </p>
           ) : null}
         </section>

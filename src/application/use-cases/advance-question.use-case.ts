@@ -23,6 +23,10 @@ export class AdvanceQuestionUseCase {
       ? quizAggregate.resetTimer()
       : quizAggregate.getTimerSnapshot();
 
+    if (!nextQuestion) {
+      quizAggregate.endQuiz();
+    }
+
     await this.quizRepository.save(quizAggregate);
 
     return {

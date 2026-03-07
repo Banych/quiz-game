@@ -15,7 +15,8 @@
       "Bash(npx shadcn@latest *)",
       "mcp__supabase__*",
       "mcp__playwright__*",
-      "mcp__context7__*"
+      "mcp__context7__*",
+      "Bash(ls:*)"
     ],
     "deny": [
       "Bash(rm -rf *)",

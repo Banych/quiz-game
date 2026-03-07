@@ -65,6 +65,36 @@ describe('AdvanceQuestionUseCase', () => {
     expect(quizRepository.save).toHaveBeenCalledWith(aggregate);
   });
 
+  it('completes the quiz and returns null question when on the last question', async () => {
+    const quiz = new Quiz(
+      'quiz-1',
+      'General Knowledge',
+      [
+        new Question(
+          'q-1',
+          'Q1',
+          ['A'],
+          'multiple-choice',
+          10,
+          undefined,
+          undefined,
+          ['A', 'B']
+        ),
+      ],
+      { allowSkipping: false, timePerQuestion: 30 }
+    );
+    const aggregate = new QuizSessionAggregate(quiz, 30);
+    aggregate.startQuiz();
+
+    quizRepository.findById.mockResolvedValue(aggregate);
+
+    const result = await useCase.execute('quiz-1');
+
+    expect(result.question).toBeNull();
+    expect(aggregate.quizStatus).toBe('Completed');
+    expect(quizRepository.save).toHaveBeenCalledWith(aggregate);
+  });
+
   it('throws when quiz does not exist', async () => {
     quizRepository.findById.mockResolvedValue(null);
 

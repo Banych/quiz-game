@@ -20,6 +20,27 @@ This document indexes all releases, completed work, and session notes. Use this 
 
 **Latest First** – Find detailed work notes by date:
 
+### 2026-03-07: Quiz Lobby + Live Game Screen ✅
+- **Focus**: Projector-friendly live game page at `/quiz/[id]/live`
+- **Deliverables**: `LiveGameScreen` orchestrator, `LobbyView`, `QuestionView`, `RoundResultsView`, `FinalResultsView`, `AdvanceQuestionUseCase` bug fix (quiz transitions to `Completed` on last advance), quiz list "Open Lobby" / "Open Live View" navigation
+- **Status**: Complete — 368 tests pass, yarn build succeeds, Playwright E2E verified
+- **File**: [plans/2026-02-08-quiz-lobby-live-game-screen.md](plans/2026-02-08-quiz-lobby-live-game-screen.md)
+
+### 2026-02-08: Fix Supabase Realtime Closed Errors ✅
+- **Focus**: Fix CLOSED/CHANNEL_ERROR console spam during normal subscription lifecycle
+- **Status**: Complete
+- **File**: [sessions/2026-02-08-fix-supabase-realtime-closed-errors.md](sessions/2026-02-08-fix-supabase-realtime-closed-errors.md)
+
+### 2026-02-07: R6 Phase 1.5.1 — Bug Fixes ✅
+- **Focus**: 5 bugs from E2E audit — join code generation (P0), subscription error spam (P1), timer display (P2), `/host` 404 (P2), HTML nesting warnings (P3)
+- **Status**: Complete — 352 tests passing, 6 new tests added
+- **File**: [sessions/2026-02-07-r6-phase1.5.1-bug-fixes.md](sessions/2026-02-07-r6-phase1.5.1-bug-fixes.md)
+
+### 2026-02-07: R6 Phase 1.5 — E2E Audit ✅
+- **Focus**: Full manual Playwright walkthrough of complete quiz lifecycle, identified 6 bugs
+- **Status**: Complete
+- **File**: [sessions/2026-02-07-r6-phase1.5-e2e-audit.md](sessions/2026-02-07-r6-phase1.5-e2e-audit.md)
+
 ### 2026-02-07: R6 Phase 1 - Landing & Navigation Polish ✅
 - **Focus**: Replace placeholder home page, add error/loading states, fix admin dashboard
 - **Deliverables**:
@@ -175,9 +196,10 @@ This document indexes all releases, completed work, and session notes. Use this 
 
 See [dev-notes.md](dev-notes.md) for the full execution log with timestamps.
 
-### Latest (2026-01-11):
-- R5 Phase 2 UI complete: scoring badges, info tooltips, player speed indicators
-- No blockers; ready for phase 3 (leaderboard + round transitions)
+### Latest (2026-03-07):
+- Quiz Lobby + Live Game Screen complete: `/quiz/[id]/live` with lobby, question, round results, and final results views
+- `AdvanceQuestionUseCase` bug fixed: quiz now transitions to `Completed` status on last question advance
+- 368 tests passing, yarn build verified
 
 ### Previous (2025-12-21):
 - R4 Content Admin 100% complete; all CRUD operations tested
@@ -199,10 +221,10 @@ All R5 phases complete as of 2026-02-01. See [plan.md](../plan.md) for performan
 ### R6 (Planned) – Expanded Scope
 
 **Phase 1: Landing & Navigation Polish**
-- [ ] Replace boilerplate home page with proper landing (hero, CTAs, responsive)
-- [ ] Add global `not-found.tsx` and `error.tsx` pages
-- [ ] Add `loading.tsx` skeletons for route transitions
-- [ ] Update Admin Dashboard "Coming Soon" sections
+- [x] Replace boilerplate home page with proper landing (hero, CTAs, responsive)
+- [x] Add global `not-found.tsx` and `error.tsx` pages
+- [x] Add `loading.tsx` skeletons for route transitions
+- [x] Update Admin Dashboard "Coming Soon" sections
 
 **Phase 2: UI/UX Improvements**
 - [ ] Accessibility audit (axe-core, Lighthouse) + fixes

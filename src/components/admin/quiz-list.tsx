@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Pencil, Trash2, PlayCircle, Loader2 } from 'lucide-react';
+import { Pencil, Trash2, MonitorPlay } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -21,30 +21,10 @@ import type { QuizListItemDTO } from '@application/dtos/quiz-admin.dto';
 
 export function QuizList() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const [editingQuiz, setEditingQuiz] = useState<QuizListItemDTO | null>(null);
   const [deletingQuiz, setDeletingQuiz] = useState<QuizListItemDTO | null>(
     null
   );
-
-  const startQuizMutation = useMutation({
-    mutationFn: async (quizId: string) => {
-      const res = await fetch('/api/quiz/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quizId }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to start quiz');
-      }
-      return res.json();
-    },
-    onSuccess: (_, quizId) => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'quizzes'] });
-      router.push(`/quiz/${quizId}`);
-    },
-  });
 
   const {
     data: quizzes,
@@ -146,16 +126,20 @@ export function QuizList() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    title="Start Quiz"
-                    onClick={() => startQuizMutation.mutate(quiz.id)}
-                    disabled={startQuizMutation.isPending}
+                    title="Open Lobby"
+                    onClick={() => router.push(`/quiz/${quiz.id}/live`)}
                   >
-                    {startQuizMutation.isPending &&
-                    startQuizMutation.variables === quiz.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <PlayCircle className="h-4 w-4" />
-                    )}
+                    <MonitorPlay className="h-4 w-4" />
+                  </Button>
+                )}
+                {quiz.status === 'Active' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    title="Open Live View"
+                    onClick={() => router.push(`/quiz/${quiz.id}/live`)}
+                  >
+                    <MonitorPlay className="h-4 w-4" />
                   </Button>
                 )}
                 {quiz.status !== 'Active' && (
