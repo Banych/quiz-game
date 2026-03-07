@@ -54,7 +54,8 @@ type QuestionService = {
     quizId: string
   ) => ReturnType<ListQuizQuestionsUseCase['execute']>;
   reorderQuestions: (
-    dto: ReorderQuestionsDTO
+    dto: ReorderQuestionsDTO,
+    quizId: string
   ) => ReturnType<ReorderQuestionsUseCase['execute']>;
 };
 
@@ -200,7 +201,8 @@ export const getServices = (): ServiceContainer => {
     deleteQuestion: (id) => deleteQuestionUseCase.execute(id),
     getQuestionById: (id) => questionRepository.findById(id),
     listQuizQuestions: (quizId) => listQuizQuestionsUseCase.execute(quizId),
-    reorderQuestions: (dto) => reorderQuestionsUseCase.execute(dto),
+    reorderQuestions: (dto, quizId) =>
+      reorderQuestionsUseCase.execute(dto, quizId),
   };
 
   container = {

@@ -11,33 +11,20 @@ import type { ReorderQuestionsDTO } from '@application/dtos/question-admin.dto';
 export class ReorderQuestionsUseCase {
   constructor(private readonly questionRepository: IQuestionRepository) {}
 
-  async execute(dto: ReorderQuestionsDTO): Promise<void> {
+  async execute(dto: ReorderQuestionsDTO, quizId: string): Promise<void> {
     if (dto.questions.length === 0) {
       return; // Nothing to reorder
     }
 
-    // Verify all questions exist and belong to same quiz
-    const firstQuestion = await this.questionRepository.findById(
-      dto.questions[0].id
-    );
-    if (!firstQuestion) {
-      throw new Error(`Question not found: ${dto.questions[0].id}`);
-    }
-
-    const quizId = firstQuestion.quizId;
-    if (!quizId) {
-      throw new Error('Question must belong to a quiz to be reordered');
-    }
-
-    // Validate remaining questions
-    for (const { id } of dto.questions.slice(1)) {
+    // Verify all questions exist and belong to the specified quiz
+    for (const { id } of dto.questions) {
       const question = await this.questionRepository.findById(id);
       if (!question) {
         throw new Error(`Question not found: ${id}`);
       }
       if (question.quizId !== quizId) {
         throw new Error(
-          `All questions must belong to the same quiz (expected ${quizId}, got ${question.quizId})`
+          `All questions must belong to quiz ${quizId} (question ${id} belongs to ${question.quizId})`
         );
       }
     }

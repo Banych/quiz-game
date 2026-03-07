@@ -32,6 +32,8 @@ export const mapPrismaQuestionToDomain = (record: PrismaQuestion): Question => {
   question.quizId = record.quizId ?? undefined;
   question.orderIndex = record.orderIndex;
   question.isPublished = record.isPublished;
+  question.createdAt = record.createdAt;
+  question.updatedAt = record.updatedAt;
 
   return question;
 };

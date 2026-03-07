@@ -5,6 +5,10 @@ const authTest = test.extend({
   storageState: { cookies: [], origins: [] },
 });
 
+const adminEmail = process.env.TEST_ADMIN_EMAIL;
+const adminPassword = process.env.TEST_ADMIN_PASSWORD;
+const hasCredentials = !!(adminEmail && adminPassword);
+
 authTest.describe.configure({ mode: 'serial' });
 
 authTest.describe('Admin Authentication', () => {
@@ -40,16 +44,18 @@ authTest.describe('Admin Authentication', () => {
   authTest(
     'should login with valid admin credentials and access dashboard',
     async ({ page }) => {
-      // Note: This test requires a valid admin user in Supabase
-      // with email matching ADMIN_EMAILS env var
-      const adminEmail = process.env.ADMIN_EMAIL || 'banykinv@gmail.com';
-      const adminPassword = process.env.ADMIN_PASSWORD || 'banych1993';
+      authTest.skip(
+        !hasCredentials,
+        'TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD env vars required'
+      );
 
       await page.goto('http://localhost:3000/login');
 
       // Fill in valid admin credentials
-      await page.getByRole('textbox', { name: 'Email' }).fill(adminEmail);
-      await page.getByRole('textbox', { name: 'Password' }).fill(adminPassword);
+      await page.getByRole('textbox', { name: 'Email' }).fill(adminEmail!);
+      await page
+        .getByRole('textbox', { name: 'Password' })
+        .fill(adminPassword!);
       await page.getByRole('button', { name: 'Sign In' }).click();
 
       // Should redirect to admin dashboard
@@ -59,7 +65,7 @@ authTest.describe('Admin Authentication', () => {
       ).toBeVisible();
 
       // Should show user email in header
-      await expect(page.getByText(adminEmail)).toBeVisible();
+      await expect(page.getByText(adminEmail!)).toBeVisible();
 
       // Should show navigation links in header
       await expect(page.getByRole('link', { name: 'Dashboard' })).toBeVisible();
@@ -70,13 +76,15 @@ authTest.describe('Admin Authentication', () => {
   );
 
   authTest('should logout and redirect to login page', async ({ page }) => {
-    const adminEmail = process.env.ADMIN_EMAIL || 'banykinv@gmail.com';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'banych1993';
+    authTest.skip(
+      !hasCredentials,
+      'TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD env vars required'
+    );
 
     // Login first
     await page.goto('http://localhost:3000/login');
-    await page.getByRole('textbox', { name: 'Email' }).fill(adminEmail);
-    await page.getByRole('textbox', { name: 'Password' }).fill(adminPassword);
+    await page.getByRole('textbox', { name: 'Email' }).fill(adminEmail!);
+    await page.getByRole('textbox', { name: 'Password' }).fill(adminPassword!);
     await page.getByRole('button', { name: 'Sign In' }).click();
 
     // Wait for dashboard to load
@@ -93,8 +101,10 @@ authTest.describe('Admin Authentication', () => {
   authTest(
     'should redirect to originally requested page after login',
     async ({ page }) => {
-      const adminEmail = process.env.ADMIN_EMAIL || 'banykinv@gmail.com';
-      const adminPassword = process.env.ADMIN_PASSWORD || 'banych1993';
+      authTest.skip(
+        !hasCredentials,
+        'TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD env vars required'
+      );
 
       // Try to access /admin/quizzes without being logged in
       await page.goto('http://localhost:3000/admin/quizzes');
@@ -103,8 +113,10 @@ authTest.describe('Admin Authentication', () => {
       await expect(page).toHaveURL(/\/login\?redirect=%2Fadmin%2Fquizzes/);
 
       // Login
-      await page.getByRole('textbox', { name: 'Email' }).fill(adminEmail);
-      await page.getByRole('textbox', { name: 'Password' }).fill(adminPassword);
+      await page.getByRole('textbox', { name: 'Email' }).fill(adminEmail!);
+      await page
+        .getByRole('textbox', { name: 'Password' })
+        .fill(adminPassword!);
       await page.getByRole('button', { name: 'Sign In' }).click();
 
       // Should redirect to originally requested page
@@ -116,13 +128,15 @@ authTest.describe('Admin Authentication', () => {
   );
 
   authTest('should persist session across page reloads', async ({ page }) => {
-    const adminEmail = process.env.ADMIN_EMAIL || 'banykinv@gmail.com';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'banych1993';
+    authTest.skip(
+      !hasCredentials,
+      'TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD env vars required'
+    );
 
     // Login
     await page.goto('http://localhost:3000/login');
-    await page.getByRole('textbox', { name: 'Email' }).fill(adminEmail);
-    await page.getByRole('textbox', { name: 'Password' }).fill(adminPassword);
+    await page.getByRole('textbox', { name: 'Email' }).fill(adminEmail!);
+    await page.getByRole('textbox', { name: 'Password' }).fill(adminPassword!);
     await page.getByRole('button', { name: 'Sign In' }).click();
     await expect(page).toHaveURL('http://localhost:3000/admin');
 

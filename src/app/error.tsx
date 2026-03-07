@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -41,7 +42,7 @@ export default function Error({
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
             <Button onClick={reset}>Try Again</Button>
             <Button variant="outline" asChild>
-              <a href="/">Go Home</a>
+              <Link href="/">Go Home</Link>
             </Button>
           </div>
         </CardContent>

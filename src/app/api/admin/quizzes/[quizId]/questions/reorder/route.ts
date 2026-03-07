@@ -6,15 +6,19 @@ import { ReorderQuestionsDTO } from '@application/dtos/question-admin.dto';
  * POST /api/admin/quizzes/[quizId]/questions/reorder
  * Reorder questions via drag-drop
  */
-export async function POST(request: NextRequest) {
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ quizId: string }> }
+) {
   try {
+    const { quizId } = await context.params;
     const body = await request.json();
 
     // Validate and parse request body
     const dto = ReorderQuestionsDTO.parse(body);
 
     const { questionService } = getServices();
-    await questionService.reorderQuestions(dto);
+    await questionService.reorderQuestions(dto, quizId);
 
     return NextResponse.json({ success: true });
   } catch (error) {

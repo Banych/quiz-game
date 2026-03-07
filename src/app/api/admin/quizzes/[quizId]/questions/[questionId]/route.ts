@@ -38,8 +38,8 @@ export async function GET(
       correctAnswers: question.correctAnswers,
       points: question.points,
       orderIndex: question.orderIndex ?? 0,
-      createdAt: new Date().toISOString(), // TODO: Get from entity
-      updatedAt: new Date().toISOString(), // TODO: Get from entity
+      createdAt: (question.createdAt ?? new Date()).toISOString(),
+      updatedAt: (question.updatedAt ?? new Date()).toISOString(),
       mediaUrl: question.media ?? null,
       mediaType: question.mediaType ?? null,
     };

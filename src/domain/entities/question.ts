@@ -11,6 +11,8 @@ export class Question {
   orderIndex?: number;
   isPublished?: boolean;
   answersLockedAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 
   constructor(
     id: string,

@@ -10,7 +10,7 @@ export const QuestionTypeDTO = z.enum([
 export const QuestionDTO = z.object({
   id: z.string(),
   text: z.string(),
-  media: z.string().url().or(z.string()).optional(),
+  media: z.string().optional(),
   mediaType: QuestionMediaTypeDTO.optional(),
   options: z.array(z.string()).optional(),
   type: QuestionTypeDTO,

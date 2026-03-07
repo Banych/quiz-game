@@ -2,8 +2,16 @@
 
 import { ReactNode, useMemo, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import dynamic from 'next/dynamic';
 import { RealtimeClientProvider } from '@hooks/use-realtime-client';
+
+const ReactQueryDevtools = dynamic(
+  () =>
+    import('@tanstack/react-query-devtools').then(
+      (mod) => mod.ReactQueryDevtools
+    ),
+  { ssr: false }
+);
 import { createNoopRealtimeClient } from '@infrastructure/realtime/noop-realtime-client';
 import { createSupabaseRealtimeClient } from '@infrastructure/realtime/supabase-realtime-client';
 
@@ -31,9 +39,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <RealtimeClientProvider client={realtimeClient}>
       <QueryClientProvider client={queryClient}>
         {children}
-        {process.env.NODE_ENV !== 'production' ? (
+        {process.env.NODE_ENV !== 'production' && (
           <ReactQueryDevtools buttonPosition="bottom-left" />
-        ) : null}
+        )}
       </QueryClientProvider>
     </RealtimeClientProvider>
   );

@@ -1,4 +1,3 @@
-````markdown
 # Step 4: Presentation, Hooks & Realtime
 
 With domain + infrastructure ready, this step connects application services to Next.js routes, TanStack Query hooks, and realtime transports so the host/player UIs mirror the mockups.
@@ -60,4 +59,3 @@ With domain + infrastructure ready, this step connects application services to N
 
 ## Next Steps
 Move to deployment hardening: CI workflows, observability, load tests, and final polish per the release plan.
-````

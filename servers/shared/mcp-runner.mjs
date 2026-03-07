@@ -12,7 +12,7 @@ if (!rawCommand) {
 
 const isWindows = process.platform === 'win32';
 
-const shell = isWindows ? 'powershell.exe' : '/bin/zsh';
+const shell = isWindows ? 'powershell.exe' : process.env.SHELL || '/bin/bash';
 
 const nvmSnippet = isWindows
   ? 'if (Get-Command nvm -ErrorAction SilentlyContinue) { nvm use | Out-Null }'

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getServices } from '@application/services/factories';
-import type { PlayerConnectionStatusDTO } from '@application/dtos/player-connection-status.dto.ts';
+import type { PlayerConnectionStatusDTO } from '@application/dtos/player-connection-status.dto';
 
 const ParamsSchema = z.object({
   quizId: z.string().min(1),
