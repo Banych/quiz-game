@@ -13,9 +13,20 @@ Initialize a new development session with proper context and progress tracking.
 ```bash
 git status
 git log --oneline -5
+git branch --show-current
 ```
 
-Review recent changes and ensure clean working directory.
+Verify you are on the correct feature branch. If starting a new feature, create a branch now:
+```bash
+git checkout -b feature/[feature-name]
+```
+
+Check test health before making any changes:
+```bash
+yarn test --reporter=dot
+```
+
+If tests are already failing, note which ones and why before touching anything.
 
 ### 2. Read Progress Context
 Check recent session notes:
@@ -60,11 +71,12 @@ Template:
 
 ### 4. Verify Environment
 ```bash
-yarn install
-yarn prisma:generate
-yarn test
-yarn dev
+yarn install           # ensure deps are up-to-date
+yarn prisma:generate   # ensure generated client matches schema
+yarn lint              # catch any pre-existing lint issues
 ```
+
+Do NOT start `yarn dev` automatically — ask the user if the dev server isn't running.
 
 ### 5. Review Relevant Code
 Based on goals, read:

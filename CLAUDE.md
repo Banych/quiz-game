@@ -9,15 +9,30 @@ A real-time quiz game built with Next.js 15, Prisma v7, and Supabase. Uses DDD-l
 ## Commands
 
 ```bash
+# Development
 yarn dev                    # Dev server with Turbopack
 yarn build                  # Production build (auto-runs prisma:generate)
-yarn lint                   # ESLint + Prettier
-yarn test                   # Run all Vitest tests
-yarn test src/tests/domain/entities/quiz.test.ts  # Run single test file
-yarn test:watch             # Watch mode
+
+# Linting
+yarn lint                   # ESLint + Prettier check
+yarn lint:fix               # ESLint + Prettier auto-fix
+
+# Unit tests (Vitest)
+yarn test                                                    # Run all tests
+yarn test src/tests/domain/entities/quiz.test.ts            # Run single test file
+yarn test submit-answer                                      # Run tests matching pattern
+yarn test:watch                                              # TDD watch mode
+yarn test:coverage                                           # With coverage report
+
+# E2E tests (Playwright)
+yarn test:e2e               # Headless E2E tests
+yarn test:e2e:ui            # Interactive Playwright UI
+yarn test:e2e:debug         # Step-through debug mode
+
+# Database
 yarn prisma:generate        # Regenerate Prisma client (required after schema changes)
 yarn prisma:migrate         # Create/apply migrations
-yarn test:e2e               # Playwright E2E tests
+yarn prisma:seed            # Seed database with test data
 ```
 
 ## Architecture
@@ -103,11 +118,19 @@ mcp__playwright__snapshot()
 
 ## Custom Skills
 
+### Scaffolding
+- `/create-entity [name]` - Scaffold domain entity + tests (file + test skeleton)
+- `/create-use-case [name]` - Scaffold use case + DTO + tests
+
 ### Workflow Skills
 - `/add-feature` - Step-by-step DDD feature implementation with test gates
 - `/test` - Testing workflow, patterns, and minimum coverage
 - `/session-start` - Initialize development session with progress tracking
 - `/prisma-migrate` - Safe database migration workflow
+- `/debug` - Systematic debugging workflow using Supabase logs and Playwright
+
+### Quality
+- `/architecture-check` - Review code for DDD layer violations and import rule breaches
 
 ### Agent-Like Skills
 - `/product-owner` - Business perspective, requirements clarification, documentation
@@ -179,6 +202,39 @@ See `.github/copilot-instructions.md` "Planning Workflow (Scrum Board Alternativ
 3. **Leaking entities to UI**: Components must receive DTOs only
 4. **Skipping prisma:generate**: Required after any schema.prisma changes
 5. **Test isolation**: Call `resetServices({ force: true })` for fresh Prisma client in tests
+6. **Importing across layer boundaries**: Use `run /architecture-check` to detect violations
+
+### Layer Import Rules (quick check)
+```
+Domain      → imports nothing from app/infra/presentation
+Application → imports from @domain/* only
+Infrastructure → imports from @domain/*, @application/* only
+Presentation  → imports from @application/dtos/* only (never entities, never Prisma)
+```
+
+## Debugging Quick Reference
+
+When something breaks, check in this order:
+
+```bash
+# 1. Check Postgres logs for DB errors
+mcp__supabase__get_logs(service: 'postgres')
+
+# 2. Check auth/edge function logs
+mcp__supabase__get_logs(service: 'auth')
+
+# 3. Inspect current DB state
+mcp__supabase__execute_sql(query: 'SELECT * FROM "Quiz" ORDER BY "createdAt" DESC LIMIT 5')
+
+# 4. Check RLS policies after schema changes
+mcp__supabase__get_advisors(type: 'security')
+
+# 5. Snapshot current UI state
+mcp__playwright__navigate(url: 'http://localhost:3000')
+mcp__playwright__snapshot()
+```
+
+For realtime issues: check the `realtime` service logs and verify Supabase channel subscriptions in `src/infrastructure/realtime/`.
 
 ## Claude Code Preferences
 
