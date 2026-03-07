@@ -98,7 +98,11 @@ export function TimerCountdown({
   const viewBoxSize = (radius + strokeWidth) * 2;
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div
+      className="flex flex-col items-center gap-4"
+      role="timer"
+      aria-label={`${formatTime(displayTime)} ${showElapsed ? 'elapsed' : 'remaining'}`}
+    >
       <div className={cn('relative', config.container)}>
         {/* SVG Progress Circle */}
         <svg

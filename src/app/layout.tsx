@@ -21,7 +21,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Quiz Game',
-  description: 'A simple quiz game',
+  description:
+    'Host live multiplayer quiz sessions with real-time scoring, speed bonuses, and instant leaderboards.',
 };
 
 export default function RootLayout({

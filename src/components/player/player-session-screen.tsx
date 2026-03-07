@@ -235,13 +235,21 @@ export function PlayerSessionScreen({
         </header>
 
         {reconnectedToast && (
-          <div className="rounded-lg border border-primary/40 bg-primary/10 p-3 text-sm text-primary">
+          <div
+            role="status"
+            aria-live="polite"
+            className="rounded-lg border border-primary/40 bg-primary/10 p-3 text-sm text-primary"
+          >
             {reconnectedToast}
           </div>
         )}
 
         {error ? (
-          <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+          >
             {error instanceof Error
               ? error.message
               : 'Unable to sync with the quiz. Try refreshing.'}
@@ -350,7 +358,11 @@ export function PlayerSessionScreen({
             </Button>
           </form>
           {submissionMessage ? (
-            <p className="mt-3 text-sm text-muted-foreground">
+            <p
+              role="status"
+              aria-live="polite"
+              className="mt-3 text-sm text-muted-foreground"
+            >
               {submissionMessage}
             </p>
           ) : null}

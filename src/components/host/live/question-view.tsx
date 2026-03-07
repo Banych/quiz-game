@@ -68,7 +68,7 @@ export function QuestionView({ quiz }: Props) {
             {activeQuestion.mediaType === 'image' && (
               <img
                 src={activeQuestion.media}
-                alt="Question media"
+                alt={activeQuestion.text}
                 className="max-h-64 rounded-xl object-contain"
               />
             )}

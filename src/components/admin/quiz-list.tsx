@@ -70,9 +70,11 @@ export function QuizList() {
           <TableRow>
             <TableHead>Title</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Questions</TableHead>
-            <TableHead>Players</TableHead>
-            <TableHead>Time/Question</TableHead>
+            <TableHead className="hidden sm:table-cell">Questions</TableHead>
+            <TableHead className="hidden sm:table-cell">Players</TableHead>
+            <TableHead className="hidden sm:table-cell">
+              Time/Question
+            </TableHead>
             <TableHead>Join Code</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -101,9 +103,15 @@ export function QuizList() {
                   {quiz.status}
                 </Badge>
               </TableCell>
-              <TableCell>{quiz.questionCount}</TableCell>
-              <TableCell>{quiz.playerCount}</TableCell>
-              <TableCell>{quiz.timePerQuestion}s</TableCell>
+              <TableCell className="hidden sm:table-cell">
+                {quiz.questionCount}
+              </TableCell>
+              <TableCell className="hidden sm:table-cell">
+                {quiz.playerCount}
+              </TableCell>
+              <TableCell className="hidden sm:table-cell">
+                {quiz.timePerQuestion}s
+              </TableCell>
               <TableCell>
                 {quiz.joinCode ? (
                   <code className="text-sm">{quiz.joinCode}</code>
@@ -117,6 +125,7 @@ export function QuizList() {
                     variant="ghost"
                     size="sm"
                     title="Edit"
+                    aria-label="Edit quiz"
                     onClick={() => setEditingQuiz(quiz)}
                   >
                     <Pencil className="h-4 w-4" />
@@ -127,6 +136,7 @@ export function QuizList() {
                     variant="ghost"
                     size="sm"
                     title="Open Lobby"
+                    aria-label="Open lobby"
                     onClick={() => router.push(`/quiz/${quiz.id}/live`)}
                   >
                     <MonitorPlay className="h-4 w-4" />
@@ -137,6 +147,7 @@ export function QuizList() {
                     variant="ghost"
                     size="sm"
                     title="Open Live View"
+                    aria-label="Open live view"
                     onClick={() => router.push(`/quiz/${quiz.id}/live`)}
                   >
                     <MonitorPlay className="h-4 w-4" />
@@ -147,6 +158,7 @@ export function QuizList() {
                     variant="ghost"
                     size="sm"
                     title="Delete"
+                    aria-label="Delete quiz"
                     className="text-destructive hover:text-destructive"
                     onClick={() => setDeletingQuiz(quiz)}
                   >

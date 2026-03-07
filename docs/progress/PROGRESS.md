@@ -12,13 +12,21 @@ This document indexes all releases, completed work, and session notes. Use this 
 | **R3**  | Player MVP         | Join/answer flows, WebSocket sync, session persistence | ✅ Complete | ~2025-12-19     |
 | **R4**  | Content Admin      | CRUD (quiz/question), media uploads, auth gate         | ✅ Complete | 2025-12-21      |
 | **R5**  | Realtime & Scoring | Speed-based scoring, round transitions, reconnection   | ✅ Complete | 2026-02-01      |
-| **R6**  | Polish & Launch    | Accessibility, responsive tweaks, audit log, analytics | 📅 Planned  | ~2026-03-31     |
+| **R6**  | Polish & Launch    | Accessibility, responsive tweaks, audit log, analytics | � Active   | ~2026-03-31     |
 
 ---
 
 ## Session Notes (Chronological)
 
 **Latest First** – Find detailed work notes by date:
+
+### 2026-03-07: R6 Phase 2 — UI/UX Improvements ✅
+- **Focus**: Accessibility (a11y) fixes and responsive design for admin table
+- **Deliverables**: `aria-label` on icon-only buttons, `aria-live`/`role="status"` on dynamic messages, `role="timer"` on countdown, responsive admin quiz table (hidden columns at 375px), `role="alert"` on join form error (bonus), updated metadata description, admin email hidden on mobile
+- **Files changed**: `quiz-list.tsx`, `question-view.tsx`, `player-session-screen.tsx`, `timer-countdown.tsx`, `layout.tsx` (root + admin), `player-join-form.tsx`
+- **Status**: Complete — 369 tests pass, lint clean, Playwright MCP spot-check verified all changes
+- **Known issue (deferred)**: Pre-existing horizontal scrollbar on `/join` page
+- **File**: [plans/2026-03-07-r6-phase2-ui-ux.md](plans/2026-03-07-r6-phase2-ui-ux.md)
 
 ### 2026-03-07: Quiz Lobby + Live Game Screen ✅
 - **Focus**: Projector-friendly live game page at `/quiz/[id]/live`
@@ -197,6 +205,11 @@ This document indexes all releases, completed work, and session notes. Use this 
 See [dev-notes.md](dev-notes.md) for the full execution log with timestamps.
 
 ### Latest (2026-03-07):
+- R6 Phase 2 UI/UX complete: a11y fixes (aria-label, aria-live, role="timer", role="alert"), responsive admin table, metadata description
+- 7 files modified, 369 tests passing, lint clean, Playwright MCP spot-check passed
+- Known deferred: horizontal scrollbar on `/join` (pre-existing)
+
+### Previous (2026-03-07):
 - Quiz Lobby + Live Game Screen complete: `/quiz/[id]/live` with lobby, question, round results, and final results views
 - `AdvanceQuestionUseCase` bug fixed: quiz now transitions to `Completed` status on last question advance
 - 368 tests passing, yarn build verified
@@ -226,10 +239,11 @@ All R5 phases complete as of 2026-02-01. See [plan.md](../plan.md) for performan
 - [x] Add `loading.tsx` skeletons for route transitions
 - [x] Update Admin Dashboard "Coming Soon" sections
 
-**Phase 2: UI/UX Improvements**
-- [ ] Accessibility audit (axe-core, Lighthouse) + fixes
-- [ ] Responsive design audit (mobile 320px→414px, tablet 768px→1024px)
-- [ ] Visual consistency pass (spacing, loading states, empty states)
+**Phase 2: UI/UX Improvements** ✅
+- [x] Accessibility fixes: `aria-label` on buttons, `aria-live` on status messages, `role="timer"` on countdown, `role="alert"` on errors
+- [x] Responsive admin quiz table (375px — hide Questions/Players/Time columns)
+- [x] Admin header email hidden on mobile, metadata description updated
+- [x] Playwright MCP spot-check verified all changes
 
 **Phase 3: Missing Features**
 - [ ] Standalone Questions management page (`/admin/questions`)

@@ -196,7 +196,11 @@ export function PlayerJoinForm() {
             </Button>
           </div>
 
-          {error ? <p className="mt-4 text-sm text-rose-200">{error}</p> : null}
+          {error ? (
+            <p role="alert" className="mt-4 text-sm text-rose-200">
+              {error}
+            </p>
+          ) : null}
         </form>
 
         {storedSession ? (

@@ -48,7 +48,9 @@ export default function AdminLayout({
           </div>
           <div className="flex items-center gap-4">
             {userEmail && (
-              <span className="text-sm text-muted-foreground">{userEmail}</span>
+              <span className="hidden md:inline text-sm text-muted-foreground">
+                {userEmail}
+              </span>
             )}
             <Button variant="outline" size="sm" onClick={handleLogout}>
               Logout
