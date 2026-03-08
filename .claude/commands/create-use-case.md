@@ -1,6 +1,6 @@
 # Create Use Case
 
-Scaffold a new application use case with DTO, mapper, and tests.
+Scaffold a new application use case following the exact patterns used in this codebase.
 
 ## Usage
 ```
@@ -11,24 +11,64 @@ Example: `/create-use-case archive-quiz` → creates `archive-quiz.use-case.ts`
 
 ## What Gets Created
 
-1. `src/application/dtos/[entity].dto.ts` - Update or create DTO (if needed)
-2. `src/application/use-cases/[verb-noun].use-case.ts` - Use case function
-3. `src/tests/application/use-cases/[verb-noun].use-case.test.ts` - Tests
+1. `src/application/use-cases/[verb-noun].use-case.ts` — use case class
+2. `src/application/dtos/[entity].dto.ts` — update DTO if needed
+3. `src/tests/application/use-cases/[verb-noun].use-case.test.ts` — tests
 
-## Step 1: Read Related Code First
+## Step 1: Read Existing Code First
 
-```bash
-# Understand the domain entity being operated on
-# e.g., src/domain/entities/quiz.ts
-
-# Read an existing similar use case to match patterns
-# e.g., src/application/use-cases/start-quiz.use-case.ts
-
-# Read existing DTO to check if it needs extending
-# e.g., src/application/dtos/quiz.dto.ts
+Read a similar use case to match the exact style:
+```
+src/application/use-cases/start-quiz.use-case.ts
+src/application/use-cases/submit-answer.use-case.ts
 ```
 
-## Step 2: Update/Create DTO
+## Step 2: Create Use Case Class
+
+File: `src/application/use-cases/[verb-noun].use-case.ts`
+
+**IMPORTANT:** Use cases in this codebase are **classes** that **throw errors** — NOT functions returning Result objects.
+
+```typescript
+import { I[Entity]Repository } from '@domain/repositories/I[Entity]Repository';
+
+export class [VerbNoun]UseCase {
+  constructor(
+    private readonly [entity]Repository: I[Entity]Repository,
+    // add other repository dependencies as needed
+  ) {}
+
+  async execute([entityId]: string, /* other params */): Promise<ReturnType> {
+    // 1. Validate required inputs (throw directly)
+    if (![entityId]) {
+      throw new Error('[Entity] ID is required');
+    }
+
+    // 2. Fetch entity
+    const [entity] = await this.[entity]Repository.findById([entityId]);
+    if (![entity]) {
+      // EXACT format used throughout codebase — the API layer regex catches this
+      throw new Error('[Entity] with ID ${[entityId]} not found');
+    }
+
+    // 3. Apply domain logic (entity method will throw if invalid state)
+    [entity].doSomething();
+
+    // 4. Persist
+    await this.[entity]Repository.save([entity]);
+
+    // 5. Return — can be void, an ID, or a mapped DTO
+    return [entity].id;
+  }
+}
+```
+
+**Critical conventions:**
+- Error format for "not found": `` `[Entity] with ID ${id} not found` `` — the API layer uses `/not found/i` regex to map this to 404
+- Don't catch errors inside the use case — let them bubble to the API route
+- Return type depends on what the API route needs (often just the ID or void)
+
+## Step 3: Update DTO (if needed)
 
 File: `src/application/dtos/[entity].dto.ts`
 
@@ -37,84 +77,90 @@ import { z } from 'zod';
 
 // Input schema (for API validation)
 export const [VerbNoun]InputSchema = z.object({
-  [entityId]: z.string().uuid(),
-  // other input fields...
+  [entityId]: z.string().min(1, '[Entity] ID is required'),
+  // other required fields with validation messages
+  // optional fields use .optional()
 });
 export type [VerbNoun]Input = z.infer<typeof [VerbNoun]InputSchema>;
 
-// Output DTO (what the API returns)
-export type [Entity]DTO = {
-  id: string;
-  // fields that presentation layer needs...
-};
-
-// Mapper: entity → DTO (no Prisma types here)
-export function [entity]ToDTO(entity: [Entity]): [Entity]DTO {
-  return {
-    id: entity.id,
-    // map fields...
-  };
-}
+// Output DTO (add to existing file if entity DTO exists)
+export const [Entity]DTO = z.object({
+  id: z.string(),
+  // only fields presentation layer needs
+});
+export type [Entity]DTO = z.infer<typeof [Entity]DTO>;
 ```
 
-## Step 3: Create Use Case
-
-File: `src/application/use-cases/[verb-noun].use-case.ts`
-
-```typescript
-import { I[Entity]Repository } from '@domain/repositories/I[Entity]Repository';
-import { [VerbNoun]Input, [Entity]DTO, [entity]ToDTO } from '@application/dtos/[entity].dto';
-
-type [VerbNoun]Error = 'NOT_FOUND' | 'INVALID_STATE' | 'VALIDATION_ERROR';
-
-type [VerbNoun]Result =
-  | { success: true; data: [Entity]DTO }
-  | { success: false; error: [VerbNoun]Error };
-
-export async function [verbNoun]UseCase(
-  input: [VerbNoun]Input,
-  [entity]Repo: I[Entity]Repository,
-): Promise<[VerbNoun]Result> {
-  const entity = await [entity]Repo.findById(input.[entityId]);
-  if (!entity) return { success: false, error: 'NOT_FOUND' };
-
-  try {
-    entity.doSomething();
-  } catch {
-    return { success: false, error: 'INVALID_STATE' };
-  }
-
-  await [entity]Repo.save(entity);
-  return { success: true, data: [entity]ToDTO(entity) };
-}
-```
-
-## Step 4: Wire into Service (if needed)
+## Step 4: Wire into Service
 
 File: `src/application/services/[entity].service.ts`
 
-Add a method that calls the use case:
 ```typescript
-async [verbNoun](input: [VerbNoun]Input): Promise<[VerbNoun]Result> {
-  return [verbNoun]UseCase(input, this.[entity]Repository);
+async [verbNoun]([entityId]: string): Promise<string> {
+  return this.[verbNoun]UseCase.execute([entityId]);
 }
 ```
 
-If `factories.ts` needs a new dependency, add it there.
+File: `src/application/services/factories.ts`
 
-## Step 5: Write Tests
+```typescript
+// In getRepositories() — add new repos if needed
+
+// In getServices() — wire use case with repos
+const [verbNoun]UseCase = new [VerbNoun]UseCase(repos.[entity]Repository);
+
+// Pass to service constructor
+const [entity]Service = new [Entity]Service(
+  // existing use cases...
+  [verbNoun]UseCase,
+);
+```
+
+## Step 5: Create API Route
+
+File: `src/app/api/[entity]/[action]/route.ts`
+
+```typescript
+import { NextResponse } from 'next/server';
+import { getServices } from '@application/services/factories';
+import { [VerbNoun]InputSchema } from '@application/dtos/[entity].dto';
+
+type RouteContext = { params: Promise<{ [entityId]: string }> };
+type ErrorResponse = { error: string };
+
+export async function POST(request: Request, { params }: RouteContext) {
+  try {
+    const { [entityId] } = await params;
+    const body = await request.json();
+    const parsed = [VerbNoun]InputSchema.parse({ [entityId], ...body });
+
+    const { [entity]Service } = getServices();
+    const result = await [entity]Service.[verbNoun](parsed.[entityId]);
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error('[API] [verb-noun] error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    const status = /not found/i.test(message) ? 404 : 400;
+    return NextResponse.json({ error: message } satisfies ErrorResponse, { status });
+  }
+}
+```
+
+## Step 6: Write Tests
 
 File: `src/tests/application/use-cases/[verb-noun].use-case.test.ts`
 
 ```typescript
 import { describe, it, expect, beforeEach, vi, type Mocked } from 'vitest';
-import { [verbNoun]UseCase } from '@application/use-cases/[verb-noun].use-case';
+import { [VerbNoun]UseCase } from '@application/use-cases/[verb-noun].use-case';
 import type { I[Entity]Repository } from '@domain/repositories/I[Entity]Repository';
+import { [Entity] } from '@domain/entities/[entity]';
 
-const make[Entity] = () => new [Entity]({ id: 'entity-1', /* valid props */ });
+const make[Entity] = (): [Entity] => new [Entity]('entity-1', /* valid props */);
 
-describe('[verbNoun]UseCase', () => {
+describe('[VerbNoun]UseCase', () => {
   let [entity]Repo: Mocked<I[Entity]Repository>;
+  let useCase: [VerbNoun]UseCase;
 
   beforeEach(() => {
     [entity]Repo = {
@@ -122,82 +168,50 @@ describe('[verbNoun]UseCase', () => {
       save: vi.fn(),
       delete: vi.fn(),
     };
+    useCase = new [VerbNoun]UseCase([entity]Repo);
   });
 
-  it('should succeed and return DTO', async () => {
+  it('should succeed and return id', async () => {
     [entity]Repo.findById.mockResolvedValue(make[Entity]());
 
-    const result = await [verbNoun]UseCase({ [entityId]: 'entity-1' }, [entity]Repo);
+    const result = await useCase.execute('entity-1');
 
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.id).toBe('entity-1');
-    }
+    expect(result).toBe('entity-1');
     expect([entity]Repo.save).toHaveBeenCalledOnce();
   });
 
-  it('should return NOT_FOUND when entity does not exist', async () => {
+  it('should throw when entity not found', async () => {
     [entity]Repo.findById.mockResolvedValue(null);
 
-    const result = await [verbNoun]UseCase({ [entityId]: 'missing' }, [entity]Repo);
-
-    expect(result.success).toBe(false);
-    if (!result.success) expect(result.error).toBe('NOT_FOUND');
+    await expect(useCase.execute('missing')).rejects.toThrow('[Entity] with ID missing not found');
     expect([entity]Repo.save).not.toHaveBeenCalled();
   });
 
-  it('should return INVALID_STATE when entity rejects the command', async () => {
+  it('should throw when entity rejects command (invalid state)', async () => {
     const entity = make[Entity]();
-    // put entity in wrong state
+    // set entity to a state where the command is invalid
     [entity]Repo.findById.mockResolvedValue(entity);
 
-    const result = await [verbNoun]UseCase({ [entityId]: 'entity-1' }, [entity]Repo);
-
-    expect(result.success).toBe(false);
-    if (!result.success) expect(result.error).toBe('INVALID_STATE');
+    await expect(useCase.execute('entity-1')).rejects.toThrow(/* expected error message */);
   });
 });
 ```
 
-## Step 6: Run Tests
+## Step 7: Run Tests
 
 ```bash
 yarn test src/tests/application/use-cases/[verb-noun].use-case.test.ts
 ```
 
-Must pass before wiring up the API route.
-
-## Step 7: Create API Route (optional)
-
-File: `src/app/api/[entity]/[action]/route.ts`
-
-```typescript
-import { NextRequest, NextResponse } from 'next/server';
-import { getServices } from '@application/services/factories';
-import { [VerbNoun]InputSchema } from '@application/dtos/[entity].dto';
-
-export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const parsed = [VerbNoun]InputSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
-
-  const services = getServices();
-  const result = await services.[entity]Service.[verbNoun](parsed.data);
-
-  if (!result.success) {
-    const status = /not found/i.test(result.error) ? 404 : 422;
-    return NextResponse.json({ error: result.error }, { status });
-  }
-
-  return NextResponse.json(result.data);
-}
-```
+Must pass before considering the use case complete.
 
 ## Checklist
 
-- [ ] DTO schema and mapper created/updated
-- [ ] Use case function created with typed Result return
-- [ ] Service method added (if applicable)
-- [ ] Tests: success path, NOT_FOUND, INVALID_STATE
+- [ ] Use case is a **class** with `execute()` method (not a standalone function)
+- [ ] "not found" error uses exact format: `` `[Entity] with ID ${id} not found` ``
+- [ ] No try/catch inside the use case — errors bubble up
+- [ ] DTO schema and types added/updated
+- [ ] Use case wired into service and factories.ts
+- [ ] API route created with standard error handling pattern
+- [ ] Tests: success path, not found (verifies error message), invalid state
 - [ ] `yarn test src/tests/application/` passes
-- [ ] API route created (if exposing via HTTP)

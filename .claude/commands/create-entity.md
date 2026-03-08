@@ -1,6 +1,6 @@
 # Create Domain Entity
 
-Scaffold a new domain entity following project conventions.
+Scaffold a new domain entity following the exact patterns used in this codebase.
 
 ## Usage
 ```
@@ -11,64 +11,89 @@ Example: `/create-entity Category`
 
 ## What Gets Created
 
-1. `src/domain/entities/[entity-name].ts` - Entity class
-2. `src/tests/domain/entities/[entity-name].test.ts` - Test skeleton
+1. `src/domain/entities/[entity-name].ts` — entity class
+2. `src/domain/repositories/I[EntityName]Repository.ts` — repository interface
+3. `src/tests/domain/entities/[entity-name].test.ts` — test file
 
 ## Step 1: Read Existing Entities First
 
-Before writing anything, read an existing entity to match conventions:
+Read an existing entity to match conventions exactly:
 ```
-src/domain/entities/quiz.ts
-src/domain/entities/player.ts
+src/domain/entities/quiz.ts       — complex entity with status transitions + collections
+src/domain/entities/player.ts     — simpler entity with status + mutable properties
 ```
 
-Pay attention to: constructor signature, private fields, command methods, domain events.
+Key things to notice: public properties (not private), enum-based status, `Map`/`Set` for collections, synchronous methods only.
 
 ## Step 2: Create Entity File
 
 File: `src/domain/entities/[entity-name].ts`
 
-```typescript
-import { DomainEvent } from '@domain/events/domain-event';
+**NOTE:** Entities in this codebase use **public properties** (not private fields with getters). No domain events system — use plain throws for invalid state transitions.
 
-export interface [EntityName]Props {
-  id: string;
-  // ... required fields
-  createdAt?: Date;
+```typescript
+export enum [EntityName]Status {
+  Pending = 'Pending',
+  Active = 'Active',
+  Completed = 'Completed',
 }
 
 export class [EntityName] {
-  private readonly _id: string;
-  // ... private fields
-  private _domainEvents: DomainEvent[] = [];
+  id: string;
+  status: [EntityName]Status;
+  // other public properties
+  createdAt: Date;
 
-  constructor(props: [EntityName]Props) {
-    // Validate invariants here
-    if (!props.id) throw new Error('[EntityName] id is required');
+  constructor(id: string, /* other required args */) {
+    // Validate invariants
+    if (!id) throw new Error('[EntityName] id is required');
 
-    this._id = props.id;
-    // ... assign fields
+    this.id = id;
+    this.status = [EntityName]Status.Pending; // default starting status
+    this.createdAt = new Date();
+    // assign other properties
   }
 
-  // --- Queries (read-only) ---
-  get id(): string { return this._id; }
-  // ... other getters
-
-  // --- Commands (mutating, emit events) ---
-  doSomething(): void {
-    // Enforce invariants
-    // Mutate state
-    // Emit event
-    this._domainEvents.push({ eventType: '[entity].something-happened', payload: { id: this._id } });
+  // Status transitions — always validate current status before changing
+  activate(): void {
+    if (this.status !== [EntityName]Status.Pending) {
+      throw new Error('[EntityName] can only be activated if it is in Pending status.');
+    }
+    this.status = [EntityName]Status.Active;
   }
 
-  // --- Domain events ---
-  getDomainEvents(): DomainEvent[] { return [...this._domainEvents]; }
-  clearDomainEvents(): void { this._domainEvents = []; }
+  complete(): void {
+    if (this.status !== [EntityName]Status.Active) {
+      throw new Error('[EntityName] can only be completed if it is in Active status.');
+    }
+    this.status = [EntityName]Status.Completed;
+  }
+
+  // Mutation methods — check preconditions before mutating
+  updateName(name: string): void {
+    if (!name.trim()) throw new Error('[EntityName] name cannot be empty');
+    this.name = name.trim();
+  }
+
+  // Use Map for keyed relationships, Set for ID collections
+  // private _items = new Map<string, Item>();
+  // private _memberIds = new Set<string>();
+
+  // Query/computed methods (synchronous only, no DB calls)
+  isActive(): boolean {
+    return this.status === [EntityName]Status.Active;
+  }
 }
 ```
 
-## Step 3: Add Repository Interface
+**Conventions to follow:**
+- Error message format for state transitions: `'[Entity] can only X if it is in Y status.'`
+- All domain methods are **synchronous** — no async, no I/O
+- Collections use `Map<string, T>` for keyed access, `Set<string>` for ID sets
+- Type assertions for status: `entity.status = record.status as [EntityName]Status` (in mapper)
+- No domain events — the aggregate coordinates events if needed
+
+## Step 3: Create Repository Interface
 
 File: `src/domain/repositories/I[EntityName]Repository.ts`
 
@@ -77,10 +102,13 @@ import { [EntityName] } from '@domain/entities/[entity-name]';
 
 export interface I[EntityName]Repository {
   findById(id: string): Promise<[EntityName] | null>;
+  listBy[RelatedEntity]Id([relatedId]: string): Promise<[EntityName][]>;
   save(entity: [EntityName]): Promise<void>;
   delete(id: string): Promise<void>;
 }
 ```
+
+Keep the interface framework-agnostic — no Prisma types, no `undefined`, just `null`.
 
 ## Step 4: Write Tests
 
@@ -88,46 +116,47 @@ File: `src/tests/domain/entities/[entity-name].test.ts`
 
 ```typescript
 import { describe, it, expect } from 'vitest';
-import { [EntityName] } from '@domain/entities/[entity-name]';
+import { [EntityName], [EntityName]Status } from '@domain/entities/[entity-name]';
 
-const makeValid[EntityName] = (overrides = {}): [EntityName] =>
-  new [EntityName]({ id: 'test-id', /* required fields */, ...overrides });
+// Factory helper — avoids repeating constructor args in every test
+const make[EntityName] = (overrides: Partial<{ id: string }> = {}): [EntityName] =>
+  new [EntityName](overrides.id ?? 'test-id', /* required args */);
 
 describe('[EntityName]', () => {
   describe('creation', () => {
     it('should create with valid props', () => {
-      const entity = makeValid[EntityName]();
+      const entity = make[EntityName]();
       expect(entity.id).toBe('test-id');
+      expect(entity.status).toBe([EntityName]Status.Pending);
     });
 
     it('should throw when id is missing', () => {
-      expect(() => new [EntityName]({ id: '', /* ... */ })).toThrow();
+      expect(() => new [EntityName]('')).toThrow('[EntityName] id is required');
     });
 
-    // Add invariant tests for each validation rule
+    // one test per invariant rule
   });
 
-  describe('[command method]', () => {
-    it('should [expected outcome]', () => {
-      const entity = makeValid[EntityName]();
-      entity.doSomething();
-      // assert state change
+  describe('activate()', () => {
+    it('should transition to Active status', () => {
+      const entity = make[EntityName]();
+
+      entity.activate();
+
+      expect(entity.status).toBe([EntityName]Status.Active);
     });
 
-    it('should emit [Event] when [action]', () => {
-      const entity = makeValid[EntityName]();
-      entity.doSomething();
-      expect(entity.getDomainEvents()).toContainEqual(
-        expect.objectContaining({ eventType: '[entity].something-happened' })
+    it('should throw when not in Pending status', () => {
+      const entity = make[EntityName]();
+      entity.activate(); // now Active
+
+      expect(() => entity.activate()).toThrow(
+        '[EntityName] can only be activated if it is in Pending status.'
       );
     });
-
-    it('should throw when in invalid state', () => {
-      const entity = makeValid[EntityName]();
-      // put entity in wrong state
-      expect(() => entity.doSomething()).toThrow();
-    });
   });
+
+  // Test each command method: happy path + invalid state
 });
 ```
 
@@ -137,13 +166,15 @@ describe('[EntityName]', () => {
 yarn test src/tests/domain/entities/[entity-name].test.ts
 ```
 
-Tests must pass before proceeding to Application layer.
+Must pass before moving to Application layer.
 
 ## Checklist
 
-- [ ] Entity class created with private fields and getters
-- [ ] Invariants validated in constructor and command methods
-- [ ] Domain events emitted on state changes
-- [ ] Repository interface defined
-- [ ] Tests written: creation, invariants, commands, events, error cases
+- [ ] Entity class with **public** properties (not private with getters)
+- [ ] Status enum with string values matching status names
+- [ ] Constructor validates required invariants (throw if invalid)
+- [ ] Status transition methods check current status before changing
+- [ ] All methods are **synchronous** (no async/await in domain)
+- [ ] Repository interface uses `null` (not `undefined`) for missing entities
+- [ ] Tests: creation + each invariant, each command (success + wrong state)
 - [ ] `yarn test src/tests/domain/` passes

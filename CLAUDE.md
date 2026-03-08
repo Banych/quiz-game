@@ -120,7 +120,8 @@ mcp__playwright__snapshot()
 
 ### Scaffolding
 - `/create-entity [name]` - Scaffold domain entity + tests (file + test skeleton)
-- `/create-use-case [name]` - Scaffold use case + DTO + tests
+- `/create-use-case [name]` - Scaffold use case class + DTO + tests
+- `/create-hook [name]` - Scaffold TanStack Query hook with optional realtime subscription
 
 ### Workflow Skills
 - `/add-feature` - Step-by-step DDD feature implementation with test gates
@@ -176,11 +177,104 @@ See `.github/copilot-instructions.md` "Planning Workflow (Scrum Board Alternativ
 ## Key Patterns
 
 ### API Routes
-1. Validate input with zod schema
-2. Call `getServices()` from `src/application/services/factories.ts`
-3. Invoke use case or service method
-4. Return JSON DTOs
-5. Map `/not found/i` errors to 404
+
+Every route follows this exact structure:
+
+```typescript
+type RouteContext = { params: Promise<{ quizId: string }> };
+type ErrorResponse = { error: string };
+
+export async function POST(request: Request, { params }: RouteContext) {
+  try {
+    const { quizId } = await params;          // always await params first
+    const body = await request.json();
+    const parsed = InputSchema.parse({ quizId, ...body }); // zod validate
+
+    const { quizService } = getServices();
+    const result = await quizService.doSomething(parsed);
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error('[API] operation error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    const status = /not found/i.test(message) ? 404 : 400;
+    return NextResponse.json({ error: message } satisfies ErrorResponse, { status });
+  }
+}
+```
+
+### Use Cases
+
+Use cases are **classes** that **throw errors** (not Result objects):
+
+```typescript
+export class DoSomethingUseCase {
+  constructor(private readonly quizRepo: IQuizRepository) {}
+
+  async execute(quizId: string): Promise<string> {
+    const quiz = await this.quizRepo.findById(quizId);
+    if (!quiz) throw new Error(`Quiz with ID ${quizId} not found`); // regex-matched by API layer → 404
+    quiz.doSomething(); // throws if invalid state
+    await this.quizRepo.save(quiz);
+    return quiz.id;
+  }
+}
+```
+
+### Domain Entities
+
+Entities use **public properties**, **synchronous methods**, **status enums**:
+
+```typescript
+export class MyEntity {
+  id: string;
+  status: MyEntityStatus = MyEntityStatus.Pending;
+
+  activate(): void {
+    if (this.status !== MyEntityStatus.Pending)
+      throw new Error('MyEntity can only be activated if it is in Pending status.');
+    this.status = MyEntityStatus.Active;
+  }
+}
+```
+
+### Realtime Naming Conventions
+
+```
+Channel:  quiz:{quizId}                  — broadcast to all in a quiz
+          player:{quizId}:{playerId}     — broadcast to one player
+
+Event:    state:update    — full state payload (triggers setQueryData)
+          answer:ack      — acknowledgment with result
+          player:update   — player property change
+          question:lock   — state change notification
+```
+
+### TanStack Query Hooks
+
+```typescript
+// Query key — always a const tuple factory
+export const entityQueryKey = (id: string) => ['entity', id] as const;
+
+// All queries use the same timing defaults
+useQuery({ queryKey, queryFn, initialData, staleTime: 5_000, refetchInterval: 5_000 });
+
+// Fetch error parsing — consistent pattern across all hooks
+const { error } = (await response.json().catch(() => ({}))) as { error?: string };
+throw new Error(error ?? 'Unable to load entity.');
+```
+
+### Repository Pattern
+
+```typescript
+// Always upsert (never separate create/update)
+await prisma.entity.upsert({ where: { id }, create: {...}, update: {...} });
+
+// Batch operations always use $transaction
+await prisma.$transaction(items.map(item => prisma.entity.update(...)));
+
+// Nullable fields: always default with ?? not undefined
+const value = record.field ?? 0;
+```
 
 ### Adding Features (with tests at each step)
 1. Domain: Define entity behavior → **write domain tests**
@@ -190,8 +284,8 @@ See `.github/copilot-instructions.md` "Planning Workflow (Scrum Board Alternativ
 5. Verify: `yarn test` passes before committing
 
 ### Testing Patterns
-- **Domain**: Pure unit tests, no mocks needed for entities
-- **Use cases**: Mock repositories, test success + NOT_FOUND + validation errors
+- **Domain**: Pure unit tests, no mocks. Factory helper `const makeEntity = () => new Entity(...)` at top of file.
+- **Use cases**: Mock repositories with `vi.fn()`, test: success + "not found" exact message + invalid state
 - **Repositories**: Use `resetServices({ force: true })` between tests
 - **E2E**: Playwright with manual-first discovery
 
