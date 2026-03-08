@@ -10,13 +10,17 @@
       "Bash(git branch*)",
       "Bash(git checkout*)",
       "Bash(git stash*)",
+      "Bash(git fetch*)",
+      "Bash(git pull*)",
       "Bash(npx prisma *)",
       "Bash(npx playwright *)",
       "Bash(npx shadcn@latest *)",
       "mcp__supabase__*",
       "mcp__playwright__*",
       "mcp__context7__*",
-      "Bash(ls:*)"
+      "mcp__github__*",
+      "Bash(ls:*)",
+      "Bash(grep *)"
     ],
     "deny": [
       "Bash(rm -rf *)",

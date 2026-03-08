@@ -9,15 +9,30 @@ A real-time quiz game built with Next.js 15, Prisma v7, and Supabase. Uses DDD-l
 ## Commands
 
 ```bash
+# Development
 yarn dev                    # Dev server with Turbopack
 yarn build                  # Production build (auto-runs prisma:generate)
-yarn lint                   # ESLint + Prettier
-yarn test                   # Run all Vitest tests
-yarn test src/tests/domain/entities/quiz.test.ts  # Run single test file
-yarn test:watch             # Watch mode
+
+# Linting
+yarn lint                   # ESLint + Prettier check
+yarn lint:fix               # ESLint + Prettier auto-fix
+
+# Unit tests (Vitest)
+yarn test                                                    # Run all tests
+yarn test src/tests/domain/entities/quiz.test.ts            # Run single test file
+yarn test submit-answer                                      # Run tests matching pattern
+yarn test:watch                                              # TDD watch mode
+yarn test:coverage                                           # With coverage report
+
+# E2E tests (Playwright)
+yarn test:e2e               # Headless E2E tests
+yarn test:e2e:ui            # Interactive Playwright UI
+yarn test:e2e:debug         # Step-through debug mode
+
+# Database
 yarn prisma:generate        # Regenerate Prisma client (required after schema changes)
 yarn prisma:migrate         # Create/apply migrations
-yarn test:e2e               # Playwright E2E tests
+yarn prisma:seed            # Seed database with test data
 ```
 
 ## Architecture
@@ -103,11 +118,20 @@ mcp__playwright__snapshot()
 
 ## Custom Skills
 
+### Scaffolding
+- `/create-entity [name]` - Scaffold domain entity + tests (file + test skeleton)
+- `/create-use-case [name]` - Scaffold use case class + DTO + tests
+- `/create-hook [name]` - Scaffold TanStack Query hook with optional realtime subscription
+
 ### Workflow Skills
 - `/add-feature` - Step-by-step DDD feature implementation with test gates
 - `/test` - Testing workflow, patterns, and minimum coverage
 - `/session-start` - Initialize development session with progress tracking
 - `/prisma-migrate` - Safe database migration workflow
+- `/debug` - Systematic debugging workflow using Supabase logs and Playwright
+
+### Quality
+- `/architecture-check` - Review code for DDD layer violations and import rule breaches
 
 ### Agent-Like Skills
 - `/product-owner` - Business perspective, requirements clarification, documentation
@@ -153,11 +177,104 @@ See `.github/copilot-instructions.md` "Planning Workflow (Scrum Board Alternativ
 ## Key Patterns
 
 ### API Routes
-1. Validate input with zod schema
-2. Call `getServices()` from `src/application/services/factories.ts`
-3. Invoke use case or service method
-4. Return JSON DTOs
-5. Map `/not found/i` errors to 404
+
+Typical route structure (most quiz/player routes follow this pattern):
+
+```typescript
+type RouteContext = { params: Promise<{ quizId: string }> };
+type ErrorResponse = { error: string };
+
+export async function POST(request: Request, { params }: RouteContext) {
+  try {
+    const { quizId } = await params;          // always await params first
+    const body = await request.json();
+    const parsed = InputSchema.parse({ quizId, ...body }); // zod validate
+
+    const { quizService } = getServices();
+    const result = await quizService.doSomething(parsed);
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error('[API] operation error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    const status = /not found/i.test(message) ? 404 : 400;
+    return NextResponse.json({ error: message } satisfies ErrorResponse, { status });
+  }
+}
+```
+
+### Use Cases
+
+Use cases are **classes** that **throw errors** (not Result objects):
+
+```typescript
+export class DoSomethingUseCase {
+  constructor(private readonly quizRepo: IQuizRepository) {}
+
+  async execute(quizId: string): Promise<string> {
+    const quiz = await this.quizRepo.findById(quizId);
+    if (!quiz) throw new Error(`Quiz with ID ${quizId} not found`); // regex-matched by API layer → 404
+    quiz.doSomething(); // throws if invalid state
+    await this.quizRepo.save(quiz);
+    return quiz.id;
+  }
+}
+```
+
+### Domain Entities
+
+Entities use **public properties**, **synchronous methods**, **status enums**:
+
+```typescript
+export class MyEntity {
+  id: string;
+  status: MyEntityStatus = MyEntityStatus.Pending;
+
+  activate(): void {
+    if (this.status !== MyEntityStatus.Pending)
+      throw new Error('MyEntity can only be activated if it is in Pending status.');
+    this.status = MyEntityStatus.Active;
+  }
+}
+```
+
+### Realtime Naming Conventions
+
+```
+Channel:  quiz:{quizId}                  — broadcast to all in a quiz
+          player:{quizId}:{playerId}     — broadcast to one player
+
+Event:    state:update    — full state payload (triggers setQueryData)
+          answer:ack      — acknowledgment with result
+          player:update   — player property change
+          question:locked — state change notification
+```
+
+### TanStack Query Hooks
+
+```typescript
+// Query key — always a const tuple factory
+export const entityQueryKey = (id: string) => ['entity', id] as const;
+
+// All queries use the same timing defaults
+useQuery({ queryKey, queryFn, initialData, staleTime: 5_000, refetchInterval: 5_000 });
+
+// Fetch error parsing — consistent pattern across all hooks
+const { error } = (await response.json().catch(() => ({}))) as { error?: string };
+throw new Error(error ?? 'Unable to load entity.');
+```
+
+### Repository Pattern
+
+```typescript
+// Always upsert (never separate create/update)
+await prisma.entity.upsert({ where: { id }, create: {...}, update: {...} });
+
+// Batch operations always use $transaction
+await prisma.$transaction(items.map(item => prisma.entity.update(...)));
+
+// Nullable fields: always default with ?? not undefined
+const value = record.field ?? 0;
+```
 
 ### Adding Features (with tests at each step)
 1. Domain: Define entity behavior → **write domain tests**
@@ -167,8 +284,8 @@ See `.github/copilot-instructions.md` "Planning Workflow (Scrum Board Alternativ
 5. Verify: `yarn test` passes before committing
 
 ### Testing Patterns
-- **Domain**: Pure unit tests, no mocks needed for entities
-- **Use cases**: Mock repositories, test success + NOT_FOUND + validation errors
+- **Domain**: Pure unit tests, no mocks. Factory helper `const makeEntity = () => new Entity(...)` at top of file.
+- **Use cases**: Mock repositories with `vi.fn()`, test: success + "not found" exact message + invalid state
 - **Repositories**: Use `resetServices({ force: true })` between tests
 - **E2E**: Playwright with manual-first discovery
 
@@ -179,6 +296,39 @@ See `.github/copilot-instructions.md` "Planning Workflow (Scrum Board Alternativ
 3. **Leaking entities to UI**: Components must receive DTOs only
 4. **Skipping prisma:generate**: Required after any schema.prisma changes
 5. **Test isolation**: Call `resetServices({ force: true })` for fresh Prisma client in tests
+6. **Importing across layer boundaries**: Use `run /architecture-check` to detect violations
+
+### Layer Import Rules (quick check)
+```
+Domain      → imports nothing from app/infra/presentation
+Application → imports from @domain/* only
+Infrastructure → imports from @domain/*, @application/* only
+Presentation  → imports from @application/dtos/* only (never entities, never Prisma)
+```
+
+## Debugging Quick Reference
+
+When something breaks, check in this order:
+
+```bash
+# 1. Check Postgres logs for DB errors
+mcp__supabase__get_logs(service: 'postgres')
+
+# 2. Check auth/edge function logs
+mcp__supabase__get_logs(service: 'auth')
+
+# 3. Inspect current DB state
+mcp__supabase__execute_sql(query: 'SELECT * FROM "Quiz" ORDER BY "createdAt" DESC LIMIT 5')
+
+# 4. Check RLS policies after schema changes
+mcp__supabase__get_advisors(type: 'security')
+
+# 5. Snapshot current UI state
+mcp__playwright__navigate(url: 'http://localhost:3000')
+mcp__playwright__snapshot()
+```
+
+For realtime issues: check the `realtime` service logs and verify Supabase channel subscriptions in `src/infrastructure/realtime/`.
 
 ## Claude Code Preferences
 
