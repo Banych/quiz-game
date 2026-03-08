@@ -15,6 +15,7 @@ tools: ['vscode', 'execute', 'read', 'edit', 'search', 'web', 'gitkraken/*', 'co
 
 **Workflow:**
 1. Understand feature requirements and acceptance criteria
+1a. When uncertain about library APIs (TanStack Query, Prisma, Next.js, Supabase), use Context7: resolve library ID then search docs before writing code
 2. Design domain entities and value objects; write domain tests first
 3. Build application use cases/services with mock repositories
 4. Implement Prisma repositories with schema changes
@@ -30,6 +31,7 @@ tools: ['vscode', 'execute', 'read', 'edit', 'search', 'web', 'gitkraken/*', 'co
 - TanStack Query integration, optimistic updates, cache invalidation
 - Supabase realtime, RLS policies, Edge Functions
 - Playwright E2E testing with manual-first discovery approach
+- Context7 MCP (`context7/*`) for live library documentation — resolve library ID then search docs when API details are uncertain
 - Type safety: strict TypeScript, no `any` types
 - Iterative development with incremental testing
 
