@@ -111,7 +111,7 @@ Add these imports and effect inside the hook:
 
 ```typescript
 import { useEffect, useCallback } from 'react';
-import { useRealtimeClient } from '@hooks/useRealtimeClient'; // adjust path
+import { useRealtimeClient } from '@hooks/use-realtime-client';
 
 // Inside the hook, after queryResult:
 
