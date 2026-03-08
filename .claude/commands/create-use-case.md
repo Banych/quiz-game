@@ -45,20 +45,20 @@ export class [VerbNoun]UseCase {
     }
 
     // 2. Fetch entity
-    const [entity] = await this.[entity]Repository.findById([entityId]);
-    if (![entity]) {
+    const entity = await this.[entity]Repository.findById([entityId]);
+    if (!entity) {
       // EXACT format used throughout codebase — the API layer regex catches this
-      throw new Error('[Entity] with ID ${[entityId]} not found');
+      throw new Error(`[Entity] with ID ${[entityId]} not found`);
     }
 
     // 3. Apply domain logic (entity method will throw if invalid state)
-    [entity].doSomething();
+    entity.doSomething();
 
     // 4. Persist
-    await this.[entity]Repository.save([entity]);
+    await this.[entity]Repository.save(entity);
 
     // 5. Return — can be void, an ID, or a mapped DTO
-    return [entity].id;
+    return entity.id;
   }
 }
 ```
@@ -169,38 +169,38 @@ import { [Entity] } from '@domain/entities/[entity]';
 const make[Entity] = (): [Entity] => new [Entity]('entity-1', /* valid props */);
 
 describe('[VerbNoun]UseCase', () => {
-  let [entity]Repo: Mocked<I[Entity]Repository>;
+  let entityRepo: Mocked<I[Entity]Repository>;
   let useCase: [VerbNoun]UseCase;
 
   beforeEach(() => {
-    [entity]Repo = {
+    entityRepo = {
       findById: vi.fn(),
       save: vi.fn(),
       delete: vi.fn(),
     };
-    useCase = new [VerbNoun]UseCase([entity]Repo);
+    useCase = new [VerbNoun]UseCase(entityRepo);
   });
 
   it('should succeed and return id', async () => {
-    [entity]Repo.findById.mockResolvedValue(make[Entity]());
+    entityRepo.findById.mockResolvedValue(make[Entity]());
 
     const result = await useCase.execute('entity-1');
 
     expect(result).toBe('entity-1');
-    expect([entity]Repo.save).toHaveBeenCalledOnce();
+    expect(entityRepo.save).toHaveBeenCalledOnce();
   });
 
   it('should throw when entity not found', async () => {
-    [entity]Repo.findById.mockResolvedValue(null);
+    entityRepo.findById.mockResolvedValue(null);
 
     await expect(useCase.execute('missing')).rejects.toThrow('[Entity] with ID missing not found');
-    expect([entity]Repo.save).not.toHaveBeenCalled();
+    expect(entityRepo.save).not.toHaveBeenCalled();
   });
 
   it('should throw when entity rejects command (invalid state)', async () => {
     const entity = make[Entity]();
     // set entity to a state where the command is invalid
-    [entity]Repo.findById.mockResolvedValue(entity);
+    entityRepo.findById.mockResolvedValue(entity);
 
     await expect(useCase.execute('entity-1')).rejects.toThrow(/* expected error message */);
   });

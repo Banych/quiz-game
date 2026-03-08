@@ -178,7 +178,7 @@ See `.github/copilot-instructions.md` "Planning Workflow (Scrum Board Alternativ
 
 ### API Routes
 
-Every route follows this exact structure:
+Typical route structure (most quiz/player routes follow this pattern):
 
 ```typescript
 type RouteContext = { params: Promise<{ quizId: string }> };
@@ -246,7 +246,7 @@ Channel:  quiz:{quizId}                  — broadcast to all in a quiz
 Event:    state:update    — full state payload (triggers setQueryData)
           answer:ack      — acknowledgment with result
           player:update   — player property change
-          question:lock   — state change notification
+          question:locked — state change notification
 ```
 
 ### TanStack Query Hooks

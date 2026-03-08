@@ -77,7 +77,7 @@ Auth checklist:
 mcp__supabase__execute_sql(query: 'SELECT * FROM "Quiz" ORDER BY "createdAt" DESC LIMIT 5')
 
 # Check migration status
-yarn prisma:migrate -- --dry-run
+npx prisma migrate status --schema ./src/infrastructure/database/prisma/schema.prisma
 
 # Verify generated client is up-to-date
 yarn prisma:generate

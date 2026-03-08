@@ -29,6 +29,8 @@ File: `src/hooks/use-[entity-name].ts`
 ### Base Pattern (query + mutation, no realtime)
 
 ```typescript
+'use client';
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { [Entity]DTO } from '@application/dtos/[entity].dto';
 
@@ -157,7 +159,7 @@ Event names (entity:action format):
   state:update     — full state replacement
   answer:ack       — acknowledgement with result
   player:update    — player property change
-  question:lock    — question locked notification
+  question:locked  — question locked notification
 ```
 
 Always match the channel/event names used in `src/infrastructure/realtime/broadcasters/`.

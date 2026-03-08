@@ -26,7 +26,9 @@ jobs:
       - name: Generate Prisma client
         run: yarn prisma:generate
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # prisma generate reads the schema only — no real DB connection needed.
+          # Using a dummy URL so fork PRs (which lack secrets) can still run this step.
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres' }}
 
       - name: Lint
         run: yarn lint
