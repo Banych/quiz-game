@@ -93,7 +93,10 @@ export type [Entity]DTO = z.infer<typeof [Entity]DTO>;
 
 ## Step 4: Wire into Service
 
-File: `src/application/services/[entity].service.ts`
+Service files use **kebab-case** with a `-service` suffix: `quiz-service.ts`, `player-service.ts`, `answer-service.ts`.
+Find the appropriate service file for your entity and add the new method:
+
+File: `src/application/services/[entity]-service.ts`
 
 ```typescript
 async [verbNoun]([entityId]: string): Promise<string> {
@@ -101,15 +104,22 @@ async [verbNoun]([entityId]: string): Promise<string> {
 }
 ```
 
+Then wire the use case in the factory. All services are assembled in `getServices()` inside `src/application/services/factories.ts`:
+
 File: `src/application/services/factories.ts`
 
 ```typescript
-// In getRepositories() — add new repos if needed
+// In getRepositories() — add new Prisma repos if needed (returned as const object)
+const getRepositories = () => {
+  // ...existing repos...
+  return { ..., [entity]Repository } as const;
+};
 
-// In getServices() — wire use case with repos
-const [verbNoun]UseCase = new [VerbNoun]UseCase(repos.[entity]Repository);
+// In getServices() — destructure repos and create the new use case
+const { ..., [entity]Repository } = getRepositories();
+const [verbNoun]UseCase = new [VerbNoun]UseCase([entity]Repository);
 
-// Pass to service constructor
+// Add use case to the existing service constructor
 const [entity]Service = new [Entity]Service(
   // existing use cases...
   [verbNoun]UseCase,
