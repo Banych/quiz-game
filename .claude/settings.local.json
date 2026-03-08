@@ -20,7 +20,8 @@
       "mcp__context7__*",
       "mcp__github__*",
       "Bash(ls:*)",
-      "Bash(grep *)"
+      "Bash(grep *)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": [
       "Bash(rm -rf *)",

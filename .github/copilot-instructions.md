@@ -12,6 +12,14 @@ Next.js request → DTO (zod) → use-case/service → domain entities → Prism
 - Infrastructure (`src/infrastructure/**`) implements repositories with Prisma
 - Presentation (`src/app/**`, `src/components/**`, `src/hooks/**`) consumes only DTOs—never entities or Prisma types
 
+**Layer Import Rules (quick check):**
+```
+Domain      → imports nothing from app/infra/presentation
+Application → imports from @domain/* only
+Infrastructure → imports from @domain/*, @application/* only
+Presentation  → imports from @application/dtos/* only (never entities, never Prisma)
+```
+
 ## Critical Prisma v7 Setup
 **Prisma uses driver adapters** (not default engine). This is NOT the standard Prisma config:
 
@@ -323,6 +331,17 @@ The project uses three MCP servers configured in `.vscode/mcp.json` for enhanced
 
 **Usage pattern:** See "MCP-Assisted Testing (Playwright MCP)" section above
 
+### Context7 MCP (HTTP)
+**Purpose:** Retrieve up-to-date library documentation and code examples
+**Capabilities:**
+- Resolve library IDs from package names via `mcp_context7_resolve-library-id(libraryName)`
+- Search docs and get code examples via `mcp_context7_search-docs(context7CompatibleLibraryID, query)`
+
+**Common workflows:**
+- Check latest TanStack Query API: `mcp_context7_resolve-library-id('tanstack-query')` then `mcp_context7_search-docs(id, 'useQuery options')`
+- Verify Next.js patterns: `mcp_context7_resolve-library-id('nextjs')` then query for specific feature
+- Look up Prisma v7 adapter API: `mcp_context7_resolve-library-id('prisma')` then `mcp_context7_search-docs(id, 'adapter-pg')`
+
 ### Postman MCP (stdio)
 **Purpose:** API testing, collection management, and API specification workflows
 **Capabilities:**
@@ -357,7 +376,7 @@ The project uses three MCP servers configured in `.vscode/mcp.json` for enhanced
 - **Mock server setup:** Create mocks for testing, update default responses, publish for public access
 - **Collection sync:** Use `putCollection()` for bulk updates (include IDs to update, omit IDs to recreate)
 
-**Note:** All MCP servers require Node 22 (use `nvm use` if switching versions). Environment variables like `POSTMAN_API_KEY` are prompted on first use.
+**Note:** All MCP servers require Node 22 (use `nvm use` if switching versions). Environment variables like `POSTMAN_API_KEY` and `CONTEXT7_API_KEY` are prompted on first use. Claude Code uses a separate `.mcp.json` at the project root with `mcp__` tool naming (e.g. `mcp__supabase__get_logs`), while Copilot uses `.vscode/mcp.json` with `mcp_` naming (e.g. `mcp_supabase_get_logs`).
 
 ### Git Operations (GitKraken MCP - Available but not in mcp.json)
 **Purpose:** Git version control operations via MCP tools
@@ -436,13 +455,22 @@ When writing or debugging E2E tests, use **Playwright MCP** (`@playwright/mcp` s
 yarn dev                    # Next.js dev server with Turbopack
 yarn build                  # Production build (auto-runs prisma:generate)
 yarn lint                   # ESLint with Prettier
+yarn lint:fix               # ESLint + Prettier auto-fix
 yarn test                   # Run Vitest suite
 yarn test:watch             # Vitest watch mode
+yarn test:coverage          # Run Vitest with coverage report
+yarn test:e2e               # Headless Playwright E2E tests
+yarn test:e2e:ui            # Interactive Playwright UI mode
+yarn test:e2e:debug         # Step-through E2E debug mode
 yarn prisma:migrate         # Create/apply Prisma migration
 yarn prisma:generate        # Regenerate Prisma client after schema edits
 yarn prisma:seed            # Reset DB and seed demo data via seed-helpers.ts
 npx shadcn@latest add <component> # Add shadcn UI primitive
 ```
+
+### Git Commits
+- Keep commit messages concise and descriptive
+- Do **not** add Co-Authored-By lines to commit messages
 
 ### Path Aliases (tsconfig.json + vitest.config.ts)
 All imports use absolute paths via these aliases:
@@ -474,6 +502,62 @@ Domain interfaces in `src/domain/repositories/**` define contracts. Prisma imple
 - **Domain/Application:** In-memory doubles or mocked repos, Vitest under `src/tests/**`
 - **Infrastructure:** Use test DB (`DATABASE_URL_TEST`), reset Prisma via `resetServices({ force: true })` between suites
 - **Pattern:** See `src/tests/domain/entities/quiz.test.ts` for entity tests, `src/tests/infrastructure/repositories/prisma-quiz-repository.test.ts` for repo contracts
+
+## Key Patterns
+
+### Realtime Naming Conventions
+```
+Channel:  quiz:{quizId}                  — broadcast to all in a quiz
+          player:{quizId}:{playerId}     — broadcast to one player
+
+Event:    state:update    — full state payload (triggers setQueryData)
+          answer:ack      — acknowledgment with result
+          player:update   — player property change
+          question:locked — state change notification
+```
+
+### TanStack Query Hooks
+```typescript
+// Query key — always a const tuple factory
+export const entityQueryKey = (id: string) => ['entity', id] as const;
+
+// All queries use the same timing defaults
+useQuery({ queryKey, queryFn, initialData, staleTime: 5_000, refetchInterval: 5_000 });
+
+// Fetch error parsing — consistent pattern across all hooks
+const { error } = (await response.json().catch(() => ({}))) as { error?: string };
+throw new Error(error ?? 'Unable to load entity.');
+```
+
+### Repository Pattern
+```typescript
+// Always upsert (never separate create/update)
+await prisma.entity.upsert({ where: { id }, create: {...}, update: {...} });
+
+// Batch operations always use $transaction
+await prisma.$transaction(items.map(item => prisma.entity.update(...)));
+
+// Nullable fields: always default with ?? not undefined
+const value = record.field ?? 0;
+```
+
+### Feature Implementation Order
+Always implement features in this order, with tests at each step:
+1. **Domain** — Define entity behavior, write domain tests (`src/tests/domain/`)
+2. **Application** — Create use case + DTO, write use case tests (`src/tests/application/use-cases/`)
+3. **Infrastructure** — Update Prisma schema + repository, write repository tests (`src/tests/infrastructure/repositories/`)
+4. **Presentation** — API route + TanStack Query hook + component (components receive DTOs only)
+
+Run `yarn test` before moving to the next layer.
+
+### Testing Patterns
+- **Domain tests** (`src/tests/domain/`): Pure unit tests, no mocks. Use factory helpers at top of file:
+  ```typescript
+  const makeEntity = () => new Entity(...);
+  ```
+- **Use case tests**: Mock repositories with `vi.fn()`, test: success path + "not found" exact error message + invalid state
+- **Repository tests**: Call `resetServices({ force: true })` between tests for a fresh Prisma client
+- **E2E tests**: Manual-first — see "MCP-Assisted Testing (Playwright MCP)" section above
 
 ## DTO-First Development
 **DTOs are the single source of truth** for API contracts:
@@ -615,6 +699,30 @@ try {
 **Implementation Reference:**
 See `docs/progress/sessions/` for real examples of optimization decisions and measured impact.
 
+## Debugging Quick Reference
+
+When something breaks, check in this order:
+
+```bash
+# 1. Check Postgres logs for DB errors
+mcp_supabase_get_logs(service: 'postgres')
+
+# 2. Check auth/edge function logs
+mcp_supabase_get_logs(service: 'auth')
+
+# 3. Inspect current DB state
+mcp_supabase_execute_sql(query: 'SELECT * FROM "Quiz" ORDER BY "createdAt" DESC LIMIT 5')
+
+# 4. Check RLS policies after schema changes
+mcp_supabase_get_advisors(type: 'security')
+
+# 5. Snapshot current UI state
+mcp_microsoft_pla_browser_navigate(url: 'http://localhost:3000')
+mcp_microsoft_pla_browser_snapshot()
+```
+
+For realtime issues: check the `realtime` service logs and verify Supabase channel subscriptions in `src/infrastructure/realtime/`.
+
 ## Environment & Deployment
 - `.env.example` documents all required vars (`DATABASE_URL`, Supabase keys, etc.)
 - Vercel serves Next.js + API routes
@@ -629,3 +737,5 @@ See `docs/progress/sessions/` for real examples of optimization decisions and me
 4. **Leaking entities to UI:** Components must receive DTOs, never domain entities
 5. **Ignoring path aliases:** Use `@application/*` etc., not relative paths like `../../application`
 6. **Missing service factory reset in tests:** Call `resetServices({ force: true })` when tests need fresh Prisma client
+7. **Test isolation:** Each repository test suite must call `resetServices({ force: true })` between tests or results bleed across tests
+8. **Layer boundary violations:** If imports cross layer boundaries (e.g., presentation importing entities), run an architecture review to detect all violations before they compound
