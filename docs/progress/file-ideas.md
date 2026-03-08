@@ -46,4 +46,28 @@ Track future improvements or follow-ups per file so context survives between ses
 | Type Safety       | Some internal functions still use broad types           | Low      |
 | E2E Fixtures      | Could simplify with Playwright global setup             | Low      |
 
+## R6 Phase 3 — Media Library Follow-ups (2026-03-08)
+
+### Subfolder / Recursive Listing
+
+Supabase Storage `list()` returns folder prefixes as entries alongside files. When images are uploaded with a path prefix (e.g. `questions/`), the root `list('')` call returns a `questions` entry with `size: 0` rather than the individual images inside it.
+
+**Current behaviour:** flat `list('')` — shows folder entries as tiles with `0 B`.
+
+**Enhancement options:**
+
+| Option | Description | Effort |
+|--------|-------------|--------|
+| Recursive listing | After `list('')`, detect entries with `metadata == null` as folders and call `list(folder/)` for each; merge results | Low |
+| Folder navigation | UI breadcrumb — click a folder tile to drill down into that prefix | Medium |
+| Upload path normalisation | Change upload helpers to always write files to the bucket root (no subfolder prefix), so flat listing always works | Low |
+
+**Recommended path:** Recursive listing — extend `listFiles` to detect folder entries (`f.metadata === null`) and recursively fetch their contents, then flatten. No UI changes needed.
+
+**Files to touch:**
+- `src/infrastructure/storage/supabase-storage.ts` — add recursion in `listFiles`
+- `src/components/admin/media-library.tsx` — no changes needed once `listFiles` returns flat list
+
+**Priority:** Low — cosmetic issue only; real image files still accessible via direct URL.
+
 _Add new rows as you uncover ideas. Mark status as TODO / In Progress / Done to reflect whether the follow-up is still outstanding._

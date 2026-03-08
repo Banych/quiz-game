@@ -1,10 +1,16 @@
 import type { IQuizRepository } from '@domain/repositories/quiz-repository';
+import type { IAuditLogRepository } from '@domain/repositories/audit-log-repository';
 import type { CreateQuizDTO } from '@application/dtos/quiz-admin.dto';
 import { Quiz, QuizSettings } from '@domain/entities/quiz';
+import { AuditLog, AuditEventType } from '@domain/entities/audit-log';
 import { generateJoinCode } from '@lib/join-code';
+import { randomUUID } from 'crypto';
 
 export class CreateQuizUseCase {
-  constructor(private readonly quizRepository: IQuizRepository) {}
+  constructor(
+    private readonly quizRepository: IQuizRepository,
+    private readonly auditLogRepository?: IAuditLogRepository
+  ) {}
 
   async execute(data: CreateQuizDTO): Promise<string> {
     const settings: QuizSettings = {
@@ -22,6 +28,16 @@ export class CreateQuizUseCase {
     );
 
     const savedQuiz = await this.quizRepository.create(quiz);
+
+    if (this.auditLogRepository) {
+      void this.auditLogRepository.save(
+        new AuditLog(randomUUID(), AuditEventType.QuizCreated, {
+          quizId: savedQuiz.id,
+          metadata: { title: data.title },
+        })
+      );
+    }
+
     return savedQuiz.id;
   }
 }

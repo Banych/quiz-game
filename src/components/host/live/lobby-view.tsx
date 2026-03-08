@@ -1,6 +1,8 @@
 'use client';
+import { useState, useEffect } from 'react';
 import type { QuizDTO } from '@application/dtos/quiz.dto';
 import type { PlayerDTO } from '@application/dtos/player.dto';
+import { QRCodeSVG } from 'qrcode.react';
 
 type Props = { quiz: QuizDTO; startingSoon?: boolean };
 
@@ -8,6 +10,13 @@ export function LobbyView({ quiz, startingSoon }: Props) {
   const { title, joinCode, players } = quiz;
   const playerCount = players.length;
   const pluralSuffix = playerCount === 1 ? '' : 's';
+
+  const [joinUrl, setJoinUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (joinCode) {
+      setJoinUrl(`${window.location.origin}/join?code=${joinCode}`);
+    }
+  }, [joinCode]);
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center px-8 py-12">
@@ -19,9 +28,20 @@ export function LobbyView({ quiz, startingSoon }: Props) {
       {/* Join instruction */}
       <p className="text-xl text-gray-400 mb-8">Join at quiz.app</p>
 
-      {/* Join code */}
-      <div className="font-mono font-black tracking-widest leading-none text-white text-9xl mb-10 select-all">
-        {joinCode ?? '----'}
+      {/* Join code + QR code side by side */}
+      <div className="flex items-center gap-10 mb-10">
+        <div className="font-mono font-black tracking-widest leading-none text-white text-9xl select-all">
+          {joinCode ?? '----'}
+        </div>
+        {joinUrl && (
+          <QRCodeSVG
+            value={joinUrl}
+            size={200}
+            bgColor="transparent"
+            fgColor="#ffffff"
+            aria-label="QR code for join link"
+          />
+        )}
       </div>
 
       {/* Status */}

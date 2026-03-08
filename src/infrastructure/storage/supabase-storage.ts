@@ -9,6 +9,8 @@ import type {
   UploadOptions,
   UploadResult,
   DeleteOptions,
+  ListFilesOptions,
+  StorageFile,
 } from './storage-service';
 
 export class SupabaseStorageService implements IStorageService {
@@ -74,6 +76,26 @@ export class SupabaseStorageService implements IStorageService {
   getPublicUrl(bucket: string, path: string): string {
     const { data } = this.client.storage.from(bucket).getPublicUrl(path);
     return data.publicUrl;
+  }
+
+  /**
+   * List files in a bucket/path
+   */
+  async listFiles(options: ListFilesOptions): Promise<StorageFile[]> {
+    const { bucket, path = '' } = options;
+    const { data, error } = await this.client.storage.from(bucket).list(path, {
+      limit: 200,
+      sortBy: { column: 'created_at', order: 'desc' },
+    });
+    if (error) throw new Error(`Failed to list files: ${error.message}`);
+    return (data ?? [])
+      .filter((f) => f.name !== '.emptyFolderPlaceholder')
+      .map((f) => ({
+        name: f.name,
+        path: path ? `${path}${f.name}` : f.name,
+        size: f.metadata?.size ?? 0,
+        createdAt: f.created_at ?? new Date().toISOString(),
+      }));
   }
 }
 

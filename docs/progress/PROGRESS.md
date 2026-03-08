@@ -204,7 +204,13 @@ This document indexes all releases, completed work, and session notes. Use this 
 
 See [dev-notes.md](dev-notes.md) for the full execution log with timestamps.
 
-### Latest (2026-03-07):
+### Latest (2026-03-08):
+- R6 Phase 3 Missing Features complete: `/host` quiz selection, QR codes in lobby, `/admin/questions`, `/admin/media`, `/admin/audit`
+- Audit log: `AuditLog` entity + `IAuditLogRepository`, Prisma migration, fire-and-forget emissions in CreateQuiz/StartQuiz/AdvanceQuestion/LockQuestion use cases
+- 388 tests passing (+14 new), yarn build succeeds, lint clean, Playwright MCP spot-check passed
+- Plan: [plans/2026-03-08-r6-phase3-missing-features.md](plans/2026-03-08-r6-phase3-missing-features.md)
+
+### Previous (2026-03-07):
 - R6 Phase 2 UI/UX complete: a11y fixes (aria-label, aria-live, role="timer", role="alert"), responsive admin table, metadata description
 - 7 files modified, 369 tests passing, lint clean, Playwright MCP spot-check passed
 - Known deferred: horizontal scrollbar on `/join` (pre-existing)
@@ -245,12 +251,12 @@ All R5 phases complete as of 2026-02-01. See [plan.md](../plan.md) for performan
 - [x] Admin header email hidden on mobile, metadata description updated
 - [x] Playwright MCP spot-check verified all changes
 
-**Phase 3: Missing Features**
-- [ ] Standalone Questions management page (`/admin/questions`)
-- [ ] Media library page (`/admin/media`)
-- [ ] Audit log feature + API (deferred from R4)
-- [ ] Host quiz selection page (`/host` landing)
-- [ ] QR code generation for join codes
+**Phase 3: Missing Features** ✅
+- [x] Standalone Questions management page (`/admin/questions`)
+- [x] Media library page (`/admin/media`)
+- [x] Audit log feature + API (deferred from R4)
+- [x] Host quiz selection page (`/host` landing)
+- [x] QR code generation for join codes
 
 **Phase 4: Analytics & Observability**
 - [ ] PostHog analytics instrumentation
@@ -284,10 +290,9 @@ See [plan.md](../plan.md#r6-polish--launch--detailed-scope) for full checklist.
 See [file-ideas.md](file-ideas.md) for tracked follow-ups per file.
 
 ### Current Phase
-- **UI Polish**: Home page is boilerplate; error/loading pages missing
-- **Admin**: "Coming Soon" buttons for Questions/Media need resolution
 - **Performance**: P95 latencies exceed targets; optimization path documented
 - **Testing**: E2E selector strict mode violations in some tests
+- **Security**: RLS not enabled on Prisma-managed tables (app uses server-side Prisma, not PostgREST)
 
 ---
 

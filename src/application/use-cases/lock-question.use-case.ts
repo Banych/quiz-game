@@ -1,18 +1,22 @@
 import { IQuizRepository } from '@domain/repositories/quiz-repository';
 import { IPlayerRepository } from '@domain/repositories/player-repository';
 import { ILeaderboardSnapshotRepository } from '@domain/repositories/leaderboard-snapshot-repository';
+import type { IAuditLogRepository } from '@domain/repositories/audit-log-repository';
 import { RoundSummaryDTO } from '@application/dtos/round-summary.dto';
 import { QuizStatus } from '@domain/entities/quiz';
+import { AuditLog, AuditEventType } from '@domain/entities/audit-log';
 import type { QuizSessionAggregate } from '@domain/aggregates/quiz-session-aggregate';
 import type { Question } from '@domain/entities/question';
 import type { Player } from '@domain/entities/player';
 import type { Answer } from '@domain/entities/answer';
+import { randomUUID } from 'crypto';
 
 export class LockQuestionUseCase {
   constructor(
     private readonly quizRepository: IQuizRepository,
     private readonly playerRepository: IPlayerRepository,
-    private readonly snapshotRepository: ILeaderboardSnapshotRepository
+    private readonly snapshotRepository: ILeaderboardSnapshotRepository,
+    private readonly auditLogRepository?: IAuditLogRepository
   ) {}
 
   async execute(quizId: string): Promise<RoundSummaryDTO> {
@@ -65,6 +69,18 @@ export class LockQuestionUseCase {
 
     // 8. Persist locked state
     await this.quizRepository.save(quiz);
+
+    if (this.auditLogRepository) {
+      void this.auditLogRepository.save(
+        new AuditLog(randomUUID(), AuditEventType.QuestionLocked, {
+          quizId,
+          metadata: {
+            questionId: currentQuestion.id,
+            questionIndex: quiz.currentQuestionIndex,
+          },
+        })
+      );
+    }
 
     return roundSummary;
   }
