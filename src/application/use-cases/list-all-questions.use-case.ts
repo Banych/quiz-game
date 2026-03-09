@@ -18,10 +18,17 @@ export class ListAllQuestionsUseCase {
       ? [await this.quizRepo.findEntityById(quizId)].filter(Boolean)
       : await this.quizRepo.findAll();
 
+    const quizList = quizzes as NonNullable<(typeof quizzes)[number]>[];
+
+    const questionsByQuiz = await Promise.all(
+      quizList.map((quiz) => this.questionRepo.listByQuizId(quiz.id))
+    );
+
     const results: QuestionListItemDTO[] = [];
 
-    for (const quiz of quizzes as NonNullable<(typeof quizzes)[number]>[]) {
-      const questions = await this.questionRepo.listByQuizId(quiz.id);
+    for (let i = 0; i < quizList.length; i++) {
+      const quiz = quizList[i];
+      const questions = questionsByQuiz[i];
       for (const q of questions) {
         if (type && q.type !== type) continue;
         results.push({

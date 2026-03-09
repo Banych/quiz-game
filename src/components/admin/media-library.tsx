@@ -3,11 +3,11 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@ui/button';
-import { SupabaseStorageService } from '@infrastructure/storage/supabase-storage';
+import { createStorageService } from '@infrastructure/storage/supabase-storage';
 import { formatFileSize } from '@lib/image-utils';
 import type { MediaFileDTO } from '@application/dtos/media.dto';
 
-const storageService = new SupabaseStorageService();
+const storageService = createStorageService();
 const BUCKET = 'quiz-media';
 
 export function MediaLibrary() {

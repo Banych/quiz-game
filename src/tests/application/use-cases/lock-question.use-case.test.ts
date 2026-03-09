@@ -7,6 +7,8 @@ import { Quiz } from '@domain/entities/quiz';
 import type { ILeaderboardSnapshotRepository } from '@domain/repositories/leaderboard-snapshot-repository';
 import type { IPlayerRepository } from '@domain/repositories/player-repository';
 import type { IQuizRepository } from '@domain/repositories/quiz-repository';
+import type { IAuditLogRepository } from '@domain/repositories/audit-log-repository';
+import { AuditEventType } from '@domain/entities/audit-log';
 import { beforeEach, describe, expect, it, vi, type Mocked } from 'vitest';
 
 describe('LockQuestionUseCase', () => {
@@ -276,6 +278,93 @@ describe('LockQuestionUseCase', () => {
       currentRank: 1,
       rankChange: 0,
     });
+  });
+
+  it('emits QuestionLocked audit log when audit repository is provided', async () => {
+    const auditLogRepository: Mocked<IAuditLogRepository> = {
+      save: vi.fn().mockResolvedValue(undefined),
+      findByQuizId: vi.fn(),
+      findRecent: vi.fn(),
+    };
+    const useCaseWithAudit = new LockQuestionUseCase(
+      quizRepository,
+      playerRepository,
+      snapshotRepository,
+      auditLogRepository
+    );
+
+    const question1 = new Question(
+      'q1',
+      'Q?',
+      ['A'],
+      'multiple-choice',
+      100,
+      undefined,
+      undefined,
+      ['A', 'B']
+    );
+    const quiz = new QuizSessionAggregate(
+      new Quiz('quiz-1', 'Test', [question1], {
+        timePerQuestion: 30,
+        allowSkipping: false,
+      }),
+      30
+    );
+    quiz.addPlayer('p1');
+    quiz.startQuiz();
+
+    const player1 = new Player('p1', 'Alice', 'quiz-1');
+    quizRepository.findById.mockResolvedValue(quiz);
+    playerRepository.listByQuizId.mockResolvedValue([player1]);
+    snapshotRepository.findByQuizAndQuestion.mockResolvedValue([]);
+
+    await useCaseWithAudit.execute('quiz-1');
+
+    await Promise.resolve();
+    expect(auditLogRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({ eventType: AuditEventType.QuestionLocked })
+    );
+  });
+
+  it('does not throw when audit log save fails in lock-question', async () => {
+    const auditLogRepository: Mocked<IAuditLogRepository> = {
+      save: vi.fn().mockRejectedValue(new Error('DB error')),
+      findByQuizId: vi.fn(),
+      findRecent: vi.fn(),
+    };
+    const useCaseWithAudit = new LockQuestionUseCase(
+      quizRepository,
+      playerRepository,
+      snapshotRepository,
+      auditLogRepository
+    );
+
+    const question1 = new Question(
+      'q1',
+      'Q?',
+      ['A'],
+      'multiple-choice',
+      100,
+      undefined,
+      undefined,
+      ['A', 'B']
+    );
+    const quiz = new QuizSessionAggregate(
+      new Quiz('quiz-1', 'Test', [question1], {
+        timePerQuestion: 30,
+        allowSkipping: false,
+      }),
+      30
+    );
+    quiz.addPlayer('p1');
+    quiz.startQuiz();
+
+    const player1 = new Player('p1', 'Alice', 'quiz-1');
+    quizRepository.findById.mockResolvedValue(quiz);
+    playerRepository.listByQuizId.mockResolvedValue([player1]);
+    snapshotRepository.findByQuizAndQuestion.mockResolvedValue([]);
+
+    await expect(useCaseWithAudit.execute('quiz-1')).resolves.not.toThrow();
   });
 
   it('should calculate average time correctly', async () => {

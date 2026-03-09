@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { getServices } from '@application/services/factories';
+import {
+  createServerClient,
+  isAdminUser,
+} from '@infrastructure/auth/supabase-auth-client';
 
 /**
  * GET /api/admin/questions
@@ -7,6 +12,16 @@ import { getServices } from '@application/services/factories';
  */
 export async function GET(request: Request) {
   try {
+    const cookieStore = await cookies();
+    const supabase = await createServerClient(cookieStore);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user || !isAdminUser(user.email)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const quizId = searchParams.get('quizId') ?? undefined;
     const type = searchParams.get('type') ?? undefined;

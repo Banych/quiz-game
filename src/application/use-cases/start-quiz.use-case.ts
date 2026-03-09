@@ -20,9 +20,13 @@ export class StartQuizUseCase {
     await this.quizRepository.save(quiz);
 
     if (this.auditLogRepository) {
-      void this.auditLogRepository.save(
-        new AuditLog(randomUUID(), AuditEventType.QuizStarted, { quizId })
-      );
+      void this.auditLogRepository
+        .save(
+          new AuditLog(randomUUID(), AuditEventType.QuizStarted, { quizId })
+        )
+        .catch((error) => {
+          console.error('Failed to save audit log for StartQuizUseCase', error);
+        });
     }
   }
 }

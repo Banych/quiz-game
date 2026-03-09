@@ -36,15 +36,22 @@ export class AdvanceQuestionUseCase {
     await this.quizRepository.save(quizAggregate);
 
     if (this.auditLogRepository) {
-      void this.auditLogRepository.save(
-        new AuditLog(randomUUID(), AuditEventType.QuestionAdvanced, {
-          quizId,
-          metadata: {
-            questionIndex: quizAggregate.currentQuestionIndex,
-            questionId: nextQuestion?.id ?? null,
-          },
-        })
-      );
+      void this.auditLogRepository
+        .save(
+          new AuditLog(randomUUID(), AuditEventType.QuestionAdvanced, {
+            quizId,
+            metadata: {
+              questionIndex: quizAggregate.currentQuestionIndex,
+              questionId: nextQuestion?.id ?? null,
+            },
+          })
+        )
+        .catch((error) => {
+          console.error(
+            'Failed to save audit log for AdvanceQuestionUseCase',
+            error
+          );
+        });
     }
 
     return {

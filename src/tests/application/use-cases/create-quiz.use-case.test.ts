@@ -1,5 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mocked } from 'vitest';
 import { IQuizRepository } from '@domain/repositories/quiz-repository';
+import type { IAuditLogRepository } from '@domain/repositories/audit-log-repository';
+import { AuditEventType } from '@domain/entities/audit-log';
 import { CreateQuizUseCase } from '@application/use-cases/create-quiz.use-case';
 import { Quiz } from '@domain/entities/quiz';
 
@@ -85,5 +87,56 @@ describe('CreateQuizUseCase', () => {
     expect(createCall.title).toBe('My Quiz');
     expect(createCall.settings.timePerQuestion).toBe(45);
     expect(createCall.settings.allowSkipping).toBe(true);
+  });
+
+  it('emits QuizCreated audit log when audit repository is provided', async () => {
+    const mockSavedQuiz = { id: 'quiz-123' } as Quiz;
+    vi.spyOn(mockQuizRepository, 'create').mockResolvedValueOnce(mockSavedQuiz);
+
+    const auditLogRepository: Mocked<IAuditLogRepository> = {
+      save: vi.fn().mockResolvedValue(undefined),
+      findByQuizId: vi.fn(),
+      findRecent: vi.fn(),
+    };
+
+    const useCaseWithAudit = new CreateQuizUseCase(
+      mockQuizRepository,
+      auditLogRepository
+    );
+    await useCaseWithAudit.execute({
+      title: 'Audit Quiz',
+      timePerQuestion: 30,
+      allowSkipping: false,
+    });
+
+    await Promise.resolve();
+    expect(auditLogRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventType: AuditEventType.QuizCreated,
+      })
+    );
+  });
+
+  it('does not throw when audit log save fails', async () => {
+    const mockSavedQuiz = { id: 'quiz-123' } as Quiz;
+    vi.spyOn(mockQuizRepository, 'create').mockResolvedValueOnce(mockSavedQuiz);
+
+    const auditLogRepository: Mocked<IAuditLogRepository> = {
+      save: vi.fn().mockRejectedValue(new Error('DB error')),
+      findByQuizId: vi.fn(),
+      findRecent: vi.fn(),
+    };
+
+    const useCaseWithAudit = new CreateQuizUseCase(
+      mockQuizRepository,
+      auditLogRepository
+    );
+    await expect(
+      useCaseWithAudit.execute({
+        title: 'Audit Quiz',
+        timePerQuestion: 30,
+        allowSkipping: false,
+      })
+    ).resolves.not.toThrow();
   });
 });

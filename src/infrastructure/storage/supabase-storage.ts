@@ -27,7 +27,8 @@ export class SupabaseStorageService implements IStorageService {
     const randomStr = Math.random().toString(36).substring(2, 15);
     const extension = file.name.split('.').pop();
     const filename = `${timestamp}-${randomStr}.${extension}`;
-    const fullPath = path ? `${path}${filename}` : filename;
+    const normalizedPath = path ? (path.endsWith('/') ? path : `${path}/`) : '';
+    const fullPath = normalizedPath ? `${normalizedPath}${filename}` : filename;
 
     // Upload file
     const { data, error } = await this.client.storage
@@ -92,7 +93,9 @@ export class SupabaseStorageService implements IStorageService {
       .filter((f) => f.name !== '.emptyFolderPlaceholder')
       .map((f) => ({
         name: f.name,
-        path: path ? `${path}${f.name}` : f.name,
+        path: path
+          ? `${path.endsWith('/') ? path : path + '/'}${f.name}`
+          : f.name,
         size: f.metadata?.size ?? 0,
         createdAt: f.created_at ?? new Date().toISOString(),
       }));

@@ -171,9 +171,9 @@ export function AllQuestionsView() {
         </div>
       )}
 
-      {editingQuestion && (
+      {editingQuestion && editingQuestion.quizId && (
         <EditQuestionDialog
-          quizId={editingQuestion.quizId!}
+          quizId={editingQuestion.quizId}
           question={editingQuestion}
           open={!!editingQuestion}
           onOpenChange={(open) => {
@@ -185,9 +185,9 @@ export function AllQuestionsView() {
         />
       )}
 
-      {deletingQuestion && (
+      {deletingQuestion && deletingQuestion.quizId && (
         <DeleteQuestionDialog
-          quizId={deletingQuestion.quizId!}
+          quizId={deletingQuestion.quizId}
           question={deletingQuestion}
           open={!!deletingQuestion}
           onOpenChange={(open) => {
