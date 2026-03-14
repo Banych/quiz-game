@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ScoringInfoBadge } from './scoring-info-badge';
 
@@ -30,7 +30,10 @@ type JoinResponse = {
 
 export function PlayerJoinForm() {
   const router = useRouter();
-  const [joinCode, setJoinCode] = useState('');
+  const searchParams = useSearchParams();
+  const [joinCode, setJoinCode] = useState(
+    () => searchParams.get('code')?.toUpperCase() ?? ''
+  );
   const [playerName, setPlayerName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);

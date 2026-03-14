@@ -3,6 +3,7 @@ import { PrismaPlayerRepository } from '@infrastructure/repositories/prisma-play
 import { PrismaQuizRepository } from '@infrastructure/repositories/prisma-quiz.repository';
 import { PrismaQuestionRepository } from '@infrastructure/repositories/prisma-question.repository';
 import { PrismaLeaderboardSnapshotRepository } from '@infrastructure/repositories/prisma-leaderboard-snapshot.repository';
+import { PrismaAuditLogRepository } from '@infrastructure/repositories/prisma-audit-log.repository';
 import { AddPlayerUseCase } from '@application/use-cases/add-player.use-case';
 import { FindPlayerByIdUseCase } from '@application/use-cases/find-player-by-id.use-case';
 import { ListQuizPlayersUseCase } from '@application/use-cases/list-quiz-players.use-case';
@@ -32,6 +33,8 @@ import { UpdateQuestionUseCase } from '@application/use-cases/update-question.us
 import { DeleteQuestionUseCase } from '@application/use-cases/delete-question.use-case';
 import { ListQuizQuestionsUseCase } from '@application/use-cases/list-quiz-questions.use-case';
 import { ReorderQuestionsUseCase } from '@application/use-cases/reorder-questions.use-case';
+import { ListAllQuestionsUseCase } from '@application/use-cases/list-all-questions.use-case';
+import { ListAuditLogsUseCase } from '@application/use-cases/audit/list-audit-logs.use-case';
 import type {
   CreateQuestionDTO,
   UpdateQuestionDTO,
@@ -57,6 +60,17 @@ type QuestionService = {
     dto: ReorderQuestionsDTO,
     quizId: string
   ) => ReturnType<ReorderQuestionsUseCase['execute']>;
+  listAllQuestions: (params: {
+    quizId?: string;
+    type?: string;
+  }) => ReturnType<ListAllQuestionsUseCase['execute']>;
+};
+
+type AuditService = {
+  listAuditLogs: (params: {
+    quizId?: string;
+    limit?: number;
+  }) => ReturnType<ListAuditLogsUseCase['execute']>;
 };
 
 type ServiceContainer = {
@@ -64,6 +78,7 @@ type ServiceContainer = {
   quizService: QuizService;
   answerService: AnswerService;
   questionService: QuestionService;
+  auditService: AuditService;
   joinSessionUseCase: JoinSessionUseCase;
   lockQuestionUseCase: LockQuestionUseCase;
   getPlayerConnectionStatusUseCase: GetPlayerConnectionStatusUseCase;
@@ -77,12 +92,14 @@ const getRepositories = () => {
   const questionRepository = new PrismaQuestionRepository();
   const leaderboardSnapshotRepository =
     new PrismaLeaderboardSnapshotRepository();
+  const auditLogRepository = new PrismaAuditLogRepository();
 
   return {
     quizRepository,
     playerRepository,
     questionRepository,
     leaderboardSnapshotRepository,
+    auditLogRepository,
   } as const;
 };
 
@@ -96,6 +113,7 @@ export const getServices = (): ServiceContainer => {
     playerRepository,
     questionRepository,
     leaderboardSnapshotRepository,
+    auditLogRepository,
   } = getRepositories();
 
   const addPlayerUseCase = new AddPlayerUseCase(
@@ -131,14 +149,20 @@ export const getServices = (): ServiceContainer => {
     getPlayerSessionUseCase
   );
 
-  const startQuizUseCase = new StartQuizUseCase(quizRepository);
+  const startQuizUseCase = new StartQuizUseCase(
+    quizRepository,
+    auditLogRepository
+  );
   const endQuizUseCase = new EndQuizUseCase(quizRepository);
   const findQuizUseCase = new FindQuizByIdUseCase(quizRepository);
   const getQuizStateUseCase = new GetQuizStateUseCase(
     quizRepository,
     playerRepository
   );
-  const advanceQuestionUseCase = new AdvanceQuestionUseCase(quizRepository);
+  const advanceQuestionUseCase = new AdvanceQuestionUseCase(
+    quizRepository,
+    auditLogRepository
+  );
   const resetQuizTimerUseCase = new ResetQuizTimerUseCase(quizRepository);
   const snapshotLeaderboardUseCase = new SnapshotLeaderboardUseCase(
     quizRepository
@@ -146,11 +170,15 @@ export const getServices = (): ServiceContainer => {
   const lockQuestionUseCase = new LockQuestionUseCase(
     quizRepository,
     playerRepository,
-    leaderboardSnapshotRepository
+    leaderboardSnapshotRepository,
+    auditLogRepository
   );
 
   // Admin use cases
-  const createQuizUseCase = new CreateQuizUseCase(quizRepository);
+  const createQuizUseCase = new CreateQuizUseCase(
+    quizRepository,
+    auditLogRepository
+  );
   const updateQuizUseCase = new UpdateQuizUseCase(quizRepository);
   const deleteQuizUseCase = new DeleteQuizUseCase(quizRepository);
   const listAllQuizzesUseCase = new ListAllQuizzesUseCase(quizRepository);
@@ -194,6 +222,17 @@ export const getServices = (): ServiceContainer => {
   const reorderQuestionsUseCase = new ReorderQuestionsUseCase(
     questionRepository
   );
+  const listAllQuestionsUseCase = new ListAllQuestionsUseCase(
+    quizRepository,
+    questionRepository
+  );
+
+  // Audit use cases
+  const listAuditLogsUseCase = new ListAuditLogsUseCase(auditLogRepository);
+
+  const auditService: AuditService = {
+    listAuditLogs: (params) => listAuditLogsUseCase.execute(params),
+  };
 
   const questionService: QuestionService = {
     createQuestion: (dto) => createQuestionUseCase.execute(dto),
@@ -203,6 +242,7 @@ export const getServices = (): ServiceContainer => {
     listQuizQuestions: (quizId) => listQuizQuestionsUseCase.execute(quizId),
     reorderQuestions: (dto, quizId) =>
       reorderQuestionsUseCase.execute(dto, quizId),
+    listAllQuestions: (params) => listAllQuestionsUseCase.execute(params),
   };
 
   container = {
@@ -210,6 +250,7 @@ export const getServices = (): ServiceContainer => {
     quizService,
     answerService,
     questionService,
+    auditService,
     joinSessionUseCase,
     lockQuestionUseCase,
     getPlayerConnectionStatusUseCase,

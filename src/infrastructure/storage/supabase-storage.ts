@@ -9,6 +9,8 @@ import type {
   UploadOptions,
   UploadResult,
   DeleteOptions,
+  ListFilesOptions,
+  StorageFile,
 } from './storage-service';
 
 export class SupabaseStorageService implements IStorageService {
@@ -25,7 +27,8 @@ export class SupabaseStorageService implements IStorageService {
     const randomStr = Math.random().toString(36).substring(2, 15);
     const extension = file.name.split('.').pop();
     const filename = `${timestamp}-${randomStr}.${extension}`;
-    const fullPath = path ? `${path}${filename}` : filename;
+    const normalizedPath = path ? (path.endsWith('/') ? path : `${path}/`) : '';
+    const fullPath = `${normalizedPath}${filename}`;
 
     // Upload file
     const { data, error } = await this.client.storage
@@ -74,6 +77,29 @@ export class SupabaseStorageService implements IStorageService {
   getPublicUrl(bucket: string, path: string): string {
     const { data } = this.client.storage.from(bucket).getPublicUrl(path);
     return data.publicUrl;
+  }
+
+  /**
+   * List files in a bucket/path
+   */
+  async listFiles(options: ListFilesOptions): Promise<StorageFile[]> {
+    const { bucket, path = '' } = options;
+    const normalizedPath = path ? (path.endsWith('/') ? path : `${path}/`) : '';
+    const { data, error } = await this.client.storage
+      .from(bucket)
+      .list(normalizedPath, {
+        limit: 200,
+        sortBy: { column: 'created_at', order: 'desc' },
+      });
+    if (error) throw new Error(`Failed to list files: ${error.message}`);
+    return (data ?? [])
+      .filter((f) => f.name !== '.emptyFolderPlaceholder')
+      .map((f) => ({
+        name: f.name,
+        path: normalizedPath ? `${normalizedPath}${f.name}` : f.name,
+        size: f.metadata?.size ?? 0,
+        createdAt: f.created_at ?? new Date().toISOString(),
+      }));
   }
 }
 

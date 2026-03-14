@@ -66,6 +66,8 @@ export const QuestionListItemDTO = z.object({
   orderIndex: z.number().int().nonnegative(),
   hasCorrectAnswers: z.boolean(), // Validation indicator
   mediaUrl: z.string().url().nullable().optional(),
+  quizId: z.string().optional(),
+  quizTitle: z.string().optional(),
 });
 
 export type QuestionListItemDTO = z.infer<typeof QuestionListItemDTO>;

@@ -2,6 +2,9 @@ import type { QuestionDTO as QuestionDTOType } from '@application/dtos/question.
 import type { QuizTimerDTO as QuizTimerDTOType } from '@application/dtos/quiz.dto';
 import { mapQuestionToDTO } from '@application/mappers/quiz-mapper';
 import type { IQuizRepository } from '@domain/repositories/quiz-repository';
+import type { IAuditLogRepository } from '@domain/repositories/audit-log-repository';
+import { AuditLog, AuditEventType } from '@domain/entities/audit-log';
+import { randomUUID } from 'crypto';
 
 export type AdvanceQuestionResult = {
   question: QuestionDTOType | null;
@@ -9,7 +12,10 @@ export type AdvanceQuestionResult = {
 };
 
 export class AdvanceQuestionUseCase {
-  constructor(private readonly quizRepository: IQuizRepository) {}
+  constructor(
+    private readonly quizRepository: IQuizRepository,
+    private readonly auditLogRepository?: IAuditLogRepository
+  ) {}
 
   async execute(quizId: string): Promise<AdvanceQuestionResult> {
     const quizAggregate = await this.quizRepository.findById(quizId);
@@ -28,6 +34,22 @@ export class AdvanceQuestionUseCase {
     }
 
     await this.quizRepository.save(quizAggregate);
+
+    if (this.auditLogRepository) {
+      void this.auditLogRepository
+        .save(
+          new AuditLog(randomUUID(), AuditEventType.QuestionAdvanced, {
+            quizId,
+            metadata: {
+              questionIndex: quizAggregate.currentQuestionIndex,
+              questionId: nextQuestion?.id ?? null,
+            },
+          })
+        )
+        .catch((error) =>
+          console.error('[AuditLog] advance-question save failed:', error)
+        );
+    }
 
     return {
       question: nextQuestion ? mapQuestionToDTO(nextQuestion) : null,

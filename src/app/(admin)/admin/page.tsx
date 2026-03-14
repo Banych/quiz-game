@@ -37,8 +37,8 @@ export default function AdminDashboardPage() {
             <CardDescription>Edit questions and answers</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild className="w-full" variant="outline" disabled>
-              <Link href="/admin/questions">Coming Soon</Link>
+            <Button asChild className="w-full">
+              <Link href="/admin/questions">Manage Questions</Link>
             </Button>
           </CardContent>
         </Card>
@@ -49,8 +49,20 @@ export default function AdminDashboardPage() {
             <CardDescription>Upload and manage images</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild className="w-full" variant="outline" disabled>
-              <Link href="/admin/media">Coming Soon</Link>
+            <Button asChild className="w-full">
+              <Link href="/admin/media">Manage Media</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Audit Log</CardTitle>
+            <CardDescription>View quiz lifecycle events</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full">
+              <Link href="/admin/audit">View Audit Log</Link>
             </Button>
           </CardContent>
         </Card>

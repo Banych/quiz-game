@@ -7,6 +7,8 @@ import { Quiz } from '@domain/entities/quiz';
 import type { ILeaderboardSnapshotRepository } from '@domain/repositories/leaderboard-snapshot-repository';
 import type { IPlayerRepository } from '@domain/repositories/player-repository';
 import type { IQuizRepository } from '@domain/repositories/quiz-repository';
+import type { IAuditLogRepository } from '@domain/repositories/audit-log-repository';
+import { AuditEventType } from '@domain/entities/audit-log';
 import { beforeEach, describe, expect, it, vi, type Mocked } from 'vitest';
 
 describe('LockQuestionUseCase', () => {
@@ -275,6 +277,96 @@ describe('LockQuestionUseCase', () => {
       previousRank: null,
       currentRank: 1,
       rankChange: 0,
+    });
+  });
+
+  describe('audit log emission', () => {
+    let auditLogRepository: Mocked<IAuditLogRepository>;
+
+    beforeEach(() => {
+      auditLogRepository = {
+        save: vi.fn().mockResolvedValue(undefined),
+        findByQuizId: vi.fn(),
+        findRecent: vi.fn(),
+      };
+    });
+
+    it('saves an audit log with QuestionLocked event type', async () => {
+      const question1 = new Question(
+        'q1',
+        'What is 2+2?',
+        ['4'],
+        'multiple-choice',
+        100,
+        undefined,
+        undefined,
+        ['2', '3', '4', '5']
+      );
+      const quiz = new QuizSessionAggregate(
+        new Quiz('quiz-1', 'Math Quiz', [question1], {
+          timePerQuestion: 30,
+          allowSkipping: false,
+        }),
+        30
+      );
+      quiz.addPlayer('p1');
+      quiz.startQuiz();
+
+      const player1 = new Player('p1', 'Alice', 'quiz-1');
+      quizRepository.findById.mockResolvedValue(quiz);
+      playerRepository.listByQuizId.mockResolvedValue([player1]);
+      snapshotRepository.findByQuizAndQuestion.mockResolvedValue([]);
+
+      const useCaseWithAudit = new LockQuestionUseCase(
+        quizRepository,
+        playerRepository,
+        snapshotRepository,
+        auditLogRepository
+      );
+
+      await useCaseWithAudit.execute('quiz-1');
+      await new Promise((r) => setImmediate(r));
+
+      expect(auditLogRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ eventType: AuditEventType.QuestionLocked })
+      );
+    });
+
+    it('does not propagate audit log save failures', async () => {
+      const question1 = new Question(
+        'q1',
+        'What is 2+2?',
+        ['4'],
+        'multiple-choice',
+        100,
+        undefined,
+        undefined,
+        ['2', '3', '4', '5']
+      );
+      const quiz = new QuizSessionAggregate(
+        new Quiz('quiz-1', 'Math Quiz', [question1], {
+          timePerQuestion: 30,
+          allowSkipping: false,
+        }),
+        30
+      );
+      quiz.addPlayer('p1');
+      quiz.startQuiz();
+
+      const player1 = new Player('p1', 'Alice', 'quiz-1');
+      quizRepository.findById.mockResolvedValue(quiz);
+      playerRepository.listByQuizId.mockResolvedValue([player1]);
+      snapshotRepository.findByQuizAndQuestion.mockResolvedValue([]);
+      auditLogRepository.save.mockRejectedValue(new Error('DB error'));
+
+      const useCaseWithAudit = new LockQuestionUseCase(
+        quizRepository,
+        playerRepository,
+        snapshotRepository,
+        auditLogRepository
+      );
+
+      await expect(useCaseWithAudit.execute('quiz-1')).resolves.not.toThrow();
     });
   });
 

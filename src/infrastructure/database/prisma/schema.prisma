@@ -28,6 +28,7 @@ model Quiz {
   players              Player[]
   questions            Question[]
   leaderboardSnapshots LeaderboardSnapshot[]
+  auditLogs            AuditLog[]
 }
 
 model Question {
@@ -105,6 +106,20 @@ model LeaderboardSnapshot {
   @@map("leaderboard_snapshots")
 }
 
+model AuditLog {
+  id        String         @id @default(cuid())
+  quizId    String?
+  actorId   String?
+  eventType AuditEventType
+  metadata  Json           @default("{}")
+  createdAt DateTime       @default(now())
+  quiz      Quiz?          @relation(fields: [quizId], references: [id], onDelete: SetNull)
+
+  @@index([quizId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
 enum QuizStatus {
   Pending
   Active
@@ -133,4 +148,11 @@ enum ScoringAlgorithm {
   EXPONENTIAL_DECAY
   LINEAR
   FIXED
+}
+
+enum AuditEventType {
+  quiz_created
+  quiz_started
+  question_advanced
+  question_locked
 }

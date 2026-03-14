@@ -54,6 +54,18 @@ export interface DeleteOptions {
   path: string;
 }
 
+export interface StorageFile {
+  name: string;
+  path: string;
+  size: number;
+  createdAt: string;
+}
+
+export interface ListFilesOptions {
+  bucket: string;
+  path?: string;
+}
+
 /**
  * Storage Service for file uploads/downloads
  */
@@ -72,4 +84,9 @@ export interface IStorageService {
    * Get public URL for a file
    */
   getPublicUrl(bucket: string, path: string): string;
+
+  /**
+   * List files in a bucket
+   */
+  listFiles(options: ListFilesOptions): Promise<StorageFile[]>;
 }

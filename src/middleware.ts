@@ -11,78 +11,82 @@ export async function middleware(request: NextRequest) {
 
   console.log('[MIDDLEWARE] Processing request for:', pathname);
 
-  // Only protect /admin routes (except login page)
-  if (pathname.startsWith('/admin') && pathname !== '/login') {
-    let supabaseResponse = NextResponse.next({
-      request,
+  const isAdminPage = pathname.startsWith('/admin') && pathname !== '/login';
+  const isAdminApi = pathname.startsWith('/api/admin');
+
+  if (!isAdminPage && !isAdminApi) {
+    return NextResponse.next();
+  }
+
+  let supabaseResponse = NextResponse.next({ request });
+
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
     });
 
-    try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    // IMPORTANT: Use getUser() which reads from JWT, not getSession()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value)
-            );
-            supabaseResponse = NextResponse.next({
-              request,
-            });
-            cookiesToSet.forEach(({ name, value, options }) =>
-              supabaseResponse.cookies.set(name, value, options)
-            );
-          },
-        },
-      });
+    console.log('[MIDDLEWARE] User:', user?.email || 'none');
 
-      // IMPORTANT: Use getUser() which reads from JWT, not getSession()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      console.log('[MIDDLEWARE] User:', user?.email || 'none');
-
-      // Redirect to login if no session
-      if (!user) {
-        const loginUrl = new URL('/login', request.url);
-        loginUrl.searchParams.set('redirect', pathname);
-        return NextResponse.redirect(loginUrl);
+    if (!user) {
+      if (isAdminApi) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
-
-      // Verify user is in admin allowlist
-      if (!isAdminUser(user.email)) {
-        console.log('[MIDDLEWARE] User not in admin allowlist');
-        // Return 403 Forbidden for authenticated but unauthorized users
-        return new NextResponse('Forbidden: Admin access required', {
-          status: 403,
-        });
-      }
-
-      console.log('[MIDDLEWARE] User authorized');
-      return supabaseResponse;
-    } catch (error) {
-      console.error('[MIDDLEWARE] Auth error:', error);
-      // On error, redirect to login
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
-  }
 
-  return NextResponse.next();
+    if (!isAdminUser(user.email)) {
+      console.log('[MIDDLEWARE] User not in admin allowlist');
+      if (isAdminApi) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      return new NextResponse('Forbidden: Admin access required', {
+        status: 403,
+      });
+    }
+
+    console.log('[MIDDLEWARE] User authorized');
+    return supabaseResponse;
+  } catch (error) {
+    console.error('[MIDDLEWARE] Auth error:', error);
+    if (isAdminApi) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
 }
 
 export const config = {
   matcher: [
     /*
-     * Match all admin routes including /admin itself
+     * Match all admin routes including /admin itself, and /api/admin routes
      */
     '/admin',
     '/admin/:path*',
+    '/api/admin/:path*',
   ],
 };
