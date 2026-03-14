@@ -258,6 +258,14 @@ All R5 phases complete as of 2026-02-01. See [plan.md](../plan.md) for performan
 - [x] Host quiz selection page (`/host` landing)
 - [x] QR code generation for join codes
 
+**Phase 3.5: Game Lifecycle & UX Fixes** 📋 Planning
+- [ ] Quiz reset: allow completed quiz → Draft for replay (`ResetQuizUseCase`)
+- [ ] Host dashboard: replace "Resume Quiz" with contextual buttons (Finish / Restart) per status
+- [ ] Player answer UI: render option buttons for MC/TF questions, text input for open questions
+- [ ] Admin quiz page: add "Start Hosting" / "Open Host View" shortcut button
+- [ ] Presence fix: active players stay `connected` instead of regressing to `away → disconnected`
+- **Plan:** [plans/2026-03-14-r6-phase3.5-lifecycle-ux-fixes.md](plans/2026-03-14-r6-phase3.5-lifecycle-ux-fixes.md)
+
 **Phase 4: Analytics & Observability**
 - [ ] PostHog analytics instrumentation
 - [ ] Structured logging with request IDs
