@@ -21,7 +21,8 @@
       "mcp__github__*",
       "Bash(ls:*)",
       "Bash(grep *)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "mcp__plugin_github_github__pull_request_read"
     ],
     "deny": [
       "Bash(rm -rf *)",

@@ -30,12 +30,16 @@ export class CreateQuizUseCase {
     const savedQuiz = await this.quizRepository.create(quiz);
 
     if (this.auditLogRepository) {
-      void this.auditLogRepository.save(
-        new AuditLog(randomUUID(), AuditEventType.QuizCreated, {
-          quizId: savedQuiz.id,
-          metadata: { title: data.title },
-        })
-      );
+      void this.auditLogRepository
+        .save(
+          new AuditLog(randomUUID(), AuditEventType.QuizCreated, {
+            quizId: savedQuiz.id,
+            metadata: { title: data.title },
+          })
+        )
+        .catch((error) =>
+          console.error('[AuditLog] create-quiz save failed:', error)
+        );
     }
 
     return savedQuiz.id;

@@ -38,7 +38,9 @@ function formatDate(iso: string) {
 export function AuditLogTable() {
   const [selectedQuizId, setSelectedQuizId] = useState<string>('all');
 
-  const { data: quizzes = [] } = useQuery<QuizListItemDTO[]>({
+  const { data: quizzes = [], error: quizzesError } = useQuery<
+    QuizListItemDTO[]
+  >({
     queryKey: ['admin', 'quizzes'],
     queryFn: async () => {
       const res = await fetch('/api/admin/quizzes');
@@ -48,7 +50,11 @@ export function AuditLogTable() {
     staleTime: 30_000,
   });
 
-  const { data: logs = [], isLoading } = useQuery<AuditLogDTO[]>({
+  const {
+    data: logs = [],
+    isLoading,
+    error: logsError,
+  } = useQuery<AuditLogDTO[]>({
     queryKey: ['admin', 'audit', selectedQuizId],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -59,6 +65,14 @@ export function AuditLogTable() {
     },
     staleTime: 10_000,
   });
+
+  if (quizzesError || logsError) {
+    return (
+      <div className="text-center py-8 text-sm text-destructive">
+        Failed to load audit log data. Please try again.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

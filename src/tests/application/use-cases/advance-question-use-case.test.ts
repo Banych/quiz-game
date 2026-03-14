@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, Mocked, vi } from 'vitest';
 import { AdvanceQuestionUseCase } from '@application/use-cases/advance-question.use-case';
 import { IQuizRepository } from '@domain/repositories/quiz-repository';
+import type { IAuditLogRepository } from '@domain/repositories/audit-log-repository';
+import { AuditEventType } from '@domain/entities/audit-log';
 import { Quiz } from '@domain/entities/quiz';
 import { QuizSessionAggregate } from '@domain/aggregates/quiz-session-aggregate';
 import { Question } from '@domain/entities/question';
@@ -101,5 +103,87 @@ describe('AdvanceQuestionUseCase', () => {
     await expect(useCase.execute('missing')).rejects.toThrow(
       'Quiz with ID missing not found.'
     );
+  });
+
+  describe('audit log emission', () => {
+    let auditLogRepository: Mocked<IAuditLogRepository>;
+
+    beforeEach(() => {
+      auditLogRepository = {
+        save: vi.fn().mockResolvedValue(undefined),
+        findByQuizId: vi.fn(),
+        findRecent: vi.fn(),
+      };
+    });
+
+    it('saves an audit log with QuestionAdvanced event type', async () => {
+      const quiz = new Quiz(
+        'quiz-1',
+        'General Knowledge',
+        [
+          new Question(
+            'q-1',
+            'Q1',
+            ['A'],
+            'multiple-choice',
+            10,
+            undefined,
+            undefined,
+            ['A', 'B']
+          ),
+          new Question(
+            'q-2',
+            'Q2',
+            ['B'],
+            'multiple-choice',
+            10,
+            undefined,
+            undefined,
+            ['A', 'B']
+          ),
+        ],
+        { allowSkipping: false, timePerQuestion: 30 }
+      );
+      const aggregate = new QuizSessionAggregate(quiz, 30);
+      aggregate.startQuiz();
+
+      quizRepository.findById.mockResolvedValue(aggregate);
+      useCase = new AdvanceQuestionUseCase(quizRepository, auditLogRepository);
+
+      await useCase.execute('quiz-1');
+      await new Promise((r) => setImmediate(r));
+
+      expect(auditLogRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ eventType: AuditEventType.QuestionAdvanced })
+      );
+    });
+
+    it('does not propagate audit log save failures', async () => {
+      const quiz = new Quiz(
+        'quiz-1',
+        'General Knowledge',
+        [
+          new Question(
+            'q-1',
+            'Q1',
+            ['A'],
+            'multiple-choice',
+            10,
+            undefined,
+            undefined,
+            ['A', 'B']
+          ),
+        ],
+        { allowSkipping: false, timePerQuestion: 30 }
+      );
+      const aggregate = new QuizSessionAggregate(quiz, 30);
+      aggregate.startQuiz();
+
+      quizRepository.findById.mockResolvedValue(aggregate);
+      auditLogRepository.save.mockRejectedValue(new Error('DB error'));
+      useCase = new AdvanceQuestionUseCase(quizRepository, auditLogRepository);
+
+      await expect(useCase.execute('quiz-1')).resolves.not.toThrow();
+    });
   });
 });

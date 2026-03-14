@@ -18,26 +18,25 @@ export class ListAllQuestionsUseCase {
       ? [await this.quizRepo.findEntityById(quizId)].filter(Boolean)
       : await this.quizRepo.findAll();
 
-    const results: QuestionListItemDTO[] = [];
+    const allResults = await Promise.all(
+      (quizzes as NonNullable<(typeof quizzes)[number]>[]).map(async (quiz) => {
+        const questions = await this.questionRepo.listByQuizId(quiz.id);
+        return questions
+          .filter((q) => !type || q.type === type)
+          .map((q) => ({
+            id: q.id,
+            text: q.text,
+            type: q.type,
+            points: q.points,
+            orderIndex: q.orderIndex ?? 0,
+            hasCorrectAnswers: q.correctAnswers.length > 0,
+            mediaUrl: q.media ?? null,
+            quizId: quiz.id,
+            quizTitle: quiz.title,
+          }));
+      })
+    );
 
-    for (const quiz of quizzes as NonNullable<(typeof quizzes)[number]>[]) {
-      const questions = await this.questionRepo.listByQuizId(quiz.id);
-      for (const q of questions) {
-        if (type && q.type !== type) continue;
-        results.push({
-          id: q.id,
-          text: q.text,
-          type: q.type,
-          points: q.points,
-          orderIndex: q.orderIndex ?? 0,
-          hasCorrectAnswers: q.correctAnswers.length > 0,
-          mediaUrl: q.media ?? null,
-          quizId: quiz.id,
-          quizTitle: quiz.title,
-        });
-      }
-    }
-
-    return results;
+    return allResults.flat();
   }
 }

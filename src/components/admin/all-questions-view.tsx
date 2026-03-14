@@ -149,6 +149,7 @@ export function AllQuestionsView() {
                       size="sm"
                       title="Edit"
                       aria-label="Edit question"
+                      disabled={!question.quizId}
                       onClick={() => setEditingQuestion(question)}
                     >
                       <Pencil className="h-4 w-4" />
@@ -159,6 +160,7 @@ export function AllQuestionsView() {
                       title="Delete"
                       aria-label="Delete question"
                       className="text-destructive hover:text-destructive"
+                      disabled={!question.quizId}
                       onClick={() => setDeletingQuestion(question)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -173,7 +175,7 @@ export function AllQuestionsView() {
 
       {editingQuestion && (
         <EditQuestionDialog
-          quizId={editingQuestion.quizId!}
+          quizId={editingQuestion.quizId ?? ''}
           question={editingQuestion}
           open={!!editingQuestion}
           onOpenChange={(open) => {
@@ -187,7 +189,7 @@ export function AllQuestionsView() {
 
       {deletingQuestion && (
         <DeleteQuestionDialog
-          quizId={deletingQuestion.quizId!}
+          quizId={deletingQuestion.quizId ?? ''}
           question={deletingQuestion}
           open={!!deletingQuestion}
           onOpenChange={(open) => {

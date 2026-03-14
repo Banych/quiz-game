@@ -71,15 +71,19 @@ export class LockQuestionUseCase {
     await this.quizRepository.save(quiz);
 
     if (this.auditLogRepository) {
-      void this.auditLogRepository.save(
-        new AuditLog(randomUUID(), AuditEventType.QuestionLocked, {
-          quizId,
-          metadata: {
-            questionId: currentQuestion.id,
-            questionIndex: quiz.currentQuestionIndex,
-          },
-        })
-      );
+      void this.auditLogRepository
+        .save(
+          new AuditLog(randomUUID(), AuditEventType.QuestionLocked, {
+            quizId,
+            metadata: {
+              questionId: currentQuestion.id,
+              questionIndex: quiz.currentQuestionIndex,
+            },
+          })
+        )
+        .catch((error) =>
+          console.error('[AuditLog] lock-question save failed:', error)
+        );
     }
 
     return roundSummary;
