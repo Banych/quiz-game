@@ -21,7 +21,7 @@ describe('EndQuizUseCase', () => {
     endQuizUseCase = new EndQuizUseCase(quizRepository);
   });
 
-  it('should end the quiz and generate a leaderboard', async () => {
+  it('should end the quiz and transition to Completed', async () => {
     const quiz = new QuizSessionAggregate(
       new Quiz('quiz1', 'Sample Quiz', [], {
         timePerQuestion: 30,
@@ -32,11 +32,10 @@ describe('EndQuizUseCase', () => {
     quiz.startQuiz();
     quizRepository.findById.mockResolvedValue(quiz);
 
-    const leaderboard = await endQuizUseCase.execute('quiz1');
+    await endQuizUseCase.execute('quiz1');
 
     expect(quizRepository.findById).toHaveBeenCalledWith('quiz1');
     expect(quiz.quizStatus).toBe(QuizStatus.Completed);
-    expect(leaderboard).toEqual([]);
     expect(quizRepository.save).toHaveBeenCalledWith(quiz);
   });
 

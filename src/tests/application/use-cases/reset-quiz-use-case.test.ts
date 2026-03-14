@@ -43,7 +43,9 @@ describe('ResetQuizUseCase', () => {
   it('throws "Quiz not found." when quiz does not exist', async () => {
     quizRepository.findById.mockResolvedValue(null);
 
-    await expect(resetQuizUseCase.execute('missing')).rejects.toThrow('Quiz not found.');
+    await expect(resetQuizUseCase.execute('missing')).rejects.toThrow(
+      'Quiz not found.'
+    );
     expect(quizRepository.save).not.toHaveBeenCalled();
   });
 

@@ -115,6 +115,27 @@ export const useHostQuizState = ({
     },
   });
 
+  const finishQuizMutation = useMutation({
+    mutationFn: () => postQuizState<QuizDTO>(`/api/quiz/${quizId}/finish`),
+    onSuccess: applyState,
+  });
+
+  const restartQuizMutation = useMutation({
+    mutationFn: () =>
+      fetch(`/api/admin/quizzes/${quizId}/reset`, { method: 'POST' }).then(
+        async (res) => {
+          if (!res.ok) {
+            const { error } = (await res.json().catch(() => ({}))) as {
+              error?: string;
+            };
+            throw new Error(error ?? 'Failed to restart quiz.');
+          }
+        }
+      ),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: hostQuizQueryKey(quizId) }),
+  });
+
   const queryResult = useQuery({
     queryKey: hostQuizQueryKey(quizId),
     queryFn: () => fetchQuizState(quizId),
@@ -135,6 +156,10 @@ export const useHostQuizState = ({
     isSnapshottingLeaderboard: snapshotLeaderboardMutation.isPending,
     lockQuestion: lockQuestionMutation.mutateAsync,
     isLockingQuestion: lockQuestionMutation.isPending,
+    finishQuiz: finishQuizMutation.mutateAsync,
+    isFinishingQuiz: finishQuizMutation.isPending,
+    restartQuiz: restartQuizMutation.mutateAsync,
+    isRestartingQuiz: restartQuizMutation.isPending,
     roundSummary,
     clearRoundSummary: () => setRoundSummary(null),
   } as const;

@@ -49,10 +49,8 @@ export class QuizService {
     await this.startQuizUseCase.execute(quizId);
   }
 
-  async endQuiz(
-    quizId: string
-  ): Promise<{ playerId: string; score: number }[]> {
-    return this.endQuizUseCase.execute(quizId);
+  async endQuiz(quizId: string): Promise<void> {
+    await this.endQuizUseCase.execute(quizId);
   }
 
   async getQuizDetails(quizId: string): Promise<QuizSessionAggregate | null> {

@@ -11,8 +11,11 @@ export async function POST(_request: Request, { params }: RouteContext) {
     await quizService.resetQuiz(quizId);
     return NextResponse.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to reset quiz.';
+    const message =
+      error instanceof Error ? error.message : 'Failed to reset quiz.';
     const status = /not found/i.test(message) ? 404 : 400;
-    return NextResponse.json({ error: message } satisfies ErrorResponse, { status });
+    return NextResponse.json({ error: message } satisfies ErrorResponse, {
+      status,
+    });
   }
 }

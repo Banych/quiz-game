@@ -136,8 +136,13 @@ export class Quiz {
   }
 
   reset(): void {
-    if (this.status !== QuizStatus.Active && this.status !== QuizStatus.Completed) {
-      throw new Error('Quiz can only be reset if it is in Active or Completed status.');
+    if (
+      this.status !== QuizStatus.Active &&
+      this.status !== QuizStatus.Completed
+    ) {
+      throw new Error(
+        'Quiz can only be reset if it is in Active or Completed status.'
+      );
     }
     this.status = QuizStatus.Pending;
     this.startTime = undefined;
