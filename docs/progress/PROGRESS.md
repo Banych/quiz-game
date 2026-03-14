@@ -204,7 +204,12 @@ This document indexes all releases, completed work, and session notes. Use this 
 
 See [dev-notes.md](dev-notes.md) for the full execution log with timestamps.
 
-### Latest (2026-03-08):
+### 2026-03-14: R6 Phase 3.5 Step 1 — Quiz Reset ✅
+- `Quiz.reset()` + `QuizSessionAggregate.reset()` + `ResetQuizUseCase` + `POST /api/admin/quizzes/[quizId]/reset`
+- 6 new tests (3 domain, 3 use case), all passing; `yarn build` succeeds
+- Plan: [plans/2026-03-14-r6-phase3.5-lifecycle-ux-fixes.md](plans/2026-03-14-r6-phase3.5-lifecycle-ux-fixes.md)
+
+### Previous (2026-03-08):
 - R6 Phase 3 Missing Features complete: `/host` quiz selection, QR codes in lobby, `/admin/questions`, `/admin/media`, `/admin/audit`
 - Audit log: `AuditLog` entity + `IAuditLogRepository`, Prisma migration, fire-and-forget emissions in CreateQuiz/StartQuiz/AdvanceQuestion/LockQuestion use cases
 - 388 tests passing (+14 new), yarn build succeeds, lint clean, Playwright MCP spot-check passed
@@ -258,8 +263,8 @@ All R5 phases complete as of 2026-02-01. See [plan.md](../plan.md) for performan
 - [x] Host quiz selection page (`/host` landing)
 - [x] QR code generation for join codes
 
-**Phase 3.5: Game Lifecycle & UX Fixes** 📋 Planning
-- [ ] Quiz reset: allow completed quiz → Draft for replay (`ResetQuizUseCase`)
+**Phase 3.5: Game Lifecycle & UX Fixes** 🚧 In Progress
+- [x] Quiz reset: allow completed quiz → Pending for replay (`ResetQuizUseCase`)
 - [ ] Host dashboard: replace "Resume Quiz" with contextual buttons (Finish / Restart) per status
 - [ ] Player answer UI: render option buttons for MC/TF questions, text input for open questions
 - [ ] Admin quiz page: add "Start Hosting" / "Open Host View" shortcut button
