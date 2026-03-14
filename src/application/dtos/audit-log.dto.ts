@@ -5,7 +5,7 @@ export const AuditLogDTO = z.object({
   quizId: z.string().optional(),
   eventType: z.string(),
   summary: z.string(),
-  metadata: z.record(z.unknown()),
+  metadata: z.record(z.string(), z.unknown()),
   createdAt: z.string(),
 });
 
