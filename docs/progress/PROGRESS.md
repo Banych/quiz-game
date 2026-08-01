@@ -20,6 +20,14 @@ This document indexes all releases, completed work, and session notes. Use this 
 
 **Latest First** – Find detailed work notes by date:
 
+### 2026-08-01: Realtime Broadcast-Listener Leak Fix 🚧
+- **Focus**: `SupabaseRealtimeClient` was silently stacking a new real `channel.on()` broadcast binding every time a consuming hook's effect re-ran, since `@supabase/realtime-js` exposes no public `channel.off()` to detach one. Found live-testing the "too many connections (~200)" production incident — one player tab left open during a live question accumulated ~180 stacked `answer:ack` handlers over ~5 minutes, each firing a real DB round-trip per broadcast.
+- **Deliverables**: rewrote `SupabaseRealtimeClient`'s internal tracking to bind exactly one real listener per `(channel, event)` pair, fanning out to a handler `Set` (class now exported for direct testing); memoized `usePlayerSession`'s query key so its realtime effects stop tearing down/rebuilding every second during an active countdown.
+- **Closing pass**: whole-branch review found the new regression test passed even against the reverted pre-fix code, because the test mock's listener storage (a `Map<event, callback>`) silently discarded stacked bindings instead of accumulating them like real `bindings` do. Fixed the mock and rewrote the regression test to match the actual incident shape (a stable second subscriber holding the channel open while a different event churns); verified it now fails against the old buggy implementation and passes against the fix.
+- **Status**: In progress — 14/14 realtime-client tests passing, full suite and lint clean; manual multi-tab Playwright verification (Success Criterion #5) still pending.
+- Plan: [plans/2026-08-01-realtime-broadcast-listener-leak-fix.md](plans/2026-08-01-realtime-broadcast-listener-leak-fix.md)
+- File: [sessions/2026-08-01-realtime-broadcast-listener-leak-fix.md](sessions/2026-08-01-realtime-broadcast-listener-leak-fix.md)
+
 ### 2026-07-04: Bobr Quiz Visual Branding ✅
 - **Focus**: Full visual branding pass — cartoon beaver mascot, brown/amber color
   retheme, generated favicon/apple-icon/OG-image/PWA-manifest assets (all via
