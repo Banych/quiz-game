@@ -219,7 +219,15 @@ type MockChannel = {
 };
 
 const createMockChannel = (): MockChannel => {
-  const listeners = new Map<string, (payload: { payload: unknown }) => void>();
+  // A Map<event, single callback> would silently let a second `.on()` call
+  // for the same event replace the first -- but real @supabase/realtime-js
+  // `.on()` *appends* to a `bindings` array, it never replaces. Storing an
+  // array per event and invoking all of them on emit is what lets this mock
+  // actually catch a stacked-bindings regression instead of masking it.
+  const listeners = new Map<
+    string,
+    Array<(payload: { payload: unknown }) => void>
+  >();
 
   return {
     on: vi.fn(
@@ -228,7 +236,9 @@ const createMockChannel = (): MockChannel => {
         filter: { event: string },
         callback: (payload: { payload: unknown }) => void
       ) => {
-        listeners.set(filter.event, callback);
+        const bound = listeners.get(filter.event) ?? [];
+        bound.push(callback);
+        listeners.set(filter.event, bound);
       }
     ),
     subscribe: vi.fn((callback?: (status: string) => void) => {
@@ -236,7 +246,7 @@ const createMockChannel = (): MockChannel => {
     }),
     unsubscribe: vi.fn().mockResolvedValue('ok'),
     emit: (event, payload) => {
-      listeners.get(event)?.({ payload });
+      listeners.get(event)?.forEach((callback) => callback({ payload }));
     },
   };
 };
@@ -291,33 +301,44 @@ describe('SupabaseRealtimeClient (real class)', () => {
     expect(handlerB).toHaveBeenCalledWith({ answerId: 'a1' });
   });
 
-  it('regression: repeated subscribe/unsubscribe churn on the same (channel, event) -- as happens every second while a countdown timer re-renders a component -- never accumulates duplicate deliveries', () => {
+  it('regression: repeated subscribe/unsubscribe churn on the same (channel, event) -- as happens every second while a countdown timer re-renders a component -- never leaves stale handlers firing', () => {
     const { client, channelsByName } = createMockClient();
     const realtimeClient = new SupabaseRealtimeClient(client);
 
-    // Simulate 5 renders' worth of effect teardown+resubscribe, each with a
-    // brand-new closure (exactly what a non-memoized effect dependency causes).
-    let lastHandler = vi.fn();
-    let unsubscribe = realtimeClient.subscribe(
-      'quiz:123',
-      'answer:ack',
-      lastHandler
-    );
-    for (let i = 0; i < 4; i++) {
-      unsubscribe();
-      lastHandler = vi.fn();
-      unsubscribe = realtimeClient.subscribe(
-        'quiz:123',
-        'answer:ack',
-        lastHandler
-      );
+    // A second, stable subscription on a DIFFERENT event keeps the channel's
+    // listenerCount above zero for the whole scenario, exactly like
+    // use-player-session.ts's stable `player:kicked` subscription kept the
+    // channel alive while its `answer:ack` effect churned every second. If
+    // this weren't here, each unsubscribe() below would drop listenerCount
+    // to 0, tearing the channel down and recreating it -- which is NOT the
+    // shape of the real incident and wouldn't exercise the leak.
+    realtimeClient.subscribe('quiz:123', 'player:kicked', vi.fn());
+
+    // Simulate 5 renders' worth of effect teardown+resubscribe on
+    // `answer:ack`, each with a brand-new closure (exactly what a
+    // non-memoized effect dependency causes) -- the channel never tears
+    // down because the player:kicked subscription above is still holding
+    // it open.
+    const handlers: ReturnType<typeof vi.fn>[] = [];
+    let unsubscribe: () => void = () => {};
+    for (let i = 0; i < 5; i++) {
+      if (i > 0) unsubscribe();
+      const handler = vi.fn();
+      handlers.push(handler);
+      unsubscribe = realtimeClient.subscribe('quiz:123', 'answer:ack', handler);
     }
 
     const channel = channelsByName.get('quiz:123')!;
     channel.emit('answer:ack', { answerId: 'a1' });
 
+    // Only the last (currently-subscribed) handler should fire. Every
+    // earlier handler was torn down and must NOT fire -- if it does,
+    // that's a stale binding stacked on top, i.e. the leak.
+    const lastHandler = handlers[handlers.length - 1];
     expect(lastHandler).toHaveBeenCalledTimes(1);
-    expect(channel.on).toHaveBeenCalledTimes(1);
+    for (const staleHandler of handlers.slice(0, -1)) {
+      expect(staleHandler).not.toHaveBeenCalled();
+    }
   });
 
   it('tears down the real channel once the last listener across all events is removed', () => {
