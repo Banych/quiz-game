@@ -202,3 +202,161 @@ describe('SupabaseRealtimeClient channel tracking', () => {
     });
   });
 });
+
+import { SupabaseRealtimeClient } from '@infrastructure/realtime/supabase-realtime-client';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+/**
+ * Mock Supabase channel/client for testing SupabaseRealtimeClient's real
+ * dispatcher-registry logic (not a stand-in fake -- this exercises the
+ * actual class, mocking only the Supabase client boundary).
+ */
+type MockChannel = {
+  on: ReturnType<typeof vi.fn>;
+  subscribe: ReturnType<typeof vi.fn>;
+  unsubscribe: ReturnType<typeof vi.fn>;
+  emit: (event: string, payload: unknown) => void;
+};
+
+const createMockChannel = (): MockChannel => {
+  const listeners = new Map<string, (payload: { payload: unknown }) => void>();
+
+  return {
+    on: vi.fn(
+      (
+        _type: string,
+        filter: { event: string },
+        callback: (payload: { payload: unknown }) => void
+      ) => {
+        listeners.set(filter.event, callback);
+      }
+    ),
+    subscribe: vi.fn((callback?: (status: string) => void) => {
+      callback?.('SUBSCRIBED');
+    }),
+    unsubscribe: vi.fn().mockResolvedValue('ok'),
+    emit: (event, payload) => {
+      listeners.get(event)?.({ payload });
+    },
+  };
+};
+
+const createMockClient = () => {
+  const channelsByName = new Map<string, MockChannel>();
+  const channel = vi.fn((name: string) => {
+    const mockChannel = createMockChannel();
+    channelsByName.set(name, mockChannel);
+    return mockChannel;
+  });
+  return {
+    client: { channel } as unknown as SupabaseClient,
+    channelsByName,
+    channelFn: channel,
+  };
+};
+
+describe('SupabaseRealtimeClient (real class)', () => {
+  it('binds the real channel.on listener only once per (channel, event) pair', () => {
+    const { client, channelsByName } = createMockClient();
+    const realtimeClient = new SupabaseRealtimeClient(client);
+
+    realtimeClient.subscribe('quiz:123', 'answer:ack', vi.fn());
+    realtimeClient.subscribe('quiz:123', 'answer:ack', vi.fn());
+    realtimeClient.subscribe('quiz:123', 'answer:ack', vi.fn());
+
+    const channel = channelsByName.get('quiz:123')!;
+    expect(channel.on).toHaveBeenCalledTimes(1);
+  });
+
+  it('stops delivering to a handler after its unsubscribe is called, without affecting others', () => {
+    const { client, channelsByName } = createMockClient();
+    const realtimeClient = new SupabaseRealtimeClient(client);
+
+    const handlerA = vi.fn();
+    const unsubscribeA = realtimeClient.subscribe(
+      'quiz:123',
+      'answer:ack',
+      handlerA
+    );
+    const handlerB = vi.fn();
+    realtimeClient.subscribe('quiz:123', 'answer:ack', handlerB);
+
+    unsubscribeA();
+
+    const channel = channelsByName.get('quiz:123')!;
+    channel.emit('answer:ack', { answerId: 'a1' });
+
+    expect(handlerA).not.toHaveBeenCalled();
+    expect(handlerB).toHaveBeenCalledTimes(1);
+    expect(handlerB).toHaveBeenCalledWith({ answerId: 'a1' });
+  });
+
+  it('regression: repeated subscribe/unsubscribe churn on the same (channel, event) -- as happens every second while a countdown timer re-renders a component -- never accumulates duplicate deliveries', () => {
+    const { client, channelsByName } = createMockClient();
+    const realtimeClient = new SupabaseRealtimeClient(client);
+
+    // Simulate 5 renders' worth of effect teardown+resubscribe, each with a
+    // brand-new closure (exactly what a non-memoized effect dependency causes).
+    let lastHandler = vi.fn();
+    let unsubscribe = realtimeClient.subscribe(
+      'quiz:123',
+      'answer:ack',
+      lastHandler
+    );
+    for (let i = 0; i < 4; i++) {
+      unsubscribe();
+      lastHandler = vi.fn();
+      unsubscribe = realtimeClient.subscribe(
+        'quiz:123',
+        'answer:ack',
+        lastHandler
+      );
+    }
+
+    const channel = channelsByName.get('quiz:123')!;
+    channel.emit('answer:ack', { answerId: 'a1' });
+
+    expect(lastHandler).toHaveBeenCalledTimes(1);
+    expect(channel.on).toHaveBeenCalledTimes(1);
+  });
+
+  it('tears down the real channel once the last listener across all events is removed', () => {
+    const { client, channelsByName } = createMockClient();
+    const realtimeClient = new SupabaseRealtimeClient(client);
+
+    const unsubscribe1 = realtimeClient.subscribe(
+      'quiz:123',
+      'state:update:player',
+      vi.fn()
+    );
+    const unsubscribe2 = realtimeClient.subscribe(
+      'quiz:123',
+      'answer:ack',
+      vi.fn()
+    );
+
+    unsubscribe1();
+    const channel = channelsByName.get('quiz:123')!;
+    expect(channel.unsubscribe).not.toHaveBeenCalled();
+
+    unsubscribe2();
+    expect(channel.unsubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it('supports multiple distinct events on the same channel independently', () => {
+    const { client, channelsByName } = createMockClient();
+    const realtimeClient = new SupabaseRealtimeClient(client);
+
+    const stateHandler = vi.fn();
+    const ackHandler = vi.fn();
+    realtimeClient.subscribe('quiz:123', 'state:update:player', stateHandler);
+    realtimeClient.subscribe('quiz:123', 'answer:ack', ackHandler);
+
+    const channel = channelsByName.get('quiz:123')!;
+    expect(channel.on).toHaveBeenCalledTimes(2);
+
+    channel.emit('answer:ack', { answerId: 'a1' });
+    expect(ackHandler).toHaveBeenCalledTimes(1);
+    expect(stateHandler).not.toHaveBeenCalled();
+  });
+});
