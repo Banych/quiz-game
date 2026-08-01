@@ -1,6 +1,6 @@
 # Realtime Broadcast Listener Leak Fix
 
-**Status:** 🚧 In Progress (manual verification pending)
+**Status:** ✅ Complete
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -540,7 +540,7 @@ Expected: PASS.
 - [x] `channel.on()` (the real Supabase binding) is called at most once per unique `(channel, event)` pair for the lifetime of that channel.
 - [x] `usePlayerSession`'s two affected effects no longer tear down/rebuild every second during an active countdown.
 - [x] `yarn test` passes in full.
-- [ ] Manually verified in the browser (Playwright, multi-tab: host + player, live game with countdown running): submit an answer, check console — `Answer acknowledged` logs exactly once per real submission, not repeated.
+- [x] Manually verified in the browser (Playwright, multi-tab: host + 2 players, live game with countdown running against "Bobr Quiz Demo"/TRYBOBR): each of two players submitted an answer while the countdown was actively ticking — console showed exactly one `Answer acknowledged` log per submission (11 total console messages each, vs. ~180 duplicate logs from a single event pre-fix), host tab stayed clean throughout (0 errors).
 
 ## Files Changed
 

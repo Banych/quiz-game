@@ -1,7 +1,7 @@
 # Realtime Broadcast Listener Leak Fix
 
 **Date:** 2026-08-01
-**Status:** 🚧 In Progress (manual browser verification pending)
+**Status:** ✅ Complete
 **Plan:** [plans/2026-08-01-realtime-broadcast-listener-leak-fix.md](../plans/2026-08-01-realtime-broadcast-listener-leak-fix.md)
 
 ---
@@ -49,7 +49,7 @@ The final whole-branch review found that reverting `supabase-realtime-client.ts`
 
 ## Outcomes / Next Steps
 
-- **Pending:** Success Criterion #5 — manual multi-tab Playwright verification (host + player, live game, countdown running, confirm `Answer acknowledged` logs exactly once per submission) has not been done yet. Out of scope for this closing pass; still open.
+- **Done:** Success Criterion #5 — manual multi-tab Playwright verification against the live "Bobr Quiz Demo" (join code `TRYBOBR`). Host tab + two concurrent player tabs, live question with the countdown actively ticking (~6-8s of per-second re-renders before each submission, exercising the churn path). Each player submitted an answer independently; each tab's console showed exactly one `Answer acknowledged` log (11 total console messages per tab, vs. ~180 duplicate logs from a single event pre-fix). Host tab stayed clean throughout (0 errors, 22 total messages, no flood from the two concurrent leaderboard/state broadcasts). Plan and this session file both updated to ✅ Complete.
 - **Deferred as follow-ups (Minor findings from the final whole-branch review, not fixed now):**
   1. **Pre-existing teardown race.** An unsubscribe followed immediately by a resubscribe during the async `channel.unsubscribe()` window can hand a `subscribe()` call a dying channel, whose `channel.subscribe()` call is then silently inert. This is pre-existing behavior, unchanged by this branch — but now triggered less often, since Task 2 cut the effect-churn rate on the player page from once/second to once/remount. `presence-tracker.ts` already solves this exact realtime-js quirk with a grace-period deferred teardown (`UNSUBSCRIBE_GRACE_PERIOD_MS`); the same pattern would close this gap in `SupabaseRealtimeClient` if it's ever prioritized.
   2. **Unconditional listenerCount decrement.** `removeListener` decrements `listenerCount` unconditionally, so a double-unsubscribe call while other listeners remain would tear down a channel still in use. Pre-existing, and no live call site actually does this (React never double-invokes a cleanup function). A per-subscription token — wrap each handler in a unique closure, store/delete the wrapper instead of the raw handler — would close this and the identical-handler-reference edge case (calling `subscribe()` twice with the literal same function reference) together, if ever prioritized.
